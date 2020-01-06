@@ -11,10 +11,23 @@ def my_latex_gen(name, main, deps):
     )
     checksum_inputs = [main, out] + deps
     checksum_output = paths.replace_extension(main, ".sha512")
-    checksum_cmd = "sha512sum $(location " + out + \
-                   ") $(location " + main + ") $(locations " + \
-                   " ".join(deps) + ") > $@"
-    print(checksum_cmd)
+    checksum_cmd = " ".join(
+        [
+            "sha512sum",
+            "$(location " + out + ")",
+            "$(location " + main + ")",
+        ] + [
+            "$(location " + d + ")"
+            for d in deps
+            if not d.startswith("//")
+        ] + [
+            "$(locations " + d + ")"
+            for d in deps
+            if d.startswith("//")
+        ] + [
+            " > $@",
+        ],
+    )
     native.genrule(
         name = name + "_checksum",
         srcs = checksum_inputs,

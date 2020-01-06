@@ -1,0 +1,12 @@
+load("//:defs.bzl", "my_latex_gen")
+
+my_latex_gen(
+    name = "main",
+    main = "main.tex",
+    deps = [
+        "fig-1.png",
+        "fig-2.png",
+        "fig-3.png",
+        "//common",
+    ],
+)
