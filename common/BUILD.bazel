@@ -1,0 +1,9 @@
+filegroup(
+    name = "common",
+    srcs = [
+        "fonts.tex",
+        "packages.tex",
+        "setup.tex",
+    ] + glob(["iosevka-type-slab/**"]),
+    visibility = ["//visibility:public"],
+)
