@@ -7,7 +7,7 @@ def my_latex_gen(name, main, deps):
         srcs = [main] + deps,
         outs = [out],
         cmd_bash = "latexmk -cd -xelatex -latexoption=\"-shell-escape\" $(location " + main + ") && " +
-                   "mv $$(dirname $(location " + main + "))/" + out + " $@",
+                   "mv \"$$(dirname $(location " + main + "))/" + out + "\" \"$@\"",
     )
     checksum_inputs = [main, out] + deps
     checksum_output = paths.replace_extension(main, ".sha512")
@@ -25,7 +25,7 @@ def my_latex_gen(name, main, deps):
             for d in deps
             if d.startswith("//")
         ] + [
-            " > $@",
+            " > \"$@\"",
         ],
     )
     native.genrule(
