@@ -6,7 +6,7 @@ def my_latex_gen(name, main, deps):
         name = name,
         srcs = [main] + deps,
         outs = [out],
-        cmd_bash = "latexmk -cd -xelatex -latexoption=\"-shell-escape\" $(location " + main + ") && " +
+        cmd_bash = "latexmk -cd -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + ") && " +
                    "mv \"$$(dirname $(location " + main + "))/" + out + "\" \"$@\"",
     )
     checksum_inputs = [main, out] + deps
