@@ -1,0 +1,329 @@
+\PassOptionsToPackage{unicode=true}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[a4paper,12pt,notitlepage,twoside,openright]{article}
+
+\usepackage{ifxetex}
+\ifxetex{}
+\else
+\errmessage{Must be built with XeLaTeX}
+\fi
+
+\input{../common/fonts.tex}
+\input{../common/packages.tex}
+\usepackage{wrapfig}
+\input{../common/setup.tex}
+
+\title{LSM-Trees and B-Trees: The Best of Both Worlds}
+\author{Varun Jain, James Lennon, Harshita Gupta}
+\date{July 5, 2019}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+
+LSM-Trees and B-Trees are the two primary data structures used as
+storage engines in modern key-value (KV) stores. These two structures
+are optimal for different workloads; LSM-Trees perform better on update
+queries, and B-Trees do on short range lookups. KV stores today use one
+or the other. However, for modern applications with increasingly diverse
+workloads, utilizing only one of the two designs leads to a significant
+loss in performance. We propose a novel method of online transitioning a
+KV store from an LSM-Tree to a B-Tree and vice versa. This allows KV
+stores to smoothly adapt to changing workloads.
+
+\end{abstract}
+
+\hypertarget{introduction}{%
+\section{INTRODUCTION}\label{introduction}}
+
+\textbf{Key-Value (KV) Stores.} NoSQL databases are becoming increasingly popular
+due to their scalability and flexible design. A common NoSQL database is
+the KV store, which maintains a unique, associative mapping between keys
+and data values. LSM-Trees and B-Trees are typically used for
+implementing KV stores.
+
+\textbf{LSM-Trees.} Log-Structured Merge Trees {[}13{]} are popular in production
+(e.g. RocksDB {[}8{]}, Monkey/Dostoevsky {[}5--7{]}) due to their
+superior update performance and space amplification properties. Updates
+are logged in an in-memory buffer to minimize disk IO, and this buffer
+is periodically flushed into sorted ``runs'' of entries on disk. These
+runs are organized in levels of exponentially increasing size. The
+smaller levels are merged into the larger levels as they fill up. Each
+run in the LSM-Tree contains an in-memory bloom filter {[}4{]} and fence
+pointers to minimize disk IO during lookups.
+
+\textbf{B-Trees.} B-Trees {[}3{]} have superior short-range scan performance at
+the cost of slower point updates. They are structured as an in-memory
+tree of internal nodes with terminal leaf nodes on disk. The internal
+nodes of one level of the tree store pointers to nodes of the next
+level. Each terminal leaf node stores KV pairs, sorted by key, and
+typically has a size of a few disk pages.
+
+\textbf{Problem with Static Data Structures.} We demonstrate in Figure 1 that
+neither data structure is optimal across all workloads. We compare a
+B-Tree (BerkeleyDB {[}12{]}) to an LSM-Tree (RocksDB {[}8{]}): During
+the first 2000 queries, the workload is short-range scan heavy and thus
+favors B-Trees. During the next 2000 queries, the workload changes and
+becomes write heavy, favoring LSM-Trees.
+
+\begin{figure}
+  \centering
+  \begin{minipage}[t]{0.9\columnwidth}
+    \includegraphics[width=0.55\columnwidth]{./media/image1.jpg}
+    \includegraphics[width=0.35\columnwidth]{./media/image2.png}
+  \end{minipage}
+  \caption{No single design is optimal for diverse workloads. An ideal
+design uses elements of both LSM-Tree (bottom right) and B-tree (top
+right).}
+\end{figure}
+
+Evidently, no single design is optimal across the whole workload {[}1,
+2, 10, 11{]}. Both state-of-the-art KV stores face problems once the
+workload departs from their respective comfort zones, leading to
+significant performance loss. Since applications today are not static,
+they must support diverse and changing workloads. New application
+features, for example, affect the read and write patterns the underlying
+storage system should support. Currently, this requires system designers
+to re-evaluate how data is stored and accessed, possibly having to take
+their application offline. In many instances, it may be impractical to
+change the data storage architecture, leaving a suboptimal data
+structure.
+
+\textbf{The Solution: Transitions.} We propose on-the-fly transitions across
+different data structure designs. Our KV stores morph their design as
+the workload changes. Figure 1 shows that while neither data structure
+is optimal, transitioning our KV store from a B-Tree to an LSM-Tree
+achieves the best of both worlds (indicated by the dashed black line).
+In this paper we provide algorithms for the transitions and initial
+results to prove this is a promising direction.
+
+One of the key ideas that makes this possible is recognizing the
+structural similarity between these two data structures; we use this
+similarity to efficiently change data from one structure to another
+in-place {[}9{]}. For example, when transitioning from an LSM-Tree to a
+B-Tree, we take the sorted run of an LSM-Tree and reinterpret that data
+as an initial leaf level of the B-Tree ``for free''. Another key idea is
+that our algorithm is gradual and can be smoothly executed over a
+tunable number of steps, allowing us to execute this transition online
+without a significant cost.
+
+\hypertarget{fromlsm-treetob-tree}{%
+\section{FROMLSM-TREETOB-TREE}\label{fromlsm-treetob-tree}}
+
+To move from an LSM-Tree to B-Tree, we present two strategies, and we
+discuss how to use them to holistically schedule the transition.
+
+\textbf{Sort-Merge Transition.} In an LSM-Tree, data is organized into
+several sorted runs with some duplicate entries that result in space
+amplification. In order to condense this data into the leaf level of a
+B-Tree, we force a sort-merge to condense these runs into a dense,
+sorted array that becomes the leaf level. This has a performance cost of
+reading all the runs' pages, and then writing each of the sorted pages
+to disk. This method has optimal space amplification properties, since
+the resulting array is compact.
+
+\begin{figure}
+  \centering
+  \begin{minipage}[t]{0.9\columnwidth}
+    \includegraphics[width=0.45\columnwidth]{./media/image3.jpg}
+    \includegraphics[width=0.45\columnwidth]{./media/image4.png}
+  \end{minipage}
+  \caption{Tradeoff Between Merge Sort (Upper Right) and Batch Insert (Lower Right)}
+\end{figure}
+
+\textbf{Batch Inserts Transition.} In some cases (e.g. when there is relatively
+little data in the levels above the bottom of the LSM-Tree), we can
+avoid reading and writing most of the data. We take the bottommost
+(largest) run of the LSM-Tree and reinterpret it as the leaf level of a
+B-Tree. We then insert the entries from the remaining upper levels of
+the LSM-Tree into this B-Tree. By performing these inserts in sorted
+order, we can ``batch insert'' the entries into the B-Tree. In
+particular, consider a node \(N\) of the leaf layer for which there
+are entries in the upper levels to be inserted into \(N\). We load
+that node into memory. Then, we iterate through the elements in the
+upper levels corresponding to the range of \(N\) --- call this set of
+elements \(R\). As we do so, we merge the elements of \(N\) and
+\(R\), making new leaf-level nodes in memory if needed. These new
+nodes are flushed to disk as they are made. As an example, if the set of
+elements \(R\) to be inserted into node \(N\) consists of just one
+element, then the above process is equivalent to a B-Tree node split.
+
+\textbf{Choosing the Optimal Transition.} Compared to the sort-merge approach, the
+batch inserts method may be more efficient as we may not insert entries
+into every node of the B-Tree, saving IO costs for certain nodes. On the
+other hand, it has worse space amplification properties because some
+pages may be partially empty; this can result in more disk IO. It can be
+shown in worst and average case analysis that the batch inserts approach
+supersedes the sort-merge approach when the size of the upper runs is
+below a certain threshold. To analytically demonstrate this, we present
+the results for a worst case analysis of an LSM-Tree with node of size 1
+page.
+
+Assume an LSM-Tree with \(L\) levels where \(x_i\) is number of
+entries in the \(i\)th level and \(d\) is the size of each entry
+in bytes and a machine where \(p\) is the page size in bytes and
+\( \phi \) is the ratio of a disk write to a disk read. The cost of a sort
+merge transition is \(C_{SM} = \left(\sum^L_{i=1} \left\lceil\frac{d \cdot x_i}{p}\right\rceil \right)(1+\phi)\). The worst-case cost of a batch insert transition is
+\(C_{BI} = \left\lceil\frac{d \cdot x_L}{p}\right\rceil + \sum^{L-1}_{i=1} x_i \left( \frac{d}{p} + 1 + 2 \phi \right) \). Let
+\(x_{-L}\) be the number of entries in all levels
+above \(L\); we choose to do a batch insert transition only when
+\(C_{BI} < C_{SM}\), in other terms when
+\( \frac{x_{-L}}{x_L} < \frac{d_\phi}{p + (2p - d) \phi } \). See Figure 2 as a visualization of this tradeoff: Using our cost model, we show that as the ratio
+\( \frac{x_{-L}}{x_L} \) decreases, the cost of the batch insert method decreases while the
+sort-merge method is unaffected. This is because as \(x_L\) becomes
+relatively larger, the LSM-Tree is more ``bottom-heavy'', and we can
+potentially use fewer disk operations when executing a batch insert
+transition.
+
+\textbf{Gradual Transitions} In most situations, a sudden spike in query latency
+is undesirable. Transitions should be lightweight, but we should also be
+able to control the transition cost with respect to the current system
+status. We propose gradual versions of the sort-merge and batch insert
+transition algorithms, which can execute over a tunable number of steps.
+These algorithms exhibit a tradeoff between total transition cost and
+query latency during the transition phase. At any time during the
+transition, KV pairs with keys below a ``threshold value'' \( \theta \) have
+been transitioned to a B-Tree, whereas those with keys above \( \theta \)
+remain in the LSM-Tree.
+
+At each step of the transition, we choose a new threshold value
+\(\theta'\), and transition data with keys between
+\( \theta \) and \(\theta'\) from the LSM-Tree to the
+B-Tree. This data can be transitioned in a sort-merge fashion by reading
+pages from each of the runs and writing to a final sorted array. For the
+batch-inserts approach, we insert KV pairs from the pages in the upper
+runs into the bottom run. While the transition is underway, we dispatch
+queries to the B-Tree component, the LSMTree component, or both (for
+range queries), based on whether the query keys are less than or greater
+than \( \theta \). The total cost of the transition will include the cost of
+reading and writing data in the original LSM-Tree and any new data added
+to the LSM-Tree during the transition.
+
+\hypertarget{fromb-treetolsm-tree}{%
+\section{FROMB-TREETOLSM-TREE}\label{fromb-treetolsm-tree}}
+
+To transition in the opposite direction, we can convert the leaf level
+of the B-Tree into a single run in our LSM-Tree. This requires us to
+read the contents of the leaf level, to construct the in-memory Bloom
+filter and fence pointers, and to write the compact, sorted run to disk.
+This transition can be gradually executed by inserting the lowest
+\(k\) pages of our B-Tree into our LSM-Tree at each step.
+
+Another approach is to use the B-Tree itself as the lowest level of the
+LSM-Tree, ``tricking'' our LSM tree into believing that the data on disk
+in the B-Tree is stored contiguously. This can be done by maintaining an
+in-memory layer of indirection, consisting of pointers to the fragmented
+disk locations of leaf level nodes. From the in-memory internal nodes of
+the B-Tree, we can construct this layer of indirection, as well as the
+in-memory fence pointers. In our key-value store, we can maintain an
+in-memory Bloom filter with the B-Tree, so that the transition itself
+would not require reading keys from disk. Consequently, this transition
+approach does not need to access the leaf level disk data during the
+transition.
+
+Comparing the above approaches, this latter transition approach uses
+more main memory. Also, range scans will be more inefficient; the
+fragmentation of leaf-level B-Tree nodes will result in more disk
+accesses, as well as more random accesses. However, the transition
+itself is ``free'', requiring no disk accesses.
+
+\newpage
+\hypertarget{efficienttransitions}{%
+\section{EFFICIENTTRANSITIONS}\label{efficienttransitions}}
+
+\begin{wrapfigure}{l}{0.5\columnwidth}
+\includegraphics[width=0.5\columnwidth]{./media/image5.jpg}
+\end{wrapfigure}The
+figure on the left demonstrates the potential of on-the-fly transitions.
+The workload changes in the same way as the experiment in Figure 1 that
+goes from scan-heavy to write-heavy. This figure captures the IO behavior
+of our KV stores by measuring the number of disk pages read and
+written by the system using analytic IO cost models summarized in this
+paper. Thus, overall this demonstrates the potential for data structure
+designs that continuously transition to assume the optimal shape without
+harming query performance.
+
+\hypertarget{references}{%
+\section{REFERENCES}\label{references}}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Manos Athanassoulis and Stratos Idreos. 2016. Design Tradeoffs of Data
+  Access Methods. In \emph{Proceedings of the 2016 International
+  Conference on Management of Data, SIGMOD Conference 2016, San
+  Francisco, CA, USA, June 26 - July 01, 2016}.
+  2195--2200. \url{https://doi.org/10.1145/2882903.2912569}
+\item
+  Manos Athanassoulis, Michael S. Kester, Lukas M. Maas, Radu Stoica,
+  Stratos Idreos, Anastasia Ailamaki, and Mark Callaghan. 2016.
+  Designing Access Methods: The RUM Conjecture. In \emph{Proceedings of
+  the 19th International Conference on Extending Database Technology, EDBT 2016, Bordeaux, France, March
+  15-16, 2016, Bordeaux, France, March 15-16, 2016.} 461--466.
+  \url{https://doi.org/10.5441/002/edbt.2016.42}
+\item
+  Rudolf Bayer and Edward M. McCreight. 1972. Organization and
+  Maintenance of Large Ordered Indices. \emph{Acta Informatica} 1, 3
+  (1972), 173--189.
+  \url{https://doi.org/10.1007/BF00288683}
+\item
+  Burton H. Bloom. 1970. Space/Time Trade-offs in Hash Coding with
+  Allowable Errors. \emph{Commun. ACM} 13, 7 (1970), 422--426.
+  \href{http://dl.acm.org/citation.cfm?id=362686.362692}{http://dl.acm.org/citation.cfm?id=
+  362686.362692}
+\item
+  Niv Dayan, Manos Athanassoulis, and Stratos Idreos. 2017. Monkey:
+  Optimal Navigable Key-Value Store. In \emph{Proceedings of the 2017
+  ACM International Conference on Management of Data, SIGMOD Conference
+  2017, Chicago, IL, USA, May 14-19, 2017}. 79--94.
+  \url{https://doi.org/10.1145/3035918.3064054}
+\item
+  Niv Dayan, Manos Athanassoulis, and Stratos Idreos. 2018. Optimal
+  Bloom Filters and Adaptive Merging for LSM-Trees. \emph{ACM Trans.
+  Database Syst.} 43, 4 (2018),
+  16:1--16:48. \url{https://dl.acm.org/citation.cfm?id=3276980}
+\item
+  Niv Dayan and Stratos Idreos. 2018. Dostoevsky: Better Space-Time
+  TradeOffs for LSM-Tree Based Key-Value Stores via Adaptive Removal of
+  Superfluous Merging. In \emph{Proceedings of the 2018 International
+  Conference on Management ofData (SIGMOD '18)}. ACM, New York, NY, USA, 505--520.
+  \url{https://doi.org/10.1145/3183713.3196927}
+\item
+  Facebook. 2018. RocksDB. (14 Nov. 2018).
+  \url{https://github.com/facebook/rocksdb}
+\item
+  Stratos Idreos, Niv Dayan, Wilson Qin, Mali Akmanalp, Sophie Hilgard,
+  Andrew Ross, James Lennon, Varun Jain, Harshita Gupta, David Li, and
+  Zichen Zhu. 2019.
+  Design Continuums and the Path Toward Self-Designing Key-Value Stores
+  that Know and Learn. In \emph{Biennial Conference on Innovative Data Systems
+Research (CIDR)}.
+\item
+  Stratos Idreos, Kostas Zoumpatianos, Manos Athanassoulis, Niv Dayan,
+  Brian
+  Hentschel, Michael S. Kester, Demi Guo, Lukas M. Maas, Wilson Qin, Abdul
+  Wasay, and Yiyou Sun. 2018. The Periodic Table of Data Structures.
+  \emph{IEEE Data Eng. Bull.} 41, 3 (2018), 64--75.
+  \url{http://sites.computer.org/debull/A18sept/p64.pdf}
+\item
+  Stratos Idreos, Kostas Zoumpatianos, Brian Hentschel, Michael S.
+  Kester, and Demi Guo. 2018. The Data Calculator: Data Structure Design
+  and Cost Synthesis from First Principles and Learned Cost Models. In
+  \emph{Proceedings of the 2018 International Conference on Management
+  of Data, SIGMOD Conference 2018, Houston, TX, USA, June 10-15, 2018}.
+  535--550. \url{https://doi.org/10.1145/3183713.3199671}
+\item
+  Michael A. Olson, Keith Bostic, and Margo I. Seltzer. 1999. Berkeley
+  DB. In \emph{Proceedings of the USENIX Annual Technical Conference
+  (ATC)}. 183--191.
+  \href{http://www.usenix.org/events/usenix99/olson.html}{http:
+  //www.usenix.org/events/usenix99/olson.html}
+\item
+  Patrick E. O'Neil, Edward Cheng, Dieter Gawlick, and Elizabeth
+  J. O'Neil. 1996. The log-structured merge-tree (LSM-tree). \emph{Acta
+  Informatica} 33, 4 (1996), 351--385.
+  \url{http://dl.acm.org/citation.cfm?id=230823.230826}
+\end{enumerate}
+
+\end{document}

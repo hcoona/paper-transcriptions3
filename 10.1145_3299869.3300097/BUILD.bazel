@@ -1,0 +1,14 @@
+load("//:defs.bzl", "my_latex_gen")
+
+my_latex_gen(
+    name = "main",
+    main = "main.tex",
+    deps = [
+        "media/image1.jpg",
+        "media/image2.png",
+        "media/image3.jpg",
+        "media/image4.png",
+        "media/image5.jpg",
+        "//common",
+    ],
+)
