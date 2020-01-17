@@ -109,7 +109,7 @@ tunable number of steps, allowing us to execute this transition online
 without a significant cost.
 
 \hypertarget{fromlsm-treetob-tree}{%
-\section{FROMLSM-TREETOB-TREE}\label{fromlsm-treetob-tree}}
+\section{FROM LSM-TREE TO B-TREE}\label{fromlsm-treetob-tree}}
 
 To move from an LSM-Tree to B-Tree, we present two strategies, and we
 discuss how to use them to holistically schedule the transition.
@@ -201,7 +201,7 @@ reading and writing data in the original LSM-Tree and any new data added
 to the LSM-Tree during the transition.
 
 \hypertarget{fromb-treetolsm-tree}{%
-\section{FROMB-TREETOLSM-TREE}\label{fromb-treetolsm-tree}}
+\section{FROM B-TREE TO LSM-TREE}\label{fromb-treetolsm-tree}}
 
 To transition in the opposite direction, we can convert the leaf level
 of the B-Tree into a single run in our LSM-Tree. This requires us to
@@ -230,7 +230,7 @@ itself is ``free'', requiring no disk accesses.
 
 \newpage
 \hypertarget{efficienttransitions}{%
-\section{EFFICIENTTRANSITIONS}\label{efficienttransitions}}
+\section{EFFICIENT TRANSITIONS}\label{efficienttransitions}}
 
 \begin{wrapfigure}{l}{0.5\columnwidth}
 \includegraphics[width=0.5\columnwidth]{./media/image5.jpg}
