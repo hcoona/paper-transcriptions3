@@ -1,0 +1,126 @@
+\newcommand{\etalchar}[1]{$^{#1}$}
+\begin{thebibliography}{BMN{\etalchar{+}}15}
+
+\bibitem[AB10]{Adve:2010:MMC:1787234.1787255}
+Sarita~V. Adve and Hans-J. Boehm.
+\newblock Memory models: A case for rethinking parallel languages and hardware.
+\newblock {\em Communications of the {ACM}}, 53(8):90--101, August 2010.
+
+\bibitem[AB11]{AdveBoehm11}
+Sarita~V. Adve and Hans{-}Juergen Boehm.
+\newblock Memory models.
+\newblock In David~A. Padua, editor, {\em Encyclopedia of Parallel Computing},
+  pages 1107--1110. Springer, 2011.
+
+\bibitem[ABH{\etalchar{+}}04]{Alexandrescu:2004}
+Andrei Alexandrescu, Hans-J. Boehm, Kevlin Henney, Doug Lea, and Bill Pugh.
+\newblock Memory model for multithreaded {C++}.
+\newblock Document WG21/N1680=J16/04-0120; available at
+  \url{http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1680.pdf},
+  September 2004.
+
+\bibitem[AG96]{AdveGharachorloo96}
+Sarita~V. Adve and Kourosh Gharachorloo.
+\newblock Shared memory consistency models: {A} tutorial.
+\newblock {\em {IEEE} Computer}, 29(12):66--76, 1996.
+
+\bibitem[BA08]{Boehm:2008:FCC:1379022.1375591}
+Hans{-}Juergen Boehm and Sarita~V. Adve.
+\newblock Foundations of the {C++} concurrency memory model.
+\newblock In {\em Proceedings of the {ACM} {SIGPLAN} 2008 Conference on
+  Programming Language Design and Implementation {(PLDI)}}, pages 68--78, 2008.
+
+\bibitem[BB16]{Bastien:2016:fail-or-succeed}
+J.F. Bastien and Hans-J. Boehm.
+\newblock Fail or succeed: there is no atomic lattice.
+\newblock C++ standards committee paper,
+  \url{http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0418r1.html},
+  August 2016.
+
+\bibitem[BMN{\etalchar{+}}15]{BattyMemarianNienhuisPichonSewell15}
+Mark Batty, Kayvan Memarian, Kyndylan Nienhuis, Jean Pichon{-}Pharabod, and
+  Peter Sewell.
+\newblock The problem of programming language concurrency semantics.
+\newblock In {\em Programming Languages and Systems - 24th European Symposium
+  on Programming ({ESOP})}, volume 9032 of {\em Lecture Notes in Computer
+  Science}, pages 283--307, 2015.
+
+\bibitem[Boe05]{Boehm:2005:TCI:1064978.1065042}
+Hans{-}Juergen Boehm.
+\newblock Threads cannot be implemented as a library.
+\newblock In {\em Proceedings of the {ACM} {SIGPLAN} 2005 Conference on
+  Programming Language Design and Implementation {(PLDI)}}, pages 261--268,
+  2005.
+
+\bibitem[BOS{\etalchar{+}}11]{BattyOwenSarkarSewellWeber11}
+Mark Batty, Scott Owens, Susmit Sarkar, Peter Sewell, and Tjark Weber.
+\newblock Mathematizing {C++} concurrency.
+\newblock In {\em Proceedings of the 38th {ACM} {SIGPLAN-SIGACT} Symposium on
+  Principles of Programming Languages ({POPL})}, pages 55--66, 2011.
+
+\bibitem[CSC12]{c++11_standard}
+Stefanus Du~Toit C++ Standards~Committee.
+\newblock Working draft, standard for programming language c++.
+\newblock C++ standards committee paper,
+  \url{http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3337.pdf},
+  January 2012.
+
+\bibitem[Dij65]{Dijkstra:1965:CSP:1102034}
+Edsger~Wybe Dijkstra.
+\newblock Cooperating sequential processes.
+\newblock Technical Report EWD-123, X, 1965.
+
+\bibitem[{Int}16]{Intel:2016:Volume3}
+{Intel Corporation}.
+\newblock {\em Intel® 64 and IA-32 Architectures Software Developer’s Manual
+  Volume 3 (3A, 3B, 3C \& 3D): System Programming Guide}, September 2016.
+
+\bibitem[Lam79]{Lamport79:sc}
+Leslie Lamport.
+\newblock How to make a multiprocessor computer that correctly executes
+  multiprocess procegrams.
+\newblock {\em {IEEE} Computer}, 28(9):690--691, 1979.
+
+\bibitem[MA04]{Meyers2004}
+Scott Meyers and Andrei Alexandrescu.
+\newblock {C++} and the perils of double-checked locking.
+\newblock {\em Doctor Dobb’s Journal}, Jul 2004.
+
+\bibitem[McK05]{Mckenney:MemoryOrdering}
+Paul~E. McKenney.
+\newblock Memory ordering in modern microprocessors.
+\newblock {\em Linux Journal}, 30:52--57, 2005.
+
+\bibitem[MSS12]{Maranget:2012}
+Luc Maranget, Susmit Sarkar, and Peter Sewell.
+\newblock A tutorial introduction to the {ARM} and {POWER} relaxed memory
+  models.
+\newblock Technical report,
+  \url{https://www.cl.cam.ac.uk/~pes20/ppc-supplemental/test7.pdf}, October
+  2012.
+
+\bibitem[Sco13]{Scott13}
+Michael~L. Scott.
+\newblock {\em Shared-Memory Synnchronization}.
+\newblock Synthesis Lectures on Computer Architecture. Morgan \& Claypool
+  Publisher, 2013.
+
+\bibitem[SHW11]{SorinHillWood11}
+Daniel~J. Sorin, Mark~D. Hill, and David~A. Wood.
+\newblock {\em A primer on Memory Consistency and Cache Coherence}.
+\newblock Synthesis Lectures on Computer Architecture. Morgan \& Claypool
+  Publisher, 2011.
+
+\bibitem[{SPA}92]{SPARCv8}
+{SPARC International Inc.}
+\newblock {\em The SPARC Architecture Manual Version 8 Revision SAV080SI9308},
+  1992.
+
+\bibitem[SSO{\etalchar{+}}10]{Sewell:2010:XRU:1785414.1785443}
+Peter Sewell, Susmit Sarkar, Scott Owens, Francesco~Zappa Nardelli, and
+  Magnus~O. Myreen.
+\newblock {X86-TSO}: A rigorous and usable programmer's model for x86
+  multiprocessors.
+\newblock {\em Communications of the {ACM}}, 53(7):89--97, 2010.
+
+\end{thebibliography}

@@ -1,0 +1,15 @@
+load("//:defs.bzl", "my_latex_gen")
+
+my_latex_gen(
+    name = "main",
+    main = "main.tex",
+    options = {
+        "bibtex": False,
+    },
+    deps = [
+        "ARM-POWER-Model.pdf",
+        "main.bbl",
+        "x86-TSO.pdf",
+        "//common",
+    ],
+)
