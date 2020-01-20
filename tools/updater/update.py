@@ -38,8 +38,8 @@ def main():
 
         if dst_checksum.exists() and filecmp.cmp(src_checksum.resolve(),
                                                  dst_checksum.resolve()):
-            logging.debug('Checksum of %s and %s are same.',
-                          src_checksum.resolve(), dst_checksum.resolve())
+            logging.info('Checksum of %s and %s are same.',
+                         src_checksum.resolve(), dst_checksum.resolve())
         else:
             logging.warning('Checksum of %s and %s are not same.',
                             src_checksum.resolve(), dst_checksum.resolve())
