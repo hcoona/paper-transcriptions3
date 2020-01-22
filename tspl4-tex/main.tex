@@ -1,0 +1,104 @@
+\PassOptionsToPackage{unicode=true}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{shortlabels}{enumitem}
+\documentclass[b5paper,11pt,twoside,openright]{book}
+
+\usepackage{ifxetex}
+\ifxetex{}
+\else
+\errmessage{Must be built with XeLaTeX}
+\fi
+
+\input{../common/fonts.tex}
+\input{../common/packages.tex}
+\usepackage{alltt}
+\usepackage{enumitem}
+\usepackage{fixltx2e}
+\usepackage{multicol}
+\usepackage{pdfpages} % include cover page
+\usepackage{ragged2e}
+\usepackage{rotating}
+\usepackage{tocstyle}
+\input{../common/setup.tex}
+\setlist{noitemsep}
+\usetocstyle{standard}
+
+\usetikzlibrary{calc,shapes.multipart,chains,arrows,matrix}
+\tikzset{>=latex'}
+\tikzstyle{list}=[
+	 rectangle split,
+	 rectangle split parts=2, draw,
+	 rectangle split horizontal,
+	 rectangle split part align=base,
+	 text width=3ex, text centered
+    ]
+
+\newcommand{\pFF}[2]{\draw[->] let \p1 = (#1.one), \p2 = (#1.center), \p3 = (#2.one), \p4 = (#2.north) in (\x1,\y2) -- (\x3,\y4)}
+\newcommand{\pSF}[2]{\draw[->] let \p1 = (#1.two), \p2 = (#1.center), \p3 = (#2.west), \p4 = (#2.center) in (\x1,\y2) -- (\x3,\y4)}
+
+\newcolumntype{L}{>{\RaggedRight}X}
+
+\newcommand{\SpecialChapter}[1]{%
+  \chapter*{#1}%
+  \addcontentsline{toc}{chapter}{#1}%
+  \markboth{\MakeUppercase{#1}}{\MakeUppercase{#1}}
+}
+
+\begin{document}
+
+\pagestyle{empty}
+
+\pdfbookmark[0]{Cover}{cover}
+\includepdf[fitpaper]{canned/cover-A4}
+
+\cleardoublepage{}
+
+\pagestyle{headings}
+
+\setcounter{page}{1}
+\pagenumbering{roman}
+\pdfbookmark{\contentsname}{toc}
+\tableofcontents
+
+\include{preface}
+
+\setcounter{page}{1}
+\pagenumbering{arabic}
+\include{body/intro}
+
+\include{body/start}
+
+\include{body/further}
+
+\include{body/binding}
+
+\include{body/control}
+
+\include{body/objects}
+
+\include{body/io}
+
+\include{body/syntax}
+
+\include{body/records}
+
+\include{body/libraries}
+
+\include{body/exceptions}
+
+\include{body/examples}
+
+\include{bibliography}
+
+\include{answers}
+
+\include{grammar}
+
+\include{summary}
+
+\include{tspl_1}
+
+%\pdfbookmark[0]{About}{about}
+%\include{canned/about}
+
+\end{document}

@@ -1,0 +1,797 @@
+\SpecialChapter{Summary of Forms}
+
+\label{summary_h0}
+
+
+
+
+The table that follows summarizes the Scheme syntactic forms and
+procedures described in Chapters \ref{binding_g88} through \ref{exceptions_g147}.
+It shows the category of the form and the page number where it
+is defined.
+The category states whether the form describes a syntactic form or
+a procedure.
+
+
+All page numbers appearing here refer to the printed version of this
+book and also serve as hypertext links to the corresponding locations
+in the electronic version of this book.
+
+\begin{longtabu} to \textwidth {Llr}\toprule
+Form & Category & Page \\\midrule\endhead
+\midrule{}See next page & & \\\bottomrule\endfoot
+\midrule{}End & & \\\bottomrule\endlastfoot
+\texttt{'\textit{obj}} & syntax & \pageref{objects_s2} \\
+\texttt{`\textit{obj}} & syntax & \pageref{objects_s5} \\
+\texttt{,\textit{obj}} & syntax & \pageref{objects_s5} \\
+\texttt{,\@{}\textit{obj}} & syntax & \pageref{objects_s5} \\
+\texttt{=\textgreater{}} & syntax & \pageref{control_s16} \\
+\texttt{\_{}} & syntax & \pageref{syntax_s26} \\
+\texttt{...} & syntax & \pageref{syntax_s26} \\
+\texttt{\#{}'\textit{template}} & syntax & \pageref{syntax_s33} \\
+\texttt{\#{}`\textit{template}} & syntax & \pageref{syntax_s40} \\
+\texttt{\#{},\textit{template}} & syntax & \pageref{syntax_s40} \\
+\texttt{\#{},\@{}\textit{template}} & syntax & \pageref{syntax_s40} \\
+\texttt{\&{}assertion} & syntax & \pageref{exceptions_s21} \\
+\texttt{\&{}condition} & syntax & \pageref{exceptions_s13} \\
+\texttt{\&{}error} & syntax & \pageref{exceptions_s22} \\
+\texttt{\&{}i/o} & syntax & \pageref{exceptions_s32} \\
+\texttt{\&{}i/o-decoding} & syntax & \pageref{exceptions_s42} \\
+\texttt{\&{}i/o-encoding} & syntax & \pageref{exceptions_s43} \\
+\texttt{\&{}i/o-file-already-exists} & syntax & \pageref{exceptions_s39} \\
+\texttt{\&{}i/o-file-does-not-exist} & syntax & \pageref{exceptions_s40} \\
+\texttt{\&{}i/o-file-is-read-only} & syntax & \pageref{exceptions_s38} \\
+\texttt{\&{}i/o-file-protection} & syntax & \pageref{exceptions_s37} \\
+\texttt{\&{}i/o-filename} & syntax & \pageref{exceptions_s36} \\
+\texttt{\&{}i/o-invalid-position} & syntax & \pageref{exceptions_s35} \\
+\texttt{\&{}i/o-port} & syntax & \pageref{exceptions_s41} \\
+\texttt{\&{}i/o-read} & syntax & \pageref{exceptions_s33} \\
+\texttt{\&{}i/o-write} & syntax & \pageref{exceptions_s34} \\
+\texttt{\&{}implementation-restriction} & syntax & \pageref{exceptions_s28} \\
+\texttt{\&{}irritants} & syntax & \pageref{exceptions_s25} \\
+\texttt{\&{}lexical} & syntax & \pageref{exceptions_s29} \\
+\texttt{\&{}message} & syntax & \pageref{exceptions_s24} \\
+\texttt{\&{}no-infinities} & syntax & \pageref{exceptions_s44} \\
+\texttt{\&{}no-nans} & syntax & \pageref{exceptions_s45} \\
+\texttt{\&{}non-continuable} & syntax & \pageref{exceptions_s27} \\
+\texttt{\&{}serious} & syntax & \pageref{exceptions_s19} \\
+\texttt{\&{}syntax} & syntax & \pageref{exceptions_s30} \\
+\texttt{\&{}undefined} & syntax & \pageref{exceptions_s31} \\
+\texttt{\&{}violation} & syntax & \pageref{exceptions_s20} \\
+\texttt{\&{}warning} & syntax & \pageref{exceptions_s23} \\
+\texttt{\&{}who} & syntax & \pageref{exceptions_s26} \\
+\texttt{(* \textit{num} ...)} & procedure & \pageref{objects_s91} \\
+\texttt{(+ \textit{num} ...)} & procedure & \pageref{objects_s89} \\
+\texttt{(- \textit{num})} & procedure & \pageref{objects_s90} \\
+\texttt{(- \textit{num\textsubscript{1}} \textit{num\textsubscript{2}} \textit{num\textsubscript{3}} ...)} & procedure & \pageref{objects_s90} \\
+\texttt{(/ \textit{num})} & procedure & \pageref{objects_s92} \\
+\texttt{(/ \textit{num\textsubscript{1}} \textit{num\textsubscript{2}} \textit{num\textsubscript{3}} ...)} & procedure & \pageref{objects_s92} \\
+\texttt{(\textless{} \textit{real\textsubscript{1}} \textit{real\textsubscript{2}} \textit{real\textsubscript{3}} ...)} & procedure & \pageref{objects_s88} \\
+\texttt{(\textless{}= \textit{real\textsubscript{1}} \textit{real\textsubscript{2}} \textit{real\textsubscript{3}} ...)} & procedure & \pageref{objects_s88} \\
+\texttt{(= \textit{num\textsubscript{1}} \textit{num\textsubscript{2}} \textit{num\textsubscript{3}} ...)} & procedure & \pageref{objects_s88} \\
+\texttt{(\textgreater{} \textit{real\textsubscript{1}} \textit{real\textsubscript{2}} \textit{real\textsubscript{3}} ...)} & procedure & \pageref{objects_s88} \\
+\texttt{(\textgreater{}= \textit{real\textsubscript{1}} \textit{real\textsubscript{2}} \textit{real\textsubscript{3}} ...)} & procedure & \pageref{objects_s88} \\
+\texttt{(abs \textit{real})} & procedure & \pageref{objects_s105} \\
+\texttt{(acos \textit{num})} & procedure & \pageref{objects_s132} \\
+\texttt{(and \textit{expr} ...)} & syntax & \pageref{control_s11} \\
+\texttt{(angle \textit{num})} & procedure & \pageref{objects_s124} \\
+\texttt{(append)} & procedure & \pageref{objects_s49} \\
+\texttt{(append \textit{list} ... \textit{obj})} & procedure & \pageref{objects_s49} \\
+\texttt{(apply \textit{procedure} \textit{obj} ... \textit{list})} & procedure & \pageref{control_s3} \\
+\texttt{(asin \textit{num})} & procedure & \pageref{objects_s132} \\
+\texttt{(assert \textit{expression})} & syntax & \pageref{exceptions_s5} \\
+\texttt{(assertion-violation \textit{who} \textit{msg} \textit{irritant} ...)} & procedure & \pageref{exceptions_s4} \\
+\texttt{(assertion-violation? \textit{obj})} & procedure & \pageref{exceptions_s21} \\
+\texttt{(assoc \textit{obj} \textit{alist})} & procedure & \pageref{objects_s58} \\
+\texttt{(assp \textit{procedure} \textit{alist})} & procedure & \pageref{objects_s60} \\
+\texttt{(assq \textit{obj} \textit{alist})} & procedure & \pageref{objects_s58} \\
+\texttt{(assv \textit{obj} \textit{alist})} & procedure & \pageref{objects_s58} \\
+\texttt{(atan \textit{num})} & procedure & \pageref{objects_s133} \\
+\texttt{(atan \textit{real\textsubscript{1}} \textit{real\textsubscript{2}})} & procedure & \pageref{objects_s133} \\
+\texttt{(begin \textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...)} & syntax & \pageref{control_s4} \\
+\texttt{(binary-port? \textit{obj})} & procedure & \pageref{io_s45} \\
+\texttt{(bitwise-and \textit{exint} ...)} & procedure & \pageref{objects_s134} \\
+\texttt{(bitwise-arithmetic-shift \textit{exint\textsubscript{1}} \textit{exint\textsubscript{2}})} & procedure & \pageref{objects_s144} \\
+\texttt{(bitwise-arithmetic-shift-left \textit{exint\textsubscript{1}} \textit{exint\textsubscript{2}})} & procedure & \pageref{objects_s143} \\
+\texttt{(bitwise-arithmetic-shift-right \textit{exint\textsubscript{1}} \textit{exint\textsubscript{2}})} & procedure & \pageref{objects_s143} \\
+\texttt{(bitwise-bit-count \textit{exint})} & procedure & \pageref{objects_s136} \\
+\texttt{(bitwise-bit-field \textit{exint\textsubscript{1}} \textit{exint\textsubscript{2}} \textit{exint\textsubscript{3}})} & procedure & \pageref{objects_s141} \\
+\texttt{(bitwise-bit-set? \textit{exint\textsubscript{1}} \textit{exint\textsubscript{2}})} & procedure & \pageref{objects_s139} \\
+\texttt{(bitwise-copy-bit \textit{exint\textsubscript{1}} \textit{exint\textsubscript{2}} \textit{exint\textsubscript{3}})} & procedure & \pageref{objects_s140} \\
+\texttt{(bitwise-copy-bit-field \textit{exint\textsubscript{1}} \textit{exint\textsubscript{2}} \textit{exint\textsubscript{3}}\allowbreak \textit{exint\textsubscript{4}})} & procedure & \pageref{objects_s142} \\
+\texttt{(bitwise-first-bit-set \textit{exint})} & procedure & \pageref{objects_s138} \\
+\texttt{(bitwise-if \textit{exint\textsubscript{1}} \textit{exint\textsubscript{2}} \textit{exint\textsubscript{3}})} & procedure & \pageref{objects_s135} \\
+\texttt{(bitwise-ior \textit{exint} ...)} & procedure & \pageref{objects_s134} \\
+\texttt{(bitwise-length \textit{exint})} & procedure & \pageref{objects_s137} \\
+\texttt{(bitwise-not \textit{exint})} & procedure & \pageref{objects_s134} \\
+\texttt{(bitwise-reverse-bit-field \textit{exint\textsubscript{1}} \textit{exint\textsubscript{2}} \textit{exint\textsubscript{3}})} & procedure & \pageref{objects_s146} \\
+\texttt{(bitwise-rotate-bit-field \textit{exint\textsubscript{1}} \textit{exint\textsubscript{2}} \textit{exint\textsubscript{3}}\allowbreak \textit{exint\textsubscript{4}})} & procedure & \pageref{objects_s145} \\
+\texttt{(bitwise-xor \textit{exint} ...)} & procedure & \pageref{objects_s134} \\
+\texttt{(boolean=? \textit{boolean\textsubscript{1}} \textit{boolean\textsubscript{2}})} & procedure & \pageref{objects_s271} \\
+\texttt{(boolean? \textit{obj})} & procedure & \pageref{objects_s14} \\
+\texttt{(bound-identifier=? \textit{identifier\textsubscript{1}} \textit{identifier\textsubscript{2}})} & procedure & \pageref{syntax_s37} \\
+\texttt{(buffer-mode \textit{symbol})} & syntax & \pageref{io_s27} \\
+\texttt{(buffer-mode? \textit{obj})} & syntax & \pageref{io_s28} \\
+\texttt{(bytevector-\textgreater{}sint-list \textit{bytevector} \textit{eness} \textit{size})} & procedure & \pageref{objects_s260} \\
+\texttt{(bytevector-\textgreater{}string \textit{bytevector} \textit{transcoder})} & procedure & \pageref{io_s91} \\
+\texttt{(bytevector-\textgreater{}u8-list \textit{bytevector})} & procedure & \pageref{objects_s252} \\
+\texttt{(bytevector-\textgreater{}uint-list \textit{bytevector} \textit{eness} \textit{size})} & procedure & \pageref{objects_s260} \\
+\texttt{(bytevector-copy \textit{bytevector})} & procedure & \pageref{objects_s246} \\
+\texttt{(bytevector-copy! \textit{src} \textit{src-start}\allowbreak \textit{dst} \textit{dst-start} \textit{n})} & procedure & \pageref{objects_s247} \\
+\texttt{(bytevector-fill! \textit{bytevector} \textit{fill})} & procedure & \pageref{objects_s245} \\
+\texttt{(bytevector-ieee-double-native-ref\allowbreak \textit{bytevector} \textit{n})} & procedure & \pageref{objects_s262} \\
+\texttt{(bytevector-ieee-double-native-set!\allowbreak \textit{bytevector} \textit{n} \textit{x})} & procedure & \pageref{objects_s263} \\
+\texttt{(bytevector-ieee-double-ref \textit{bytevector} \textit{n} \textit{eness})} & procedure & \pageref{objects_s264} \\
+\texttt{(bytevector-ieee-double-set! \textit{bytevector} \textit{n} \textit{x} \textit{eness})} & procedure & \pageref{objects_s265} \\
+\texttt{(bytevector-ieee-single-native-ref \textit{bytevector} \textit{n})} & procedure & \pageref{objects_s262} \\
+\texttt{(bytevector-ieee-single-native-set! \textit{bytevector} \textit{n} \textit{x})} & procedure & \pageref{objects_s263} \\
+\texttt{(bytevector-ieee-single-ref \textit{bytevector} \textit{n} \textit{eness})} & procedure & \pageref{objects_s264} \\
+\texttt{(bytevector-ieee-single-set! \textit{bytevector} \textit{n} \textit{x} \textit{eness})} & procedure & \pageref{objects_s265} \\
+\texttt{(bytevector-length \textit{bytevector})} & procedure & \pageref{objects_s243} \\
+\texttt{(bytevector-s16-native-ref \textit{bytevector} \textit{n})} & procedure & \pageref{objects_s254} \\
+\texttt{(bytevector-s16-native-set! \textit{bytevector} \textit{n} \textit{s16})} & procedure & \pageref{objects_s255} \\
+\texttt{(bytevector-s16-ref \textit{bytevector} \textit{n} \textit{eness})} & procedure & \pageref{objects_s256} \\
+\texttt{(bytevector-s16-set! \textit{bytevector} \textit{n} \textit{s16} \textit{eness})} & procedure & \pageref{objects_s257} \\
+\texttt{(bytevector-s32-native-ref \textit{bytevector} \textit{n})} & procedure & \pageref{objects_s254} \\
+\texttt{(bytevector-s32-native-set! \textit{bytevector} \textit{n} \textit{s32})} & procedure & \pageref{objects_s255} \\
+\texttt{(bytevector-s32-ref \textit{bytevector} \textit{n} \textit{eness})} & procedure & \pageref{objects_s256} \\
+\texttt{(bytevector-s32-set! \textit{bytevector} \textit{n} \textit{s32} \textit{eness})} & procedure & \pageref{objects_s257} \\
+\texttt{(bytevector-s64-native-ref \textit{bytevector} \textit{n})} & procedure & \pageref{objects_s254} \\
+\texttt{(bytevector-s64-native-set! \textit{bytevector} \textit{n} \textit{s64})} & procedure & \pageref{objects_s255} \\
+\texttt{(bytevector-s64-ref \textit{bytevector} \textit{n} \textit{eness})} & procedure & \pageref{objects_s256} \\
+\texttt{(bytevector-s64-set! \textit{bytevector} \textit{n} \textit{s64} \textit{eness})} & procedure & \pageref{objects_s257} \\
+\texttt{(bytevector-s8-ref \textit{bytevector} \textit{n})} & procedure & \pageref{objects_s249} \\
+\texttt{(bytevector-s8-set! \textit{bytevector} \textit{n} \textit{s8})} & procedure & \pageref{objects_s251} \\
+\texttt{(bytevector-sint-ref \textit{bytevector} \textit{n} \textit{eness} \textit{size})} & procedure & \pageref{objects_s258} \\
+\texttt{(bytevector-sint-set! \textit{bytevector} \textit{n} \textit{sint} \textit{eness} \textit{size})} & procedure & \pageref{objects_s259} \\
+\texttt{(bytevector-u16-native-ref \textit{bytevector} \textit{n})} & procedure & \pageref{objects_s254} \\
+\texttt{(bytevector-u16-native-set! \textit{bytevector} \textit{n} \textit{u16})} & procedure & \pageref{objects_s255} \\
+\texttt{(bytevector-u16-ref \textit{bytevector} \textit{n} \textit{eness})} & procedure & \pageref{objects_s256} \\
+\texttt{(bytevector-u16-set! \textit{bytevector} \textit{n} \textit{u16} \textit{eness})} & procedure & \pageref{objects_s257} \\
+\texttt{(bytevector-u32-native-ref \textit{bytevector} \textit{n})} & procedure & \pageref{objects_s254} \\
+\texttt{(bytevector-u32-native-set! \textit{bytevector} \textit{n} \textit{u32})} & procedure & \pageref{objects_s255} \\
+\texttt{(bytevector-u32-ref \textit{bytevector} \textit{n} \textit{eness})} & procedure & \pageref{objects_s256} \\
+\texttt{(bytevector-u32-set! \textit{bytevector} \textit{n} \textit{u32} \textit{eness})} & procedure & \pageref{objects_s257} \\
+\texttt{(bytevector-u64-native-ref \textit{bytevector} \textit{n})} & procedure & \pageref{objects_s254} \\
+\texttt{(bytevector-u64-native-set! \textit{bytevector} \textit{n} \textit{u64})} & procedure & \pageref{objects_s255} \\
+\texttt{(bytevector-u64-ref \textit{bytevector} \textit{n} \textit{eness})} & procedure & \pageref{objects_s256} \\
+\texttt{(bytevector-u64-set! \textit{bytevector} \textit{n} \textit{u64} \textit{eness})} & procedure & \pageref{objects_s257} \\
+\texttt{(bytevector-u8-ref \textit{bytevector} \textit{n})} & procedure & \pageref{objects_s248} \\
+\texttt{(bytevector-u8-set! \textit{bytevector} \textit{n} \textit{u8})} & procedure & \pageref{objects_s250} \\
+\texttt{(bytevector-uint-ref \textit{bytevector} \textit{n} \textit{eness} \textit{size})} & procedure & \pageref{objects_s258} \\
+\texttt{(bytevector-uint-set! \textit{bytevector} \textit{n} \textit{uint} \textit{eness} \textit{size})} & procedure & \pageref{objects_s259} \\
+\texttt{(bytevector=? \textit{bytevector\textsubscript{1}} \textit{bytevector\textsubscript{2}})} & procedure & \pageref{objects_s244} \\
+\texttt{(bytevector? \textit{obj})} & procedure & \pageref{objects_s24} \\
+\texttt{(caaaar \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(caaadr \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(caaar \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(caadar \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(caaddr \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(caadr \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(caar \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cadaar \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cadadr \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cadar \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(caddar \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cadddr \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(caddr \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cadr \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(call-with-bytevector-output-port \textit{procedure})} & procedure & \pageref{io_s38} \\
+\texttt{(call-with-bytevector-output-port \textit{procedure} \textit{?transcoder})} & procedure & \pageref{io_s38} \\
+\texttt{(call-with-current-continuation \textit{procedure})} & procedure & \pageref{control_s54} \\
+\texttt{(call-with-input-file \textit{path} \textit{procedure})} & procedure & \pageref{io_s77} \\
+\texttt{(call-with-output-file \textit{path} \textit{procedure})} & procedure & \pageref{io_s78} \\
+\texttt{(call-with-port \textit{port} \textit{procedure})} & procedure & \pageref{io_s51} \\
+\texttt{(call-with-string-output-port \textit{procedure})} & procedure & \pageref{io_s39} \\
+\texttt{(call-with-values \textit{producer} \textit{consumer})} & procedure & \pageref{control_s71} \\
+\texttt{(call/cc \textit{procedure})} & procedure & \pageref{control_s54} \\
+\texttt{(car \textit{pair})} & procedure & \pageref{objects_s38} \\
+\texttt{(case \textit{expr\textsubscript{0}} \textit{clause\textsubscript{1}} \textit{clause\textsubscript{2}} ...)} & syntax & \pageref{control_s18} \\
+\texttt{(case-lambda \textit{clause} ...)} & syntax & \pageref{binding_s13} \\
+\texttt{(cdaaar \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cdaadr \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cdaar \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cdadar \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cdaddr \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cdadr \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cdar \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cddaar \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cddadr \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cddar \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cdddar \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cddddr \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cdddr \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cddr \textit{pair})} & procedure & \pageref{objects_s42} \\
+\texttt{(cdr \textit{pair})} & procedure & \pageref{objects_s39} \\
+\texttt{(ceiling \textit{real})} & procedure & \pageref{objects_s103} \\
+\texttt{(char-\textgreater{}integer \textit{char})} & procedure & \pageref{objects_s210} \\
+\texttt{(char-alphabetic? \textit{char})} & procedure & \pageref{objects_s203} \\
+\texttt{(char-ci\textless{}=? \textit{char\textsubscript{1}} \textit{char\textsubscript{2}} \textit{char\textsubscript{3}} ...)} & procedure & \pageref{objects_s202} \\
+\texttt{(char-ci\textless{}? \textit{char\textsubscript{1}} \textit{char\textsubscript{2}} \textit{char\textsubscript{3}} ...)} & procedure & \pageref{objects_s202} \\
+\texttt{(char-ci=? \textit{char\textsubscript{1}} \textit{char\textsubscript{2}} \textit{char\textsubscript{3}} ...)} & procedure & \pageref{objects_s202} \\
+\texttt{(char-ci\textgreater{}=? \textit{char\textsubscript{1}} \textit{char\textsubscript{2}} \textit{char\textsubscript{3}} ...)} & procedure & \pageref{objects_s202} \\
+\texttt{(char-ci\textgreater{}? \textit{char\textsubscript{1}} \textit{char\textsubscript{2}} \textit{char\textsubscript{3}} ...)} & procedure & \pageref{objects_s202} \\
+\texttt{(char-downcase \textit{char})} & procedure & \pageref{objects_s207} \\
+\texttt{(char-foldcase \textit{char})} & procedure & \pageref{objects_s209} \\
+\texttt{(char-general-category \textit{char})} & procedure & \pageref{objects_s205} \\
+\texttt{(char-lower-case? \textit{char})} & procedure & \pageref{objects_s204} \\
+\texttt{(char-numeric? \textit{char})} & procedure & \pageref{objects_s203} \\
+\texttt{(char-title-case? \textit{char})} & procedure & \pageref{objects_s204} \\
+\texttt{(char-titlecase \textit{char})} & procedure & \pageref{objects_s208} \\
+\texttt{(char-upcase \textit{char})} & procedure & \pageref{objects_s206} \\
+\texttt{(char-upper-case? \textit{char})} & procedure & \pageref{objects_s204} \\
+\texttt{(char-whitespace? \textit{char})} & procedure & \pageref{objects_s203} \\
+\texttt{(char\textless{}=? \textit{char\textsubscript{1}} \textit{char\textsubscript{2}} \textit{char\textsubscript{3}} ...)} & procedure & \pageref{objects_s201} \\
+\texttt{(char\textless{}? \textit{char\textsubscript{1}} \textit{char\textsubscript{2}} \textit{char\textsubscript{3}} ...)} & procedure & \pageref{objects_s201} \\
+\texttt{(char=? \textit{char\textsubscript{1}} \textit{char\textsubscript{2}} \textit{char\textsubscript{3}} ...)} & procedure & \pageref{objects_s201} \\
+\texttt{(char\textgreater{}=? \textit{char\textsubscript{1}} \textit{char\textsubscript{2}} \textit{char\textsubscript{3}} ...)} & procedure & \pageref{objects_s201} \\
+\texttt{(char\textgreater{}? \textit{char\textsubscript{1}} \textit{char\textsubscript{2}} \textit{char\textsubscript{3}} ...)} & procedure & \pageref{objects_s201} \\
+\texttt{(char? \textit{obj})} & procedure & \pageref{objects_s19} \\
+\texttt{(close-input-port \textit{input-port})} & procedure & \pageref{io_s88} \\
+\texttt{(close-output-port \textit{output-port})} & procedure & \pageref{io_s88} \\
+\texttt{(close-port \textit{port})} & procedure & \pageref{io_s46} \\
+\texttt{(command-line)} & procedure & \pageref{libraries_s17} \\
+\texttt{(complex? \textit{obj})} & procedure & \pageref{objects_s17} \\
+\texttt{(cond \textit{clause\textsubscript{1}} \textit{clause\textsubscript{2}} ...)} & syntax & \pageref{control_s13} \\
+\texttt{(condition \textit{condition} ...)} & procedure & \pageref{exceptions_s15} \\
+\texttt{(condition-accessor \textit{rtd} \textit{procedure})} & procedure & \pageref{exceptions_s18} \\
+\texttt{(condition-irritants \textit{condition})} & procedure & \pageref{exceptions_s25} \\
+\texttt{(condition-message \textit{condition})} & procedure & \pageref{exceptions_s24} \\
+\texttt{(condition-predicate \textit{rtd})} & procedure & \pageref{exceptions_s18} \\
+\texttt{(condition-who \textit{condition})} & procedure & \pageref{exceptions_s26} \\
+\texttt{(condition? \textit{obj})} & procedure & \pageref{exceptions_s14} \\
+\texttt{(cons \textit{obj\textsubscript{1}} \textit{obj\textsubscript{2}})} & procedure & \pageref{objects_s37} \\
+\texttt{(cons* \textit{obj} ... \textit{final-obj})} & procedure & \pageref{objects_s44} \\
+\texttt{\textit{constant}} & syntax & \pageref{objects_s1} \\
+\texttt{(cos \textit{num})} & procedure & \pageref{objects_s131} \\
+\texttt{(current-error-port)} & procedure & \pageref{io_s32} \\
+\texttt{(current-input-port)} & procedure & \pageref{io_s32} \\
+\texttt{(current-output-port)} & procedure & \pageref{io_s32} \\
+\texttt{(datum-\textgreater{}syntax \textit{template-identifier} \textit{obj})} & procedure & \pageref{syntax_s45} \\
+\texttt{(define \textit{var} \textit{expr})} & syntax & \pageref{binding_s24} \\
+\texttt{(define \textit{var})} & syntax & \pageref{binding_s24} \\
+\texttt{(define (\textit{var\textsubscript{0}} \textit{var\textsubscript{1}} ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)} & syntax & \pageref{binding_s24} \\
+\texttt{(define (\textit{var\textsubscript{0}} . \textit{var\textsubscript{r}}) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)} & syntax & \pageref{binding_s24} \\
+\texttt{(define (\textit{var\textsubscript{0}} \textit{var\textsubscript{1}} \textit{var\textsubscript{2}} ... . \textit{var\textsubscript{r}}) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)} & syntax & \pageref{binding_s24} \\
+\texttt{(define-condition-type \textit{name} \textit{parent} \textit{constructor}\allowbreak \textit{pred} \textit{field} ...)} & syntax & \pageref{exceptions_s17} \\
+\texttt{(define-enumeration \textit{name} (\textit{symbol} ...)\allowbreak \textit{constructor})} & syntax & \pageref{objects_s290} \\
+\texttt{(define-record-type \textit{record-name} \textit{clause} ...)} & syntax & \pageref{records_s13} \\
+\texttt{(define-record-type (\textit{record-name} \textit{constructor} \textit{pred}) \textit{clause} ...)} & syntax & \pageref{records_s13} \\
+\texttt{(define-syntax \textit{keyword} \textit{expr})} & syntax & \pageref{syntax_s12} \\
+\texttt{(delay \textit{expr})} & syntax & \pageref{control_s65} \\
+\texttt{(delete-file \textit{path})} & procedure & \pageref{io_s90} \\
+\texttt{(denominator \textit{rat})} & procedure & \pageref{objects_s119} \\
+\texttt{(display \textit{obj})} & procedure & \pageref{io_s85} \\
+\texttt{(display \textit{obj} \textit{textual-output-port})} & procedure & \pageref{io_s85} \\
+\texttt{(div \textit{x\textsubscript{1}} \textit{x\textsubscript{2}})} & procedure & \pageref{objects_s99} \\
+\texttt{(div-and-mod \textit{x\textsubscript{1}} \textit{x\textsubscript{2}})} & procedure & \pageref{objects_s99} \\
+\texttt{(div0 \textit{x\textsubscript{1}} \textit{x\textsubscript{2}})} & procedure & \pageref{objects_s100} \\
+\texttt{(div0-and-mod0 \textit{x\textsubscript{1}} \textit{x\textsubscript{2}})} & procedure & \pageref{objects_s100} \\
+\texttt{(do ((\textit{var} \textit{init} \textit{update}) ...) (\textit{test} \textit{result} ...) \textit{expr} ...)} & syntax & \pageref{control_s25} \\
+\texttt{(dynamic-wind \textit{in} \textit{body} \textit{out})} & procedure & \pageref{control_s56} \\
+\texttt{else} & syntax & \pageref{control_s16} \\
+\texttt{(endianness \textit{symbol})} & syntax & \pageref{objects_s240} \\
+\texttt{(enum-set-\textgreater{}list \textit{enum-set})} & procedure & \pageref{objects_s294} \\
+\texttt{(enum-set-complement \textit{enum-set})} & procedure & \pageref{objects_s299} \\
+\texttt{(enum-set-constructor \textit{enum-set})} & procedure & \pageref{objects_s292} \\
+\texttt{(enum-set-difference \textit{enum-set\textsubscript{1}} \textit{enum-set\textsubscript{2}})} & procedure & \pageref{objects_s298} \\
+\texttt{(enum-set-indexer \textit{enum-set})} & procedure & \pageref{objects_s301} \\
+\texttt{(enum-set-intersection \textit{enum-set\textsubscript{1}} \textit{enum-set\textsubscript{2}})} & procedure & \pageref{objects_s298} \\
+\texttt{(enum-set-member? \textit{symbol} \textit{enum-set})} & procedure & \pageref{objects_s297} \\
+\texttt{(enum-set-projection \textit{enum-set\textsubscript{1}} \textit{enum-set\textsubscript{2}})} & procedure & \pageref{objects_s300} \\
+\texttt{(enum-set-subset? \textit{enum-set\textsubscript{1}} \textit{enum-set\textsubscript{2}})} & procedure & \pageref{objects_s295} \\
+\texttt{(enum-set-union \textit{enum-set\textsubscript{1}} \textit{enum-set\textsubscript{2}})} & procedure & \pageref{objects_s298} \\
+\texttt{(enum-set-universe \textit{enum-set})} & procedure & \pageref{objects_s293} \\
+\texttt{(enum-set=? \textit{enum-set\textsubscript{1}} \textit{enum-set\textsubscript{2}})} & procedure & \pageref{objects_s296} \\
+\texttt{(environment \textit{import-spec} ...)} & procedure & \pageref{control_s81} \\
+\texttt{(eof-object)} & procedure & \pageref{io_s54} \\
+\texttt{(eof-object? \textit{obj})} & procedure & \pageref{io_s53} \\
+\texttt{(eol-style \textit{symbol})} & syntax & \pageref{io_s23} \\
+\texttt{(eq? \textit{obj\textsubscript{1}} \textit{obj\textsubscript{2}})} & procedure & \pageref{objects_s10} \\
+\texttt{(equal-hash \textit{obj})} & procedure & \pageref{objects_s279} \\
+\texttt{(equal? \textit{obj\textsubscript{1}} \textit{obj\textsubscript{2}})} & procedure & \pageref{objects_s13} \\
+\texttt{(eqv? \textit{obj\textsubscript{1}} \textit{obj\textsubscript{2}})} & procedure & \pageref{objects_s12} \\
+\texttt{(error \textit{who} \textit{msg} \textit{irritant} ...)} & procedure & \pageref{exceptions_s4} \\
+\texttt{(error-handling-mode \textit{symbol})} & syntax & \pageref{io_s25} \\
+\texttt{(error? \textit{obj})} & procedure & \pageref{exceptions_s22} \\
+\texttt{(eval \textit{obj} \textit{environment})} & procedure & \pageref{control_s80} \\
+\texttt{(even? \textit{int})} & procedure & \pageref{objects_s96} \\
+\texttt{(exact \textit{num})} & procedure & \pageref{objects_s114} \\
+\texttt{(exact-\textgreater{}inexact \textit{num})} & procedure & \pageref{objects_s116} \\
+\texttt{(exact-integer-sqrt \textit{n})} & procedure & \pageref{objects_s128} \\
+\texttt{(exact? \textit{num})} & procedure & \pageref{objects_s86} \\
+\texttt{(exists \textit{procedure} \textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...)} & procedure & \pageref{control_s36} \\
+\texttt{(exit)} & procedure & \pageref{libraries_s18} \\
+\texttt{(exit \textit{obj})} & procedure & \pageref{libraries_s18} \\
+\texttt{(exp \textit{num})} & procedure & \pageref{objects_s129} \\
+\texttt{(expt \textit{num\textsubscript{1}} \textit{num\textsubscript{2}})} & procedure & \pageref{objects_s111} \\
+\texttt{fields} & syntax & \pageref{records_s16} \\
+\texttt{(file-exists? \textit{path})} & procedure & \pageref{io_s89} \\
+\texttt{(file-options \textit{symbol} ...)} & syntax & \pageref{io_s26} \\
+\texttt{(filter \textit{procedure} \textit{list})} & procedure & \pageref{objects_s55} \\
+\texttt{(find \textit{procedure} \textit{list})} & procedure & \pageref{objects_s57} \\
+\texttt{(finite? \textit{real})} & procedure & \pageref{objects_s97} \\
+\texttt{(fixnum-\textgreater{}flonum \textit{fx})} & procedure & \pageref{objects_s198} \\
+\texttt{(fixnum-width)} & procedure & \pageref{objects_s152} \\
+\texttt{(fixnum? \textit{obj})} & procedure & \pageref{objects_s150} \\
+\texttt{(fl* \textit{fl} ...)} & procedure & \pageref{objects_s186} \\
+\texttt{(fl+ \textit{fl} ...)} & procedure & \pageref{objects_s184} \\
+\texttt{(fl- \textit{fl})} & procedure & \pageref{objects_s185} \\
+\texttt{(fl- \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}} \textit{fl\textsubscript{3}} ...)} & procedure & \pageref{objects_s185} \\
+\texttt{(fl/ \textit{fl})} & procedure & \pageref{objects_s187} \\
+\texttt{(fl/ \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}} \textit{fl\textsubscript{3}} ...)} & procedure & \pageref{objects_s187} \\
+\texttt{(fl\textless{}=? \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}} \textit{fl\textsubscript{3}} ...)} & procedure & \pageref{objects_s178} \\
+\texttt{(fl\textless{}? \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}} \textit{fl\textsubscript{3}} ...)} & procedure & \pageref{objects_s178} \\
+\texttt{(fl=? \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}} \textit{fl\textsubscript{3}} ...)} & procedure & \pageref{objects_s178} \\
+\texttt{(fl\textgreater{}=? \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}} \textit{fl\textsubscript{3}} ...)} & procedure & \pageref{objects_s178} \\
+\texttt{(fl\textgreater{}? \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}} \textit{fl\textsubscript{3}} ...)} & procedure & \pageref{objects_s178} \\
+\texttt{(flabs \textit{fl})} & procedure & \pageref{objects_s192} \\
+\texttt{(flacos \textit{fl})} & procedure & \pageref{objects_s195} \\
+\texttt{(flasin \textit{fl})} & procedure & \pageref{objects_s195} \\
+\texttt{(flatan \textit{fl})} & procedure & \pageref{objects_s195} \\
+\texttt{(flatan \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}})} & procedure & \pageref{objects_s195} \\
+\texttt{(flceiling \textit{fl})} & procedure & \pageref{objects_s190} \\
+\texttt{(flcos \textit{fl})} & procedure & \pageref{objects_s194} \\
+\texttt{(fldenominator \textit{fl})} & procedure & \pageref{objects_s191} \\
+\texttt{(fldiv \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}})} & procedure & \pageref{objects_s188} \\
+\texttt{(fldiv-and-mod \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}})} & procedure & \pageref{objects_s188} \\
+\texttt{(fldiv0 \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}})} & procedure & \pageref{objects_s189} \\
+\texttt{(fldiv0-and-mod0 \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}})} & procedure & \pageref{objects_s189} \\
+\texttt{(fleven? \textit{fl-int})} & procedure & \pageref{objects_s182} \\
+\texttt{(flexp \textit{fl})} & procedure & \pageref{objects_s193} \\
+\texttt{(flexpt \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}})} & procedure & \pageref{objects_s197} \\
+\texttt{(flfinite? \textit{fl})} & procedure & \pageref{objects_s181} \\
+\texttt{(flfloor \textit{fl})} & procedure & \pageref{objects_s190} \\
+\texttt{(flinfinite? \textit{fl})} & procedure & \pageref{objects_s181} \\
+\texttt{(flinteger? \textit{fl})} & procedure & \pageref{objects_s180} \\
+\texttt{(fllog \textit{fl})} & procedure & \pageref{objects_s193} \\
+\texttt{(fllog \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}})} & procedure & \pageref{objects_s193} \\
+\texttt{(flmax \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}} ...)} & procedure & \pageref{objects_s183} \\
+\texttt{(flmin \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}} ...)} & procedure & \pageref{objects_s183} \\
+\texttt{(flmod \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}})} & procedure & \pageref{objects_s188} \\
+\texttt{(flmod0 \textit{fl\textsubscript{1}} \textit{fl\textsubscript{2}})} & procedure & \pageref{objects_s189} \\
+\texttt{(flnan? \textit{fl})} & procedure & \pageref{objects_s181} \\
+\texttt{(flnegative? \textit{fl})} & procedure & \pageref{objects_s179} \\
+\texttt{(flnumerator \textit{fl})} & procedure & \pageref{objects_s191} \\
+\texttt{(flodd? \textit{fl-int})} & procedure & \pageref{objects_s182} \\
+\texttt{(flonum? \textit{obj})} & procedure & \pageref{objects_s177} \\
+\texttt{(floor \textit{real})} & procedure & \pageref{objects_s102} \\
+\texttt{(flpositive? \textit{fl})} & procedure & \pageref{objects_s179} \\
+\texttt{(flround \textit{fl})} & procedure & \pageref{objects_s190} \\
+\texttt{(flsin \textit{fl})} & procedure & \pageref{objects_s194} \\
+\texttt{(flsqrt \textit{fl})} & procedure & \pageref{objects_s196} \\
+\texttt{(fltan \textit{fl})} & procedure & \pageref{objects_s194} \\
+\texttt{(fltruncate \textit{fl})} & procedure & \pageref{objects_s190} \\
+\texttt{(flush-output-port \textit{output-port})} & procedure & \pageref{io_s74} \\
+\texttt{(flzero? \textit{fl})} & procedure & \pageref{objects_s179} \\
+\texttt{(fold-left \textit{procedure} \textit{obj} \textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...)} & procedure & \pageref{control_s38} \\
+\texttt{(fold-right \textit{procedure} \textit{obj} \textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...)} & procedure & \pageref{control_s41} \\
+\texttt{(for-all \textit{procedure} \textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...)} & procedure & \pageref{control_s37} \\
+\texttt{(for-each \textit{procedure} \textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...)} & procedure & \pageref{control_s33} \\
+\texttt{(force \textit{promise})} & procedure & \pageref{control_s65} \\
+\texttt{(free-identifier=? \textit{identifier\textsubscript{1}} \textit{identifier\textsubscript{2}})} & procedure & \pageref{syntax_s37} \\
+\texttt{(fx* \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}})} & procedure & \pageref{objects_s159} \\
+\texttt{(fx*/carry \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} \textit{fx\textsubscript{3}})} & procedure & \pageref{objects_s162} \\
+\texttt{(fx+ \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}})} & procedure & \pageref{objects_s157} \\
+\texttt{(fx+/carry \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} \textit{fx\textsubscript{3}})} & procedure & \pageref{objects_s162} \\
+\texttt{(fx- \textit{fx})} & procedure & \pageref{objects_s158} \\
+\texttt{(fx- \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}})} & procedure & \pageref{objects_s158} \\
+\texttt{(fx-/carry \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} \textit{fx\textsubscript{3}})} & procedure & \pageref{objects_s162} \\
+\texttt{(fx\textless{}=? \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} \textit{fx\textsubscript{3}} ...)} & procedure & \pageref{objects_s153} \\
+\texttt{(fx\textless{}? \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} \textit{fx\textsubscript{3}} ...)} & procedure & \pageref{objects_s153} \\
+\texttt{(fx=? \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} \textit{fx\textsubscript{3}} ...)} & procedure & \pageref{objects_s153} \\
+\texttt{(fx\textgreater{}=? \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} \textit{fx\textsubscript{3}} ...)} & procedure & \pageref{objects_s153} \\
+\texttt{(fx\textgreater{}? \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} \textit{fx\textsubscript{3}} ...)} & procedure & \pageref{objects_s153} \\
+\texttt{(fxand \textit{fx} ...)} & procedure & \pageref{objects_s163} \\
+\texttt{(fxarithmetic-shift \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}})} & procedure & \pageref{objects_s173} \\
+\texttt{(fxarithmetic-shift-left \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}})} & procedure & \pageref{objects_s172} \\
+\texttt{(fxarithmetic-shift-right \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}})} & procedure & \pageref{objects_s172} \\
+\texttt{(fxbit-count \textit{fx})} & procedure & \pageref{objects_s165} \\
+\texttt{(fxbit-field \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} \textit{fx\textsubscript{3}})} & procedure & \pageref{objects_s170} \\
+\texttt{(fxbit-set? \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}})} & procedure & \pageref{objects_s168} \\
+\texttt{(fxcopy-bit \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} \textit{fx\textsubscript{3}})} & procedure & \pageref{objects_s169} \\
+\texttt{(fxcopy-bit-field \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} \textit{fx\textsubscript{3}} \textit{fx\textsubscript{4}})} & procedure & \pageref{objects_s171} \\
+\texttt{(fxdiv \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}})} & procedure & \pageref{objects_s160} \\
+\texttt{(fxdiv-and-mod \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}})} & procedure & \pageref{objects_s160} \\
+\texttt{(fxdiv0 \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}})} & procedure & \pageref{objects_s161} \\
+\texttt{(fxdiv0-and-mod0 \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}})} & procedure & \pageref{objects_s161} \\
+\texttt{(fxeven? \textit{fx})} & procedure & \pageref{objects_s155} \\
+\texttt{(fxfirst-bit-set \textit{fx})} & procedure & \pageref{objects_s167} \\
+\texttt{(fxif \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} \textit{fx\textsubscript{3}})} & procedure & \pageref{objects_s164} \\
+\texttt{(fxior \textit{fx} ...)} & procedure & \pageref{objects_s163} \\
+\texttt{(fxlength \textit{fx})} & procedure & \pageref{objects_s166} \\
+\texttt{(fxmax \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} ...)} & procedure & \pageref{objects_s156} \\
+\texttt{(fxmin \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} ...)} & procedure & \pageref{objects_s156} \\
+\texttt{(fxmod \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}})} & procedure & \pageref{objects_s160} \\
+\texttt{(fxmod0 \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}})} & procedure & \pageref{objects_s161} \\
+\texttt{(fxnegative? \textit{fx})} & procedure & \pageref{objects_s154} \\
+\texttt{(fxnot \textit{fx})} & procedure & \pageref{objects_s163} \\
+\texttt{(fxodd? \textit{fx})} & procedure & \pageref{objects_s155} \\
+\texttt{(fxpositive? \textit{fx})} & procedure & \pageref{objects_s154} \\
+\texttt{(fxreverse-bit-field \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} \textit{fx\textsubscript{3}})} & procedure & \pageref{objects_s175} \\
+\texttt{(fxrotate-bit-field \textit{fx\textsubscript{1}} \textit{fx\textsubscript{2}} \textit{fx\textsubscript{3}} \textit{fx\textsubscript{4}})} & procedure & \pageref{objects_s174} \\
+\texttt{(fxxor \textit{fx} ...)} & procedure & \pageref{objects_s163} \\
+\texttt{(fxzero? \textit{fx})} & procedure & \pageref{objects_s154} \\
+\texttt{(gcd \textit{int} ...)} & procedure & \pageref{objects_s109} \\
+\texttt{(generate-temporaries \textit{list})} & procedure & \pageref{syntax_s49} \\
+\texttt{(get-bytevector-all \textit{binary-input-port})} & procedure & \pageref{io_s60} \\
+\texttt{(get-bytevector-n \textit{binary-input-port} \textit{n})} & procedure & \pageref{io_s57} \\
+\texttt{(get-bytevector-n! \textit{binary-input-port} \textit{bytevector} \textit{start} \textit{n})} & procedure & \pageref{io_s58} \\
+\texttt{(get-bytevector-some \textit{binary-input-port})} & procedure & \pageref{io_s59} \\
+\texttt{(get-char \textit{textual-input-port})} & procedure & \pageref{io_s61} \\
+\texttt{(get-datum \textit{textual-input-port})} & procedure & \pageref{io_s67} \\
+\texttt{(get-line \textit{textual-input-port})} & procedure & \pageref{io_s66} \\
+\texttt{(get-string-all \textit{textual-input-port})} & procedure & \pageref{io_s65} \\
+\texttt{(get-string-n \textit{textual-input-port} \textit{n})} & procedure & \pageref{io_s63} \\
+\texttt{(get-string-n! \textit{textual-input-port} \textit{string} \textit{start} \textit{n})} & procedure & \pageref{io_s64} \\
+\texttt{(get-u8 \textit{binary-input-port})} & procedure & \pageref{io_s55} \\
+\texttt{(greatest-fixnum)} & procedure & \pageref{objects_s151} \\
+\texttt{(guard (\textit{var} \textit{clause\textsubscript{1}} \textit{clause\textsubscript{2}} ...) \textit{b1} \textit{b2} ...)} & syntax & \pageref{exceptions_s8} \\
+\texttt{(hashtable-clear! \textit{hashtable})} & procedure & \pageref{objects_s287} \\
+\texttt{(hashtable-clear! \textit{hashtable} \textit{size})} & procedure & \pageref{objects_s287} \\
+\texttt{(hashtable-contains? \textit{hashtable} \textit{key})} & procedure & \pageref{objects_s282} \\
+\texttt{(hashtable-copy \textit{hashtable})} & procedure & \pageref{objects_s286} \\
+\texttt{(hashtable-copy \textit{hashtable} \textit{mutable?})} & procedure & \pageref{objects_s286} \\
+\texttt{(hashtable-delete! \textit{hashtable} \textit{key})} & procedure & \pageref{objects_s284} \\
+\texttt{(hashtable-entries \textit{hashtable})} & procedure & \pageref{objects_s289} \\
+\texttt{(hashtable-equivalence-function \textit{hashtable})} & procedure & \pageref{objects_s278} \\
+\texttt{(hashtable-hash-function \textit{hashtable})} & procedure & \pageref{objects_s278} \\
+\texttt{(hashtable-keys \textit{hashtable})} & procedure & \pageref{objects_s288} \\
+\texttt{(hashtable-mutable? \textit{hashtable})} & procedure & \pageref{objects_s277} \\
+\texttt{(hashtable-ref \textit{hashtable} \textit{key} \textit{default})} & procedure & \pageref{objects_s281} \\
+\texttt{(hashtable-set! \textit{hashtable} \textit{key} \textit{obj})} & procedure & \pageref{objects_s280} \\
+\texttt{(hashtable-size \textit{hashtable})} & procedure & \pageref{objects_s285} \\
+\texttt{(hashtable-update! \textit{hashtable} \textit{key} \textit{procedure} \textit{default})} & procedure & \pageref{objects_s283} \\
+\texttt{(hashtable? \textit{obj})} & procedure & \pageref{objects_s25} \\
+\texttt{(i/o-decoding-error? \textit{obj})} & procedure & \pageref{exceptions_s42} \\
+\texttt{(i/o-encoding-error-char \textit{condition})} & procedure & \pageref{exceptions_s43} \\
+\texttt{(i/o-encoding-error? \textit{obj})} & procedure & \pageref{exceptions_s43} \\
+\texttt{(i/o-error-filename \textit{condition})} & procedure & \pageref{exceptions_s36} \\
+\texttt{(i/o-error-port \textit{condition})} & procedure & \pageref{exceptions_s41} \\
+\texttt{(i/o-error-position \textit{condition})} & procedure & \pageref{exceptions_s35} \\
+\texttt{(i/o-error? \textit{obj})} & procedure & \pageref{exceptions_s32} \\
+\texttt{(i/o-file-already-exists-error? \textit{obj})} & procedure & \pageref{exceptions_s39} \\
+\texttt{(i/o-file-does-not-exist-error? \textit{obj})} & procedure & \pageref{exceptions_s40} \\
+\texttt{(i/o-file-is-read-only-error? \textit{obj})} & procedure & \pageref{exceptions_s38} \\
+\texttt{(i/o-file-protection-error? \textit{obj})} & procedure & \pageref{exceptions_s37} \\
+\texttt{(i/o-filename-error? \textit{obj})} & procedure & \pageref{exceptions_s36} \\
+\texttt{(i/o-invalid-position-error? \textit{obj})} & procedure & \pageref{exceptions_s35} \\
+\texttt{(i/o-port-error? \textit{obj})} & procedure & \pageref{exceptions_s41} \\
+\texttt{(i/o-read-error? \textit{obj})} & procedure & \pageref{exceptions_s33} \\
+\texttt{(i/o-write-error? \textit{obj})} & procedure & \pageref{exceptions_s34} \\
+\texttt{(identifier-syntax \textit{tmpl})} & syntax & \pageref{syntax_s27} \\
+\texttt{(identifier-syntax (\textit{id\textsubscript{1}} \textit{tmpl\textsubscript{1}}) ((set! \textit{id\textsubscript{2}} \textit{e\textsubscript{2}}) \textit{tmpl\textsubscript{2}}))} & syntax & \pageref{syntax_s27} \\
+\texttt{(identifier? \textit{obj})} & procedure & \pageref{syntax_s35} \\
+\texttt{(if \textit{test} \textit{consequent} \textit{alternative})} & syntax & \pageref{control_s8} \\
+\texttt{(if \textit{test} \textit{consequent})} & syntax & \pageref{control_s8} \\
+\texttt{(imag-part \textit{num})} & procedure & \pageref{objects_s121} \\
+\texttt{immutable} & syntax & \pageref{records_s16} \\
+\texttt{(implementation-restriction-violation? \textit{obj})} & procedure & \pageref{exceptions_s28} \\
+\texttt{(inexact \textit{num})} & procedure & \pageref{objects_s112} \\
+\texttt{(inexact-\textgreater{}exact \textit{num})} & procedure & \pageref{objects_s116} \\
+\texttt{(inexact? \textit{num})} & procedure & \pageref{objects_s87} \\
+\texttt{(infinite? \textit{real})} & procedure & \pageref{objects_s97} \\
+\texttt{(input-port? \textit{obj})} & procedure & \pageref{io_s44} \\
+\texttt{(integer-\textgreater{}char \textit{n})} & procedure & \pageref{objects_s211} \\
+\texttt{(integer-valued? \textit{obj})} & procedure & \pageref{objects_s18} \\
+\texttt{(integer? \textit{obj})} & procedure & \pageref{objects_s17} \\
+\texttt{(irritants-condition? \textit{obj})} & procedure & \pageref{exceptions_s25} \\
+\texttt{(lambda \textit{formals} \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)} & syntax & \pageref{binding_s3} \\
+\texttt{(latin-1-codec)} & procedure & \pageref{io_s22} \\
+\texttt{(lcm \textit{int} ...)} & procedure & \pageref{objects_s110} \\
+\texttt{(least-fixnum)} & procedure & \pageref{objects_s151} \\
+\texttt{(length \textit{list})} & procedure & \pageref{objects_s46} \\
+\texttt{(let ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)} & syntax & \pageref{binding_s16} \\
+\texttt{(let \textit{name} ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)} & syntax & \pageref{control_s20} \\
+\texttt{(let* ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)} & syntax & \pageref{binding_s18} \\
+\texttt{(let*-values ((\textit{formals} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)} & syntax & \pageref{binding_s23} \\
+\texttt{(let-syntax ((\textit{keyword} \textit{expr}) ...) \textit{form\textsubscript{1}} \textit{form\textsubscript{2}} ...)} & syntax & \pageref{syntax_s13} \\
+\texttt{(let-values ((\textit{formals} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)} & syntax & \pageref{binding_s23} \\
+\texttt{(letrec ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)} & syntax & \pageref{binding_s20} \\
+\texttt{(letrec* ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)} & syntax & \pageref{binding_s22} \\
+\texttt{(letrec-syntax ((\textit{keyword} \textit{expr}) ...) \textit{form\textsubscript{1}} \textit{form\textsubscript{2}} ...)} & syntax & \pageref{syntax_s13} \\
+\texttt{(lexical-violation? \textit{obj})} & procedure & \pageref{exceptions_s29} \\
+\texttt{(list \textit{obj} ...)} & procedure & \pageref{objects_s43} \\
+\texttt{(list-\textgreater{}string \textit{list})} & procedure & \pageref{objects_s229} \\
+\texttt{(list-\textgreater{}vector \textit{list})} & procedure & \pageref{objects_s238} \\
+\texttt{(list-ref \textit{list} \textit{n})} & procedure & \pageref{objects_s47} \\
+\texttt{(list-sort \textit{predicate} \textit{list})} & procedure & \pageref{objects_s62} \\
+\texttt{(list-tail \textit{list} \textit{n})} & procedure & \pageref{objects_s48} \\
+\texttt{(list? \textit{obj})} & procedure & \pageref{objects_s45} \\
+\texttt{(log \textit{num})} & procedure & \pageref{objects_s130} \\
+\texttt{(log \textit{num\textsubscript{1}} \textit{num\textsubscript{2}})} & procedure & \pageref{objects_s130} \\
+\texttt{(lookahead-char \textit{textual-input-port})} & procedure & \pageref{io_s62} \\
+\texttt{(lookahead-u8 \textit{binary-input-port})} & procedure & \pageref{io_s56} \\
+\texttt{(magnitude \textit{num})} & procedure & \pageref{objects_s125} \\
+\texttt{(make-assertion-violation)} & procedure & \pageref{exceptions_s21} \\
+\texttt{(make-bytevector \textit{n})} & procedure & \pageref{objects_s242} \\
+\texttt{(make-bytevector \textit{n} \textit{fill})} & procedure & \pageref{objects_s242} \\
+\texttt{(make-custom-binary-input-port \textit{id} \textit{r!} \textit{gp} \textit{sp!} \textit{close})} & procedure & \pageref{io_s41} \\
+\texttt{(make-custom-binary-input/output-port \textit{id} \textit{r!} \textit{w!} \textit{gp} \textit{sp!} \textit{close})} & procedure & \pageref{io_s41} \\
+\texttt{(make-custom-binary-output-port \textit{id} \textit{w!} \textit{gp} \textit{sp!} \textit{close})} & procedure & \pageref{io_s41} \\
+\texttt{(make-custom-textual-input-port \textit{id} \textit{r!} \textit{gp} \textit{sp!} \textit{close})} & procedure & \pageref{io_s42} \\
+\texttt{(make-custom-textual-input/output-port \textit{id} \textit{r!} \textit{w!} \textit{gp} \textit{sp!} \textit{close})} & procedure & \pageref{io_s42} \\
+\texttt{(make-custom-textual-output-port \textit{id} \textit{w!} \textit{gp} \textit{sp!} \textit{close})} & procedure & \pageref{io_s42} \\
+\texttt{(make-enumeration \textit{symbol-list})} & procedure & \pageref{objects_s291} \\
+\texttt{(make-eq-hashtable)} & procedure & \pageref{objects_s274} \\
+\texttt{(make-eq-hashtable \textit{size})} & procedure & \pageref{objects_s274} \\
+\texttt{(make-eqv-hashtable)} & procedure & \pageref{objects_s275} \\
+\texttt{(make-eqv-hashtable \textit{size})} & procedure & \pageref{objects_s275} \\
+\texttt{(make-error)} & procedure & \pageref{exceptions_s22} \\
+\texttt{(make-hashtable \textit{hash} \textit{equiv?})} & procedure & \pageref{objects_s276} \\
+\texttt{(make-hashtable \textit{hash} \textit{equiv?} \textit{size})} & procedure & \pageref{objects_s276} \\
+\texttt{(make-i/o-decoding-error \textit{pobj})} & procedure & \pageref{exceptions_s42} \\
+\texttt{(make-i/o-encoding-error \textit{pobj} \textit{cobj})} & procedure & \pageref{exceptions_s43} \\
+\texttt{(make-i/o-error)} & procedure & \pageref{exceptions_s32} \\
+\texttt{(make-i/o-file-already-exists-error \textit{filename})} & procedure & \pageref{exceptions_s39} \\
+\texttt{(make-i/o-file-does-not-exist-error \textit{filename})} & procedure & \pageref{exceptions_s40} \\
+\texttt{(make-i/o-file-is-read-only-error \textit{filename})} & procedure & \pageref{exceptions_s38} \\
+\texttt{(make-i/o-file-protection-error \textit{filename})} & procedure & \pageref{exceptions_s37} \\
+\texttt{(make-i/o-filename-error \textit{filename})} & procedure & \pageref{exceptions_s36} \\
+\texttt{(make-i/o-invalid-position-error \textit{position})} & procedure & \pageref{exceptions_s35} \\
+\texttt{(make-i/o-port-error \textit{pobj})} & procedure & \pageref{exceptions_s41} \\
+\texttt{(make-i/o-read-error)} & procedure & \pageref{exceptions_s33} \\
+\texttt{(make-i/o-write-error)} & procedure & \pageref{exceptions_s34} \\
+\texttt{(make-implementation-restriction-violation)} & procedure & \pageref{exceptions_s28} \\
+\texttt{(make-irritants-condition \textit{irritants})} & procedure & \pageref{exceptions_s25} \\
+\texttt{(make-lexical-violation)} & procedure & \pageref{exceptions_s29} \\
+\texttt{(make-message-condition \textit{message})} & procedure & \pageref{exceptions_s24} \\
+\texttt{(make-no-infinities-violation)} & procedure & \pageref{exceptions_s44} \\
+\texttt{(make-no-nans-violation)} & procedure & \pageref{exceptions_s45} \\
+\texttt{(make-non-continuable-violation)} & procedure & \pageref{exceptions_s27} \\
+\texttt{(make-polar \textit{real\textsubscript{1}} \textit{real\textsubscript{2}})} & procedure & \pageref{objects_s123} \\
+\texttt{(make-record-constructor-descriptor \textit{rtd} \textit{parent-rcd} \textit{protocol})} & procedure & \pageref{records_s24} \\
+\texttt{(make-record-type-descriptor \textit{name} \textit{parent} \textit{uid} \textit{s?} \textit{o?} \textit{fields})} & procedure & \pageref{records_s20} \\
+\texttt{(make-rectangular \textit{real\textsubscript{1}} \textit{real\textsubscript{2}})} & procedure & \pageref{objects_s122} \\
+\texttt{(make-serious-condition)} & procedure & \pageref{exceptions_s19} \\
+\texttt{(make-string \textit{n})} & procedure & \pageref{objects_s218} \\
+\texttt{(make-string \textit{n} \textit{char})} & procedure & \pageref{objects_s218} \\
+\texttt{(make-syntax-violation \textit{form} \textit{subform})} & procedure & \pageref{exceptions_s30} \\
+\texttt{(make-transcoder \textit{codec})} & procedure & \pageref{io_s19} \\
+\texttt{(make-transcoder \textit{codec} \textit{eol-style})} & procedure & \pageref{io_s19} \\
+\texttt{(make-transcoder \textit{codec} \textit{eol-style} \textit{error-handling-mode})} & procedure & \pageref{io_s19} \\
+\texttt{(make-undefined-violation)} & procedure & \pageref{exceptions_s31} \\
+\texttt{(make-variable-transformer \textit{procedure})} & procedure & \pageref{syntax_s42} \\
+\texttt{(make-vector \textit{n})} & procedure & \pageref{objects_s232} \\
+\texttt{(make-vector \textit{n} \textit{obj})} & procedure & \pageref{objects_s232} \\
+\texttt{(make-violation)} & procedure & \pageref{exceptions_s20} \\
+\texttt{(make-warning)} & procedure & \pageref{exceptions_s23} \\
+\texttt{(make-who-condition \textit{who})} & procedure & \pageref{exceptions_s26} \\
+\texttt{(map \textit{procedure} \textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...)} & procedure & \pageref{control_s30} \\
+\texttt{(max \textit{real\textsubscript{1}} \textit{real\textsubscript{2}} ...)} & procedure & \pageref{objects_s107} \\
+\texttt{(member \textit{obj} \textit{list})} & procedure & \pageref{objects_s51} \\
+\texttt{(memp \textit{procedure} \textit{list})} & procedure & \pageref{objects_s52} \\
+\texttt{(memq \textit{obj} \textit{list})} & procedure & \pageref{objects_s51} \\
+\texttt{(memv \textit{obj} \textit{list})} & procedure & \pageref{objects_s51} \\
+\texttt{(message-condition? \textit{obj})} & procedure & \pageref{exceptions_s24} \\
+\texttt{(min \textit{real\textsubscript{1}} \textit{real\textsubscript{2}} ...)} & procedure & \pageref{objects_s108} \\
+\texttt{(mod \textit{x\textsubscript{1}} \textit{x\textsubscript{2}})} & procedure & \pageref{objects_s99} \\
+\texttt{(mod0 \textit{x\textsubscript{1}} \textit{x\textsubscript{2}})} & procedure & \pageref{objects_s100} \\
+\texttt{(modulo \textit{int\textsubscript{1}} \textit{int\textsubscript{2}})} & procedure & \pageref{objects_s98} \\
+\texttt{mutable} & syntax & \pageref{records_s16} \\
+\texttt{(nan? \textit{real})} & procedure & \pageref{objects_s97} \\
+\texttt{(native-endianness)} & procedure & \pageref{objects_s241} \\
+\texttt{(native-eol-style)} & procedure & \pageref{io_s24} \\
+\texttt{(native-transcoder)} & procedure & \pageref{io_s21} \\
+\texttt{(negative? \textit{real})} & procedure & \pageref{objects_s95} \\
+\texttt{(newline)} & procedure & \pageref{io_s87} \\
+\texttt{(newline \textit{textual-output-port})} & procedure & \pageref{io_s87} \\
+\texttt{(no-infinities-violation? \textit{obj})} & procedure & \pageref{exceptions_s44} \\
+\texttt{(no-nans-violation? \textit{obj})} & procedure & \pageref{exceptions_s45} \\
+\texttt{(non-continuable-violation? \textit{obj})} & procedure & \pageref{exceptions_s27} \\
+\texttt{nongenerative} & syntax & \pageref{records_s16} \\
+\texttt{(not \textit{obj})} & procedure & \pageref{control_s10} \\
+\texttt{(null-environment \textit{version})} & procedure & \pageref{control_s82} \\
+\texttt{(null? \textit{obj})} & procedure & \pageref{objects_s15} \\
+\texttt{(number-\textgreater{}string \textit{num})} & procedure & \pageref{objects_s148} \\
+\texttt{(number-\textgreater{}string \textit{num} \textit{radix})} & procedure & \pageref{objects_s148} \\
+\texttt{(number-\textgreater{}string \textit{num} \textit{radix} \textit{precision})} & procedure & \pageref{objects_s148} \\
+\texttt{(number? \textit{obj})} & procedure & \pageref{objects_s17} \\
+\texttt{(numerator \textit{rat})} & procedure & \pageref{objects_s118} \\
+\texttt{(odd? \textit{int})} & procedure & \pageref{objects_s96} \\
+\texttt{opaque} & syntax & \pageref{records_s16} \\
+\texttt{(open-bytevector-input-port \textit{bytevector})} & procedure & \pageref{io_s34} \\
+\texttt{(open-bytevector-input-port \textit{bytevector} \textit{?transcoder})} & procedure & \pageref{io_s34} \\
+\texttt{(open-bytevector-output-port)} & procedure & \pageref{io_s36} \\
+\texttt{(open-bytevector-output-port \textit{?transcoder})} & procedure & \pageref{io_s36} \\
+\texttt{(open-file-input-port \textit{path})} & procedure & \pageref{io_s29} \\
+\texttt{(open-file-input-port \textit{path} \textit{options})} & procedure & \pageref{io_s29} \\
+\texttt{(open-file-input-port \textit{path} \textit{options} \textit{b-mode})} & procedure & \pageref{io_s29} \\
+\texttt{(open-file-input-port \textit{path} \textit{options} \textit{b-mode} \textit{?transcoder})} & procedure & \pageref{io_s29} \\
+\texttt{(open-file-input/output-port \textit{path})} & procedure & \pageref{io_s31} \\
+\texttt{(open-file-input/output-port \textit{path} \textit{options})} & procedure & \pageref{io_s31} \\
+\texttt{(open-file-input/output-port \textit{path} \textit{options} \textit{b-mode})} & procedure & \pageref{io_s31} \\
+\texttt{(open-file-input/output-port \textit{path} \textit{options} \textit{b-mode} \textit{?transcoder})} & procedure & \pageref{io_s31} \\
+\texttt{(open-file-output-port \textit{path})} & procedure & \pageref{io_s30} \\
+\texttt{(open-file-output-port \textit{path} \textit{options})} & procedure & \pageref{io_s30} \\
+\texttt{(open-file-output-port \textit{path} \textit{options} \textit{b-mode})} & procedure & \pageref{io_s30} \\
+\texttt{(open-file-output-port \textit{path} \textit{options} \textit{b-mode} \textit{?transcoder})} & procedure & \pageref{io_s30} \\
+\texttt{(open-input-file \textit{path})} & procedure & \pageref{io_s75} \\
+\texttt{(open-output-file \textit{path})} & procedure & \pageref{io_s76} \\
+\texttt{(open-string-input-port \textit{string})} & procedure & \pageref{io_s35} \\
+\texttt{(open-string-output-port)} & procedure & \pageref{io_s37} \\
+\texttt{(or \textit{expr} ...)} & syntax & \pageref{control_s12} \\
+\texttt{(output-port-buffer-mode \textit{port})} & procedure & \pageref{io_s52} \\
+\texttt{(output-port? \textit{obj})} & procedure & \pageref{io_s44} \\
+\texttt{(pair? \textit{obj})} & procedure & \pageref{objects_s16} \\
+\texttt{parent} & syntax & \pageref{records_s16} \\
+\texttt{parent-rtd} & syntax & \pageref{records_s16} \\
+\texttt{(partition \textit{procedure} \textit{list})} & procedure & \pageref{objects_s56} \\
+\texttt{(peek-char)} & procedure & \pageref{io_s83} \\
+\texttt{(peek-char \textit{textual-input-port})} & procedure & \pageref{io_s83} \\
+\texttt{(port-eof? \textit{input-port})} & procedure & \pageref{io_s68} \\
+\texttt{(port-has-port-position? \textit{port})} & procedure & \pageref{io_s49} \\
+\texttt{(port-has-set-port-position!? \textit{port})} & procedure & \pageref{io_s50} \\
+\texttt{(port-position \textit{port})} & procedure & \pageref{io_s49} \\
+\texttt{(port-transcoder \textit{port})} & procedure & \pageref{io_s48} \\
+\texttt{(port? \textit{obj})} & procedure & \pageref{io_s43} \\
+\texttt{(positive? \textit{real})} & procedure & \pageref{objects_s94} \\
+\texttt{(\textit{expr\textsubscript{0}} \textit{expr\textsubscript{1}} ...)} & syntax & \pageref{control_s1} \\
+\texttt{(procedure? \textit{obj})} & procedure & \pageref{objects_s23} \\
+\texttt{protocol} & syntax & \pageref{records_s16} \\
+\texttt{(put-bytevector \textit{binary-output-port} \textit{bytevector})} & procedure & \pageref{io_s70} \\
+\texttt{(put-bytevector \textit{binary-output-port} \textit{bytevector} \textit{start})} & procedure & \pageref{io_s70} \\
+\texttt{(put-bytevector \textit{binary-output-port} \textit{bytevector} \textit{start} \textit{n})} & procedure & \pageref{io_s70} \\
+\texttt{(put-char \textit{textual-output-port} \textit{char})} & procedure & \pageref{io_s71} \\
+\texttt{(put-datum \textit{textual-output-port} \textit{obj})} & procedure & \pageref{io_s73} \\
+\texttt{(put-string \textit{textual-output-port} \textit{string})} & procedure & \pageref{io_s72} \\
+\texttt{(put-string \textit{textual-output-port} \textit{string} \textit{start})} & procedure & \pageref{io_s72} \\
+\texttt{(put-string \textit{textual-output-port} \textit{string} \textit{start} \textit{n})} & procedure & \pageref{io_s72} \\
+\texttt{(put-u8 \textit{binary-output-port} \textit{octet})} & procedure & \pageref{io_s69} \\
+\texttt{(quasiquote \textit{obj} ...)} & syntax & \pageref{objects_s5} \\
+\texttt{(quasisyntax \textit{template} ...)} & syntax & \pageref{syntax_s40} \\
+\texttt{(quote \textit{obj})} & syntax & \pageref{objects_s2} \\
+\texttt{(quotient \textit{int\textsubscript{1}} \textit{int\textsubscript{2}})} & procedure & \pageref{objects_s98} \\
+\texttt{(raise \textit{obj})} & procedure & \pageref{exceptions_s3} \\
+\texttt{(raise-continuable \textit{obj})} & procedure & \pageref{exceptions_s3} \\
+\texttt{(rational-valued? \textit{obj})} & procedure & \pageref{objects_s18} \\
+\texttt{(rational? \textit{obj})} & procedure & \pageref{objects_s17} \\
+\texttt{(rationalize \textit{real\textsubscript{1}} \textit{real\textsubscript{2}})} & procedure & \pageref{objects_s117} \\
+\texttt{(read)} & procedure & \pageref{io_s81} \\
+\texttt{(read \textit{textual-input-port})} & procedure & \pageref{io_s81} \\
+\texttt{(read-char)} & procedure & \pageref{io_s82} \\
+\texttt{(read-char \textit{textual-input-port})} & procedure & \pageref{io_s82} \\
+\texttt{(real-\textgreater{}flonum \textit{real})} & procedure & \pageref{objects_s198} \\
+\texttt{(real-part \textit{num})} & procedure & \pageref{objects_s120} \\
+\texttt{(real-valued? \textit{obj})} & procedure & \pageref{objects_s18} \\
+\texttt{(real? \textit{obj})} & procedure & \pageref{objects_s17} \\
+\texttt{(record-accessor \textit{rtd} \textit{idx})} & procedure & \pageref{records_s31} \\
+\texttt{(record-constructor \textit{rcd})} & procedure & \pageref{records_s29} \\
+\texttt{(record-constructor-descriptor \textit{record-name})} & syntax & \pageref{records_s28} \\
+\texttt{(record-field-mutable? \textit{rtd} \textit{idx})} & procedure & \pageref{records_s39} \\
+\texttt{(record-mutator \textit{rtd} \textit{idx})} & procedure & \pageref{records_s32} \\
+\texttt{(record-predicate \textit{rtd})} & procedure & \pageref{records_s30} \\
+\texttt{(record-rtd \textit{record})} & procedure & \pageref{records_s41} \\
+\texttt{(record-type-descriptor \textit{record-name})} & syntax & \pageref{records_s28} \\
+\texttt{(record-type-descriptor? \textit{obj})} & procedure & \pageref{records_s23} \\
+\texttt{(record-type-field-names \textit{rtd})} & procedure & \pageref{records_s38} \\
+\texttt{(record-type-generative? \textit{rtd})} & procedure & \pageref{records_s37} \\
+\texttt{(record-type-name \textit{rtd})} & procedure & \pageref{records_s34} \\
+\texttt{(record-type-opaque? \textit{rtd})} & procedure & \pageref{records_s37} \\
+\texttt{(record-type-parent \textit{rtd})} & procedure & \pageref{records_s35} \\
+\texttt{(record-type-sealed? \textit{rtd})} & procedure & \pageref{records_s37} \\
+\texttt{(record-type-uid \textit{rtd})} & procedure & \pageref{records_s36} \\
+\texttt{(record? \textit{obj})} & procedure & \pageref{records_s40} \\
+\texttt{(remainder \textit{int\textsubscript{1}} \textit{int\textsubscript{2}})} & procedure & \pageref{objects_s98} \\
+\texttt{(remove \textit{obj} \textit{list})} & procedure & \pageref{objects_s53} \\
+\texttt{(remp \textit{procedure} \textit{list})} & procedure & \pageref{objects_s54} \\
+\texttt{(remq \textit{obj} \textit{list})} & procedure & \pageref{objects_s53} \\
+\texttt{(remv \textit{obj} \textit{list})} & procedure & \pageref{objects_s53} \\
+\texttt{(reverse \textit{list})} & procedure & \pageref{objects_s50} \\
+\texttt{(round \textit{real})} & procedure & \pageref{objects_s104} \\
+\texttt{(scheme-report-environment \textit{version})} & procedure & \pageref{control_s82} \\
+\texttt{sealed} & syntax & \pageref{records_s16} \\
+\texttt{(serious-condition? \textit{obj})} & procedure & \pageref{exceptions_s19} \\
+\texttt{(set! \textit{var} \textit{expr})} & syntax & \pageref{binding_s28} \\
+\texttt{(set-car! \textit{pair} \textit{obj})} & procedure & \pageref{objects_s40} \\
+\texttt{(set-cdr! \textit{pair} \textit{obj})} & procedure & \pageref{objects_s41} \\
+\texttt{(set-port-position! \textit{port} \textit{pos})} & procedure & \pageref{io_s50} \\
+\texttt{(simple-conditions \textit{condition})} & procedure & \pageref{exceptions_s16} \\
+\texttt{(sin \textit{num})} & procedure & \pageref{objects_s131} \\
+\texttt{(sint-list-\textgreater{}bytevector \textit{list} \textit{eness} \textit{size})} & procedure & \pageref{objects_s261} \\
+\texttt{(sqrt \textit{num})} & procedure & \pageref{objects_s127} \\
+\texttt{(standard-error-port)} & procedure & \pageref{io_s33} \\
+\texttt{(standard-input-port)} & procedure & \pageref{io_s33} \\
+\texttt{(standard-output-port)} & procedure & \pageref{io_s33} \\
+\texttt{(string \textit{char} ...)} & procedure & \pageref{objects_s217} \\
+\texttt{(string-\textgreater{}bytevector \textit{string} \textit{transcoder})} & procedure & \pageref{io_s92} \\
+\texttt{(string-\textgreater{}list \textit{string})} & procedure & \pageref{objects_s228} \\
+\texttt{(string-\textgreater{}number \textit{string})} & procedure & \pageref{objects_s147} \\
+\texttt{(string-\textgreater{}number \textit{string} \textit{radix})} & procedure & \pageref{objects_s147} \\
+\texttt{(string-\textgreater{}symbol \textit{string})} & procedure & \pageref{objects_s269} \\
+\texttt{(string-\textgreater{}utf16 \textit{string})} & procedure & \pageref{io_s94} \\
+\texttt{(string-\textgreater{}utf16 \textit{string} \textit{endianness})} & procedure & \pageref{io_s94} \\
+\texttt{(string-\textgreater{}utf32 \textit{string})} & procedure & \pageref{io_s94} \\
+\texttt{(string-\textgreater{}utf32 \textit{string} \textit{endianness})} & procedure & \pageref{io_s94} \\
+\texttt{(string-\textgreater{}utf8 \textit{string})} & procedure & \pageref{io_s93} \\
+\texttt{(string-append \textit{string} ...)} & procedure & \pageref{objects_s223} \\
+\texttt{(string-ci-hash \textit{string})} & procedure & \pageref{objects_s279} \\
+\texttt{(string-ci\textless{}=? \textit{string\textsubscript{1}} \textit{string\textsubscript{2}} \textit{string\textsubscript{3}} ...)} & procedure & \pageref{objects_s216} \\
+\texttt{(string-ci\textless{}? \textit{string\textsubscript{1}} \textit{string\textsubscript{2}} \textit{string\textsubscript{3}} ...)} & procedure & \pageref{objects_s216} \\
+\texttt{(string-ci=? \textit{string\textsubscript{1}} \textit{string\textsubscript{2}} \textit{string\textsubscript{3}} ...)} & procedure & \pageref{objects_s216} \\
+\texttt{(string-ci\textgreater{}=? \textit{string\textsubscript{1}} \textit{string\textsubscript{2}} \textit{string\textsubscript{3}} ...)} & procedure & \pageref{objects_s216} \\
+\texttt{(string-ci\textgreater{}? \textit{string\textsubscript{1}} \textit{string\textsubscript{2}} \textit{string\textsubscript{3}} ...)} & procedure & \pageref{objects_s216} \\
+\texttt{(string-copy \textit{string})} & procedure & \pageref{objects_s222} \\
+\texttt{(string-downcase \textit{string})} & procedure & \pageref{objects_s226} \\
+\texttt{(string-fill! \textit{string} \textit{char})} & procedure & \pageref{objects_s225} \\
+\texttt{(string-foldcase \textit{string})} & procedure & \pageref{objects_s226} \\
+\texttt{(string-for-each \textit{procedure} \textit{string\textsubscript{1}} \textit{string\textsubscript{2}} ...)} & procedure & \pageref{control_s50} \\
+\texttt{(string-hash \textit{string})} & procedure & \pageref{objects_s279} \\
+\texttt{(string-length \textit{string})} & procedure & \pageref{objects_s219} \\
+\texttt{(string-normalize-nfc \textit{string})} & procedure & \pageref{objects_s227} \\
+\texttt{(string-normalize-nfd \textit{string})} & procedure & \pageref{objects_s227} \\
+\texttt{(string-normalize-nfkc \textit{string})} & procedure & \pageref{objects_s227} \\
+\texttt{(string-normalize-nfkd \textit{string})} & procedure & \pageref{objects_s227} \\
+\texttt{(string-ref \textit{string} \textit{n})} & procedure & \pageref{objects_s220} \\
+\texttt{(string-set! \textit{string} \textit{n} \textit{char})} & procedure & \pageref{objects_s221} \\
+\texttt{(string-titlecase \textit{string})} & procedure & \pageref{objects_s226} \\
+\texttt{(string-upcase \textit{string})} & procedure & \pageref{objects_s226} \\
+\texttt{(string\textless{}=? \textit{string\textsubscript{1}} \textit{string\textsubscript{2}} \textit{string\textsubscript{3}} ...)} & procedure & \pageref{objects_s215} \\
+\texttt{(string\textless{}? \textit{string\textsubscript{1}} \textit{string\textsubscript{2}} \textit{string\textsubscript{3}} ...)} & procedure & \pageref{objects_s215} \\
+\texttt{(string=? \textit{string\textsubscript{1}} \textit{string\textsubscript{2}} \textit{string\textsubscript{3}} ...)} & procedure & \pageref{objects_s215} \\
+\texttt{(string\textgreater{}=? \textit{string\textsubscript{1}} \textit{string\textsubscript{2}} \textit{string\textsubscript{3}} ...)} & procedure & \pageref{objects_s215} \\
+\texttt{(string\textgreater{}? \textit{string\textsubscript{1}} \textit{string\textsubscript{2}} \textit{string\textsubscript{3}} ...)} & procedure & \pageref{objects_s215} \\
+\texttt{(string? \textit{obj})} & procedure & \pageref{objects_s20} \\
+\texttt{(substring \textit{string} \textit{start} \textit{end})} & procedure & \pageref{objects_s224} \\
+\texttt{(symbol-\textgreater{}string \textit{symbol})} & procedure & \pageref{objects_s270} \\
+\texttt{(symbol-hash \textit{symbol})} & procedure & \pageref{objects_s279} \\
+\texttt{(symbol=? \textit{symbol\textsubscript{1}} \textit{symbol\textsubscript{2}})} & procedure & \pageref{objects_s268} \\
+\texttt{(symbol? \textit{obj})} & procedure & \pageref{objects_s22} \\
+\texttt{(syntax \textit{template})} & syntax & \pageref{syntax_s33} \\
+\texttt{(syntax-\textgreater{}datum \textit{obj})} & procedure & \pageref{syntax_s44} \\
+\texttt{(syntax-case \textit{expr} (\textit{literal} ...) \textit{clause} ...)} & syntax & \pageref{syntax_s30} \\
+\texttt{(syntax-rules (\textit{literal} ...) \textit{clause} ...)} & syntax & \pageref{syntax_s14} \\
+\texttt{(syntax-violation \textit{who} \textit{msg} \textit{form})} & procedure & \pageref{exceptions_s6} \\
+\texttt{(syntax-violation \textit{who} \textit{msg} \textit{form} \textit{subform})} & procedure & \pageref{exceptions_s6} \\
+\texttt{(syntax-violation-form \textit{condition})} & procedure & \pageref{exceptions_s30} \\
+\texttt{(syntax-violation-subform \textit{condition})} & procedure & \pageref{exceptions_s30} \\
+\texttt{(syntax-violation? \textit{obj})} & procedure & \pageref{exceptions_s30} \\
+\texttt{(tan \textit{num})} & procedure & \pageref{objects_s131} \\
+\texttt{(textual-port? \textit{obj})} & procedure & \pageref{io_s45} \\
+\texttt{(transcoded-port \textit{binary-port} \textit{transcoder})} & procedure & \pageref{io_s47} \\
+\texttt{(transcoder-codec \textit{transcoder})} & procedure & \pageref{io_s20} \\
+\texttt{(transcoder-eol-style \textit{transcoder})} & procedure & \pageref{io_s20} \\
+\texttt{(transcoder-error-handling-mode \textit{transcoder})} & procedure & \pageref{io_s20} \\
+\texttt{(truncate \textit{real})} & procedure & \pageref{objects_s101} \\
+\texttt{(u8-list-\textgreater{}bytevector \textit{list})} & procedure & \pageref{objects_s253} \\
+\texttt{(uint-list-\textgreater{}bytevector \textit{list} \textit{eness} \textit{size})} & procedure & \pageref{objects_s261} \\
+\texttt{(undefined-violation? \textit{obj})} & procedure & \pageref{exceptions_s31} \\
+\texttt{(unless \textit{test-expr} \textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...)} & syntax & \pageref{control_s17} \\
+\texttt{(unquote \textit{obj} ...)} & syntax & \pageref{objects_s5} \\
+\texttt{(unquote-splicing \textit{obj} ...)} & syntax & \pageref{objects_s5} \\
+\texttt{(unsyntax \textit{template} ...)} & syntax & \pageref{syntax_s40} \\
+\texttt{(unsyntax-splicing \textit{template} ...)} & syntax & \pageref{syntax_s40} \\
+\texttt{(utf-16-codec)} & procedure & \pageref{io_s22} \\
+\texttt{(utf-8-codec)} & procedure & \pageref{io_s22} \\
+\texttt{(utf16-\textgreater{}string \textit{bytevector} \textit{endianness})} & procedure & \pageref{io_s96} \\
+\texttt{(utf16-\textgreater{}string \textit{bytevector} \textit{endianness} \textit{endianness-mandatory?})} & procedure & \pageref{io_s96} \\
+\texttt{(utf32-\textgreater{}string \textit{bytevector} \textit{endianness})} & procedure & \pageref{io_s96} \\
+\texttt{(utf32-\textgreater{}string \textit{bytevector} \textit{endianness} \textit{endianness-mandatory?})} & procedure & \pageref{io_s96} \\
+\texttt{(utf8-\textgreater{}string \textit{bytevector})} & procedure & \pageref{io_s95} \\
+\texttt{(values \textit{obj} ...)} & procedure & \pageref{control_s70} \\
+\texttt{\textit{variable}} & syntax & \pageref{binding_s2} \\
+\texttt{(vector \textit{obj} ...)} & procedure & \pageref{objects_s231} \\
+\texttt{(vector-\textgreater{}list \textit{vector})} & procedure & \pageref{objects_s237} \\
+\texttt{(vector-fill! \textit{vector} \textit{obj})} & procedure & \pageref{objects_s236} \\
+\texttt{(vector-for-each \textit{procedure} \textit{vector\textsubscript{1}} \textit{vector\textsubscript{2}} ...)} & procedure & \pageref{control_s47} \\
+\texttt{(vector-length \textit{vector})} & procedure & \pageref{objects_s233} \\
+\texttt{(vector-map \textit{procedure} \textit{vector\textsubscript{1}} \textit{vector\textsubscript{1}} ...)} & procedure & \pageref{control_s44} \\
+\texttt{(vector-ref \textit{vector} \textit{n})} & procedure & \pageref{objects_s234} \\
+\texttt{(vector-set! \textit{vector} \textit{n} \textit{obj})} & procedure & \pageref{objects_s235} \\
+\texttt{(vector-sort \textit{predicate} \textit{vector})} & procedure & \pageref{objects_s239} \\
+\texttt{(vector-sort! \textit{predicate} \textit{vector})} & procedure & \pageref{objects_s239} \\
+\texttt{(vector? \textit{obj})} & procedure & \pageref{objects_s21} \\
+\texttt{(violation? \textit{obj})} & procedure & \pageref{exceptions_s20} \\
+\texttt{(warning? \textit{obj})} & procedure & \pageref{exceptions_s23} \\
+\texttt{(when \textit{test-expr} \textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...)} & syntax & \pageref{control_s17} \\
+\texttt{(who-condition? \textit{obj})} & procedure & \pageref{exceptions_s26} \\
+\texttt{(with-exception-handler \textit{procedure} \textit{thunk})} & procedure & \pageref{exceptions_s7} \\
+\texttt{(with-input-from-file \textit{path} \textit{thunk})} & procedure & \pageref{io_s79} \\
+\texttt{(with-output-to-file \textit{path} \textit{thunk})} & procedure & \pageref{io_s80} \\
+\texttt{(with-syntax ((\textit{pattern} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)} & syntax & \pageref{syntax_s38} \\
+\texttt{(write \textit{obj})} & procedure & \pageref{io_s84} \\
+\texttt{(write \textit{obj} \textit{textual-output-port})} & procedure & \pageref{io_s84} \\
+\texttt{(write-char \textit{char})} & procedure & \pageref{io_s86} \\
+\texttt{(write-char \textit{char} \textit{textual-output-port})} & procedure & \pageref{io_s86} \\
+\texttt{(zero? \textit{num})} & procedure & \pageref{objects_s93} \\
+\end{longtabu}

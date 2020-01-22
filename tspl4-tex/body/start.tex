@@ -1,0 +1,3264 @@
+\chapter{Getting Started\label{start_CHPTGETTINGSTARTED}}
+\label{start_g4}
+\label{start_h0}
+\begin{figure}[H]
+\centering
+\setlength{\fboxrule}{3pt}
+\fbox{
+\includegraphics[width=0.9\textwidth]{canned/ch2.png}
+\begin{rotate}{90}
+\copyright~2009 Jean-Pierre H\'{e}bert
+\end{rotate}}
+\end{figure}
+\clearpage
+
+
+
+
+
+This chapter is an introduction to Scheme for programmers who are new
+to the language.
+You will get more from this chapter if you are sitting in front of an
+interactive Scheme system, trying out the examples as you go.
+
+
+After reading this chapter and working the exercises, you should be
+able to start using Scheme.
+You will have learned the syntax of Scheme programs and how they are
+executed, along with how to use simple data structures and control
+mechanisms.
+
+
+
+\section{\label{start_g5}\label{start_h1}Interacting with Scheme\label{start_SECTGSINTERACTING}}
+
+
+
+Most Scheme systems provide an interactive programming environment
+that simplifies program development and experimentation.
+The simplest interaction with Scheme follows a ``read-evaluate-print''
+cycle.
+A program (often called a \textit{read-evaluate-print loop}, or REPL)
+reads each expression you type at the keyboard,
+evaluates it, and prints its value.
+
+
+With an interactive Scheme system, you can type an expression at 
+the keyboard and see its value immediately.
+You can define a procedure and apply it to arguments to see how it works. 
+You can even type in an entire program consisting of a set of procedure 
+definitions and test it without leaving the system.
+When your program starts getting longer, it will be more convenient to 
+type it into a file (using a text editor), load the file
+and test it interactively.
+In most Scheme systems, a file may be loaded with the nonstandard
+procedure \label{start_s0}\texttt{load}, which takes a string
+argument naming the file.
+Preparing your program in a file has several advantages: you have a 
+chance to compose your program more carefully, you can correct errors 
+without retyping the program, and you can retain a copy for later use.
+Most Scheme implementations treat expressions loaded from a file the same as expressions 
+typed at the keyboard.
+
+
+While Scheme provides various input and output procedures, the REPL
+takes care of reading expressions and printing their values.
+This frees you to concentrate on writing your program without worrying 
+about how its results will be displayed.
+
+
+The examples in this chapter and in the rest of the book follow a
+regular format.
+An expression you might type from your keyboard is given first,
+possibly spanning several lines.
+The value of the expression is given
+after the \(\Rightarrow\), to be read as ``evaluates to.''
+The \(\Rightarrow\) is omitted for definitions and when the value of
+an expression is unspecified.
+
+
+The example programs are formatted in a style that ``looks nice''
+and conveys the structure of the program.
+The code is easy to read because the relationship between each
+expression and its subexpressions is clearly shown.
+Scheme ignores indentation and line breaks, however, so there is no
+need to follow a particular style.
+The important thing is to establish one style and keep to it.
+Scheme sees each program as if it were on a single line, with its
+subexpressions ordered from left to right.
+
+
+If you have access to an interactive Scheme system, it might be a good idea to
+start it up now and type in the examples as you read.
+One of the simplest Scheme expressions is a \label{start_s1}string constant.
+Try typing \texttt{"Hi Mom!"} (including the double quotes) in response
+to the prompt.
+The system should respond with \texttt{"Hi Mom!"}; the value of any
+constant is the constant itself.
+
+
+\texttt{"Hi Mom!" \(\Rightarrow\) "Hi Mom!"}
+
+Here is a set of expressions, each with Scheme's response.
+They are explained in later sections of this chapter, but for now
+use them to practice interacting with Scheme.
+
+
+\begin{alltt}
+"hello" \(\Rightarrow\) "hello"
+42 \(\Rightarrow\) 42
+22/7 \(\Rightarrow\) 22/7
+3.141592653 \(\Rightarrow\) 3.141592653
++ \(\Rightarrow\) \#{}\textless{}procedure\textgreater{}
+(+ 76 31) \(\Rightarrow\) 107
+(* -12 10) \(\Rightarrow\) -120
+'(a b c d) \(\Rightarrow\) (a b c d)
+\end{alltt}
+
+
+Be careful not to miss any single quotes ( \texttt{'} ), double quotes, or
+parentheses.
+If you left off a single quote in the last
+expression, you probably received a message indicating that an exception
+has occurred.
+Just try again.
+If you left off a closing parenthesis or double quote, the system might
+still be waiting for it.
+
+
+Here are a few more expressions to try.  You can try to figure out on
+your own what they mean or wait to find out later in the chapter.
+
+
+\begin{alltt}
+(car '(a b c)) \(\Rightarrow\) a
+(cdr '(a b c)) \(\Rightarrow\) (b c)
+(cons 'a '(b c)) \(\Rightarrow\) (a b c)
+(cons (car '(a b c))
+      (cdr '(d e f))) \(\Rightarrow\) (a e f)
+\end{alltt}
+
+
+As you can see, Scheme expressions may span more than one line.
+The Scheme system knows when it has an entire expression by matching
+double quotes and parentheses.
+
+
+Next, let's try defining a procedure\label{start_s2}.
+
+
+\begin{alltt}
+(define square
+  (lambda (n)
+    (* n n)))
+\end{alltt}
+
+
+The procedure \texttt{square} computes the square \textit{n}\textsuperscript{2} of any number \textit{n}.
+We say more about the expressions that make up this definition later in
+this chapter.
+For now it suffices to say that \texttt{define} establishes variable bindings,
+\texttt{lambda} creates procedures, and \texttt{*} names the multiplication
+procedure.
+Note the form of these expressions.
+All structured forms are enclosed in parentheses and written in
+\label{start_s3}\textit{prefix notation}, i.e., the operator precedes the arguments.
+As you can see, this is true even for simple arithmetic operations such
+as \texttt{*}.
+
+
+Try using \texttt{square}.
+
+
+\begin{alltt}
+(square 5) \(\Rightarrow\) 25
+(square -200) \(\Rightarrow\) 40000
+(square 0.5) \(\Rightarrow\) 0.25
+(square -1/2) \(\Rightarrow\) 1/4
+\end{alltt}
+
+
+Even though the next definition is short, you might enter it into a file.
+Let's assume you call the file ``reciprocal.ss.''
+
+
+\begin{alltt}
+(define reciprocal
+  (lambda (n)
+    (if (= n 0)
+        "oops!"
+        (/ 1 n))))
+\end{alltt}
+
+
+This procedure, \label{start_s4}\texttt{reciprocal}, computes the quantity 1/\textit{n} for any
+number \textit{n} ≠ 0.
+For \textit{n} = 0, \texttt{reciprocal} returns the string \texttt{"oops!"}.
+Return to Scheme and try loading your file with the procedure \texttt{load}.
+
+
+\texttt{(load "reciprocal.ss")}
+
+Finally, try using the procedure we have just defined.
+
+
+\begin{alltt}
+(reciprocal 10) \(\Rightarrow\) 1/10
+(reciprocal 1/10) \(\Rightarrow\) 10
+(reciprocal 0) \(\Rightarrow\) "oops!"
+(reciprocal (reciprocal 1/10)) \(\Rightarrow\) 1/10
+\end{alltt}
+
+
+In the next section we will discuss Scheme expressions in more detail.
+Throughout this chapter, keep in mind that your Scheme system is one
+of the most useful tools for learning Scheme.
+Whenever you try one of the examples in the text, follow it up with
+your own examples.
+In an interactive Scheme system, the cost of trying something out
+is relatively small---usually just the time to type it in.
+
+
+
+\section{\label{start_g6}\label{start_h2}Simple Expressions\label{start_SECTGSSIMPLE}}
+
+
+
+The simplest Scheme expressions are constant data objects, such as strings,
+numbers, symbols, and lists.
+Scheme supports other object types, but these four are enough for
+many programs.
+We saw some examples of strings and numbers in the preceding
+section.
+
+
+Let's discuss \label{start_s5}numbers in a little more detail.
+Numbers are constants.
+If you enter a number, Scheme echoes it back to you.
+The following examples show that Scheme supports several types of
+numbers.
+
+
+\begin{alltt}
+123456789987654321 \(\Rightarrow\) 123456789987654321
+3/4 \(\Rightarrow\) 3/4
+2.718281828 \(\Rightarrow\) 2.718281828
+2.2+1.1i \(\Rightarrow\) 2.2+1.1i
+\end{alltt}
+
+
+Scheme numbers include exact and inexact integer, rational, real, and
+complex numbers.
+Exact integers and rational numbers have arbitrary precision, i.e., they
+can be of arbitrary size.
+Inexact numbers are usually represented internally using
+IEEE standard floating-point representations.
+
+
+Scheme provides the names \label{start_s6}\texttt{+}, \label{start_s7}\texttt{-}, \label{start_s8}\texttt{*}, and \label{start_s9}\texttt{/} for
+the corresponding arithmetic procedures.
+Each procedure accepts two numeric arguments.
+The expressions below are called
+\label{start_s10}\textit{procedure applications},
+because they specify the application of a procedure to
+a set of arguments.
+
+
+\begin{alltt}
+(+ 1/2 1/2) \(\Rightarrow\) 1
+(- 1.5 1/2) \(\Rightarrow\) 1.0
+
+(* 3 1/2) \(\Rightarrow\) 3/2
+(/ 1.5 3/4) \(\Rightarrow\) 2.0
+\end{alltt}
+
+
+Scheme employs \label{start_s11}prefix notation even for common arithmetic operations.
+Any procedure application, whether the procedure
+takes zero, one, two, or more arguments, is written as
+\texttt{(\textit{procedure} \textit{arg} ...)}.
+This regularity simplifies the syntax of expressions; one notation is
+employed regardless of the operation, and there are no complicated rules
+regarding the \label{start_s12}precedence
+or associativity of operators.
+
+
+Procedure applications may be nested, in which case the innermost
+values are computed first.
+We can thus nest applications of the arithmetic procedures given above
+to evaluate more complicated formulas. 
+
+
+\begin{alltt}
+(+ (+ 2 2) (+ 2 2)) \(\Rightarrow\) 8
+(- 2 (* 4 1/3)) \(\Rightarrow\) 2/3
+(* 2 (* 2 (* 2 (* 2 2)))) \(\Rightarrow\) 32
+(/ (* 6/7 7/2) (- 4.5 1.5)) \(\Rightarrow\) 1.0
+\end{alltt}
+
+
+These examples demonstrate everything you need to use Scheme as a
+four-function desk calculator.
+While we will not discuss them in this chapter, Scheme supports
+many other arithmetic procedures.
+Now might be a good time to turn to Section \ref{objects_g110} and experiment
+with some of them.
+
+
+\label{start_s13}Simple numeric objects are sufficient for many tasks, but
+sometimes aggregate data structures containing two or more values
+are needed.
+In many languages, the basic aggregate data structure is the array.
+In Scheme, it is the \textit{list}.
+Lists are written as sequences of objects surrounded by parentheses.
+For instance, \texttt{(1 2 3 4 5)} is a list of numbers, and
+\texttt{("this" "is" "a" "list")} is a list of strings.
+Lists need not contain only one type of object, so
+\texttt{(4.2 "hi")} is a valid list containing a number and a string.
+Lists may be nested (may contain other lists), so \texttt{((1 2) (3 4))} is a
+valid list with two
+elements, each of which is a list of two elements.
+
+
+You might notice that lists look just like procedure applications
+and wonder how Scheme tells them apart.
+That is, how does Scheme distinguish between a list of objects,
+\texttt{(\textit{obj\textsubscript{1}} \textit{obj\textsubscript{2}} ...)},
+and a \label{start_s14}procedure application,
+\texttt{(\textit{procedure} \textit{arg} ...)}?
+
+
+In some cases, the distinction might seem obvious.
+The list of numbers \texttt{(1 2 3 4 5)} could hardly be confused with a
+procedure application, since 1 is a number, not a procedure.
+So, the answer might be that Scheme looks at the first element of the
+list or procedure application and makes its decision based on whether
+that first element is a procedure or not.
+This answer is not good enough, since we might even want to treat a valid
+procedure application such as \texttt{(+ 3 4)} as a list.
+The answer is that we must tell Scheme explicitly to treat a list as
+data rather than as a procedure application.
+We do this with \label{start_s15}\label{start_s16}\texttt{quote}.
+
+
+\begin{alltt}
+(quote (1 2 3 4 5)) \(\Rightarrow\) (1 2 3 4 5)
+(quote ("this" "is" "a" "list")) \(\Rightarrow\) ("this" "is" "a" "list")
+(quote (+ 3 4)) \(\Rightarrow\) (+ 3 4)
+\end{alltt}
+
+
+The \texttt{quote} forces the list to be treated as data.
+Try entering the above expressions without the quote; you will likely
+receive a message indicating that an exception has occurred for the first
+two and an incorrect answer (\texttt{7}) for the third.
+
+
+Because \texttt{quote} is required fairly frequently in Scheme code, Scheme
+recognizes a single quotation mark ( \texttt{'} ) preceding
+an expression as an abbreviation for \texttt{quote}.
+
+
+\begin{alltt}
+'(1 2 3 4) \(\Rightarrow\) (1 2 3 4)
+'((1 2) (3 4)) \(\Rightarrow\) ((1 2) (3 4))
+'(/ (* 2 -1) 3) \(\Rightarrow\) (/ (* 2 -1) 3)
+\end{alltt}
+
+
+Both forms are referred to as \texttt{quote} expressions.
+We often say an object is \textit{quoted} when it is enclosed in
+a \texttt{quote} expression.
+
+
+A \texttt{quote} expression is \textit{not} a procedure application, since
+it inhibits the evaluation of its subexpression.
+It is an entirely different syntactic form.
+Scheme supports several other \label{start_s17}syntactic forms in addition to
+procedure applications and \texttt{quote} expressions.
+Each syntactic form is evaluated differently.
+Fortunately, the number of different syntactic forms is small.
+We will see more of them later in this chapter.
+
+
+Not all \texttt{quote} expressions involve lists.
+Try the following expression with and without the \texttt{quote}
+wrapper.
+
+
+\texttt{(quote hello) \(\Rightarrow\) hello}
+
+The symbol \texttt{hello} must be quoted in order to prevent Scheme from
+treating \texttt{hello} as a \textit{variable}.
+Symbols and \label{start_s18}variables in Scheme are similar to \label{start_s19}symbols and
+variables in mathematical expressions and equations.
+When we evaluate the mathematical expression 1 - \textit{x} for some value of
+\textit{x}, we think of \textit{x} as a variable.
+On the other hand, when we consider the algebraic equation 
+\textit{x}\textsuperscript{2} - 1 = (\textit{x} - 1)(\textit{x} + 1), we think of \textit{x} as a symbol (in fact, we
+think of the whole equation symbolically).
+Just as quoting a list tells Scheme to treat a parenthesized form as
+a list rather than as a procedure application,
+quoting an identifier tells Scheme to treat the identifier
+as a symbol rather than as a variable.
+While symbols are commonly used to represent variables in symbolic
+representations of equations or programs,
+symbols may
+also be used, for example, as words in the representation of natural
+language sentences.
+
+
+You might wonder why applications and variables share notations with
+lists and symbols.
+The shared notation allows Scheme programs to be represented as Scheme
+data, simplifying the writing
+of interpreters, compilers, editors, and other tools in Scheme.
+This is demonstrated by the Scheme interpreter given in
+Section \ref{examples_g187},
+which is itself written in Scheme.
+Many people believe this to be one of the most important features of
+Scheme.
+
+
+Numbers and strings may be quoted, too.
+
+
+\begin{alltt}
+'2 \(\Rightarrow\) 2
+'2/3 \(\Rightarrow\) 2/3
+(quote "Hi Mom!") \(\Rightarrow\) "Hi Mom!"
+\end{alltt}
+
+
+Numbers and strings are treated as constants in any case, however,
+so quoting them is unnecessary.
+
+
+Now let's discuss some Scheme procedures for manipulating \label{start_s20}lists.
+There are two basic procedures for taking lists apart: \label{start_s21}\texttt{car} and
+\label{start_s22}\texttt{cdr} (pronounced \textit{could-er}).
+\texttt{car} returns the first element of a list, and \texttt{cdr} returns
+the remainder of the list.
+(The names ``car'' and ``cdr'' are derived from operations
+supported by the first computer
+on which a Lisp language was implemented, the IBM 704.)
+Each requires a nonempty list as its argument.
+
+
+\begin{alltt}
+(car '(a b c)) \(\Rightarrow\) a
+(cdr '(a b c)) \(\Rightarrow\) (b c)
+(cdr '(a)) \(\Rightarrow\) ()
+
+(car (cdr '(a b c))) \(\Rightarrow\) b
+(cdr (cdr '(a b c))) \(\Rightarrow\) (c)
+
+(car '((a b) (c d))) \(\Rightarrow\) (a b)
+(cdr '((a b) (c d))) \(\Rightarrow\) ((c d))
+\end{alltt}
+
+
+The first element of a list is often called the ``car'' of the
+list, and the rest of the list is often called the ``cdr'' of
+the list.
+The cdr of a list with one element is \label{start_s23}\texttt{()}, the \label{start_s24}\textit{empty list}.
+
+
+The procedure \label{start_s25}\texttt{cons} constructs lists.
+It takes two arguments.
+The second argument is usually a list, and in that case \texttt{cons}
+returns a list.
+
+
+\begin{alltt}
+(cons 'a '()) \(\Rightarrow\) (a)
+(cons 'a '(b c)) \(\Rightarrow\) (a b c)
+(cons 'a (cons 'b (cons 'c '()))) \(\Rightarrow\) (a b c)
+(cons '(a b) '(c d)) \(\Rightarrow\) ((a b) c d)
+
+(car (cons 'a '(b c))) \(\Rightarrow\) a
+(cdr (cons 'a '(b c))) \(\Rightarrow\) (b c)
+(cons (car '(a b c))
+      (cdr '(d e f))) \(\Rightarrow\) (a e f)
+(cons (car '(a b c))
+      (cdr '(a b c))) \(\Rightarrow\) (a b c)
+\end{alltt}
+
+
+Just as ``car'' and ``cdr'' are often used as nouns, ``cons'' is
+often used as a verb.
+Creating a new list by adding an element to the beginning of a list
+is referred to as \label{start_s26}\textit{consing} the element onto the list.
+
+
+Notice the word ``usually'' in the description of \texttt{cons}'s second
+argument.
+The procedure \texttt{cons} actually builds \label{start_s27}\textit{pairs}, and there is no
+reason that the cdr of a pair must be a list.
+A list is a sequence of pairs; each pair's cdr is the next pair in
+the sequence.
+\begin{figure}[H]
+\centering
+%\includegraphics{math/1.eps}
+\input{math/1.tikz}
+\end{figure}
+
+The cdr of the last pair in a \label{start_s28}\textit{proper list} is the empty list.
+Otherwise, the sequence of pairs forms an \label{start_s29}\textit{improper list}.
+More formally, the empty list is a proper list, and any pair whose cdr
+is a proper list is a proper list.
+
+An improper list is printed in \textit{dotted-pair notation}, with a
+period, or \label{start_s30}\label{start_s31}\textit{dot},
+preceding the final element of the list.
+
+
+\begin{alltt}
+(cons 'a 'b) \(\Rightarrow\) (a . b)
+(cdr '(a . b)) \(\Rightarrow\) b
+(cons 'a '(b . c)) \(\Rightarrow\) (a b . c)
+\end{alltt}
+
+
+Because of its printed notation, a pair whose cdr is not a list is
+often called a \label{start_s32}\textit{dotted pair}.
+Even pairs whose cdrs are lists can be written in dotted-pair
+notation, however, although the printer always chooses to write
+proper lists without dots.
+
+
+\texttt{'(a . (b . (c . ()))) \(\Rightarrow\) (a b c)}
+
+The procedure \label{start_s33}\texttt{list} is similar to \texttt{cons}, except that it takes
+an arbitrary number of arguments and always builds a proper list.
+
+
+\begin{alltt}
+(list 'a 'b 'c) \(\Rightarrow\) (a b c)
+(list 'a) \(\Rightarrow\) (a)
+(list) \(\Rightarrow\) ()
+\end{alltt}
+
+
+Section \ref{objects_g109} provides more information on lists and the Scheme
+procedures for manipulating them.
+This might be a good time to turn to that section and familiarize
+yourself with the other procedures given there.
+
+
+\paragraph{Exercise \label{start_g7}2.2.1}
+
+
+\label{start_s34}Convert the following arithmetic expressions into Scheme expressions
+and evaluate them.
+
+
+ 
+ \begin{enumerate}[\it a. ]
+\item $1.2 \times (2 - 1/3) + -8.7$
+\item $(2/3 + 4/9) \div (5/11 - 4/3)$
+\item $1 + 1 \div (2 + 1 \div (1 + 1/2))$
+\item $1 \times -2 \times 3 \times -4 \times 5 \times -6 \times 7$
+\end{enumerate}
+
+
+
+
+\paragraph{Exercise \label{start_g8}2.2.2}
+
+
+\label{start_s35}Experiment with the procedures \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/}
+to determine Scheme's rules for the type of value returned by
+each when given different types of numeric arguments.
+
+
+
+
+\paragraph{Exercise \label{start_g9}2.2.3}
+
+
+\label{start_s36}\label{start_EXEXPRVALUE}Determine the values of the following expressions.
+Use your Scheme system to verify your answers.
+
+
+ 
+ \begin{enumerate}[\it a. ]
+\item \texttt{(cons 'car 'cdr)}
+\item \texttt{(list 'this '(is silly))}
+\item \texttt{(cons 'is '(this silly?))}
+\item \texttt{(quote (+ 2 3))}
+\item \texttt{(cons '+ '(2 3))}
+\item \texttt{(car '(+ 2 3))}
+\item \texttt{(cdr '(+ 2 3))}
+\item \texttt{cons}
+\item \texttt{(quote cons)}
+\item \texttt{(quote (quote cons))}
+\item \texttt{(car (quote (quote cons)))}
+\item \texttt{(+ 2 3)}
+\item \texttt{(+ '2 '3)}
+\item \texttt{(+ (car '(2 3)) (car (cdr '(2 3))))}
+\item \texttt{((car (list + - * /)) 2 3)}
+\end{enumerate}
+
+
+
+
+\paragraph{Exercise \label{start_g10}2.2.4}
+
+
+\label{start_s37}\texttt{(car (car '((a b) (c d))))} yields \texttt{a}.
+Determine which compositions of \texttt{car} and \texttt{cdr} applied
+to \texttt{((a b) (c d))} yield \texttt{b}, \texttt{c}, and
+\texttt{d}.
+
+
+
+
+\paragraph{Exercise \label{start_g11}2.2.5}
+
+
+\label{start_s38}Write a Scheme expression that evaluates to the following internal
+list structure.
+
+
+\begin{figure}[H]
+\centering
+%\includegraphics{math/2.eps}
+\input{math/2.tikz}
+\end{figure}
+
+
+
+
+
+\paragraph{Exercise \label{start_g12}2.2.6}
+
+
+\label{start_s39}Draw the internal list structure produced by the expression below.
+
+
+\texttt{(cons 1 (cons '(2 . ((3) . ())) (cons '(()) (cons 4 5))))}
+
+
+
+\paragraph{Exercise \label{start_g13}2.2.7}
+
+
+\label{start_s40}The behavior of
+\texttt{(car (car (car '((a b) (c d)))))} is undefined because
+\texttt{(car '((a b) (c d)))} is \texttt{(a b)},
+\texttt{(car '(a b))} is \texttt{a},
+and \texttt{(car 'a)} is undefined.
+Determine all legal compositions of \texttt{car} and \texttt{cdr} applied
+to \texttt{((a b) (c d))}.
+
+
+
+
+
+\paragraph{Exercise \label{start_g14}2.2.8}
+
+
+\label{start_s41}Try to explain how Scheme expressions are evaluated.
+Does your explanation cover the last example in Exercise \hyperref[start_g9]{2.2.3}?
+
+
+
+
+\section{\label{start_g15}\label{start_h3}Evaluating Scheme Expressions\label{start_SECTGSEVALUATING}}
+
+
+
+Let's turn to a discussion of how Scheme evaluates the expressions
+you type.
+We have already established the rules for \label{start_s42}constant objects
+such as strings and numbers: the object itself is the value.
+You have probably also worked out in your mind a rule for evaluating
+\label{start_s43}procedure applications of the form
+\texttt{(\textit{procedure} \textit{arg\textsubscript{1}} ... \textit{arg\textsubscript{n}})}.
+Here, \texttt{\textit{procedure}} is an expression representing a Scheme procedure,
+and \texttt{\textit{arg\textsubscript{1}} ... \textit{arg\textsubscript{n}}} are expressions representing its
+arguments.
+One possibility is the following.
+
+\begin{itemize}
+\item 
+Find the value of \texttt{\textit{procedure}}.
+
+\item 
+Find the value of \texttt{\textit{arg\textsubscript{1}}}.
+
+\(\vdots\)
+\item 
+Find the value of \texttt{\textit{arg\textsubscript{n}}}.
+
+\item 
+Apply the value of \texttt{\textit{procedure}} to the values
+of \texttt{\textit{arg\textsubscript{1}} ... \textit{arg\textsubscript{n}}}.
+
+\end{itemize}
+
+
+For example, consider the simple procedure application \texttt{(+ 3 4)}.
+The value of \texttt{+} is the addition procedure, the value of 3
+is the number 3, and the value of 4 is the number 4.
+Applying the addition procedure to 3 and 4 yields 7, so our value
+is the object 7.
+
+
+By applying this process at each level, we can find the value of the
+nested expression \texttt{(* (+ 3 4) 2)}.
+The value of \texttt{*} is the multiplication procedure, the value of
+\texttt{(+ 3 4)} we can determine to be the number 7, and the
+value of 2 is the number 2.
+Multiplying 7 by 2 we get 14, so our answer is 14.
+
+
+This rule works for procedure applications but not
+for
+\label{start_s44}\label{start_s45}\texttt{quote} expressions
+because the subexpressions of a procedure application are
+evaluated, whereas the subexpression of a \texttt{quote} expression is
+not.
+The evaluation of a \texttt{quote} expression is more similar to the
+evaluation of constant objects.
+The value of a \texttt{quote} expression of the form
+\texttt{(quote \textit{object})}
+is simply \texttt{\textit{object}}.
+
+
+Constant objects, procedure applications, and \texttt{quote} expressions
+are only three of the many syntactic forms provided by Scheme.
+Fortunately, only a few of the other syntactic forms need to be
+understood directly by a Scheme programmer; these are referred to as
+\textit{core} syntactic forms.
+The remaining syntactic forms are \label{start_s46}\textit{syntactic extensions}
+defined, ultimately, in terms of the \label{start_s47}core syntactic forms.
+We will discuss the remaining core syntactic forms and a few
+syntactic extensions in the remaining sections of this chapter.
+Section \ref{further_g50} summarizes the core syntactic forms and introduces
+the syntactic extension mechanism.
+
+
+Before we go on to more syntactic forms and procedures,
+two points related to the evaluation of procedure applications
+are worthy of note.
+\label{start_s48}First, the process given above is
+overspecified, in that it requires the subexpressions to be evaluated
+from left to right.
+That is, \texttt{\textit{procedure}} is evaluated before \texttt{\textit{arg\textsubscript{1}}},
+\texttt{\textit{arg\textsubscript{1}}} is evaluated before \texttt{\textit{arg\textsubscript{2}}}, and so on.
+This need not be the case.
+A Scheme evaluator is free to evaluate the expressions in
+any order---left to right, right to left, or any other sequential
+order.
+In fact, the subexpressions may be evaluated in different orders
+for different applications, even in the same implementation.
+
+
+The second point is that \texttt{\textit{procedure}} is evaluated in the
+same way as \texttt{\textit{arg\textsubscript{1}} ... \textit{arg\textsubscript{n}}}.
+While \texttt{\textit{procedure}} is often a variable
+that names a particular procedure, this need not be the case.
+Exercise \hyperref[start_g9]{2.2.3} had you determine
+the value of the expression \texttt{((car (list + - * /)) 2 3)}.
+Here, \texttt{\textit{procedure}} is \texttt{(car (list + - * /))}.
+The value of \texttt{(car (list + - * /))} is the addition procedure,
+just as if \texttt{\textit{procedure}} were simply the variable
+\texttt{+}.
+
+
+\paragraph{Exercise \label{start_g16}2.3.1}
+
+
+\label{start_s49}Write down the steps necessary to evaluate the expression below.
+
+
+\texttt{((car (cdr (list + - * /))) 17 5)}
+
+
+\section{\label{start_g17}\label{start_h4}Variables and Let Expressions\label{start_SECTGSIDENTIFIERS}}
+
+
+
+\label{start_s50}Suppose \texttt{\textit{expr}} is a Scheme expression that contains
+a variable \texttt{\textit{var}}.
+Suppose, additionally, that we would like \texttt{\textit{var}} to have the value 
+\texttt{\textit{val}} when we evaluate \texttt{\textit{expr}}.
+For example, we might like \texttt{x} to have the value 2 when we 
+evaluate \texttt{(+ x 3)}.
+Or, we might want \texttt{y} to have the value 3 when we evaluate 
+\texttt{(+ 2 y)}.
+The following examples demonstrate how to do this using Scheme's
+\label{start_s51}\texttt{let} syntactic form.
+
+
+\begin{alltt}
+(let ((x 2))
+  (+ x 3)) \(\Rightarrow\) 5
+
+(let ((y 3))
+  (+ 2 y)) \(\Rightarrow\) 5
+
+(let ((x 2) (y 3))
+  (+ x y)) \(\Rightarrow\) 5
+\end{alltt}
+
+
+The \texttt{let} syntactic form includes a list of variable-expression pairs, 
+along with a sequence of expressions referred to as the \textit{body} of the
+\texttt{let}. 
+The general form of a \texttt{let} expression is
+
+
+\texttt{(let ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+\label{start_s52}We say the variables are \textit{bound} to the
+values by the \texttt{let}.
+We refer to variables bound by \texttt{let} as
+\label{start_s53}\texttt{let}-\textit{bound} variables.
+
+
+A \texttt{let} expression is often used to simplify an expression that
+would contain two identical subexpressions.
+Doing so also ensures that the
+value of the common subexpression is computed only once.
+
+
+\begin{alltt}
+(+ (* 4 4) (* 4 4)) \(\Rightarrow\) 32
+
+(let ((a (* 4 4))) (+ a a)) \(\Rightarrow\) 32
+\end{alltt}
+
+
+Brackets are often used in place of parentheses to delimit the bindings of
+a \texttt{let} expression.
+
+
+\begin{alltt}
+(let ([list1 '(a b c)] [list2 '(d e f)])
+  (cons (cons (car list1)
+              (car list2))
+        (cons (car (cdr list1))
+              (car (cdr list2))))) \(\Rightarrow\) ((a . d) b . e)
+\end{alltt}
+
+
+Scheme treats forms enclosed in brackets just like forms enclosed in
+parentheses.
+An open bracket must be matched by a close bracket, and an open
+parenthesis must be matched by a close parenthesis.
+We use brackets for \texttt{let} (and, as we'll see, several other
+standard syntactic forms) to improve readability, especially when we might
+otherwise have two or more consecutive open parentheses.
+
+
+Since expressions in the first position of a procedure application
+are evaluated no differently from other expressions, a \texttt{let}-bound
+variable may be used there as well.
+
+
+\begin{alltt}
+(let ([f +])
+  (f 2 3)) \(\Rightarrow\) 5
+
+(let ([f +] [x 2])
+  (f x 3)) \(\Rightarrow\) 5
+
+(let ([f +] [x 2] [y 3])
+  (f x y)) \(\Rightarrow\) 5
+\end{alltt}
+
+
+The variables bound by \texttt{let} are visible only within the body of 
+the \texttt{let}.
+
+
+\begin{alltt}
+(let ([+ *])
+  (+ 2 3)) \(\Rightarrow\) 6
+
+(+ 2 3) \(\Rightarrow\) 5
+\end{alltt}
+
+
+This is fortunate, because we would not want the
+value of \texttt{+} to be the multiplication procedure everywhere.
+
+
+It is possible to nest \texttt{let} expressions.
+
+
+\begin{alltt}
+(let ([a 4] [b -3])
+  (let ([a-squared (* a a)]
+        [b-squared (* b b)])
+    (+ a-squared b-squared))) \(\Rightarrow\) 25
+\end{alltt}
+
+
+When nested \texttt{let} expressions bind the same variable, only the 
+binding created by the inner \texttt{let} is visible within its body.
+
+
+\begin{alltt}
+(let ([x 1])
+  (let ([x (+ x 1)])
+    (+ x x))) \(\Rightarrow\) 4
+\end{alltt}
+
+
+The outer \texttt{let} expression binds \texttt{x} to 1 within its
+body, which is the second \texttt{let} expression.
+The inner \texttt{let} expression binds \texttt{x} to \texttt{(+ x 1)} within
+its body, which is the expression \texttt{(+ x x)}.
+What is the value of \texttt{(+ x 1)}?
+Since \texttt{(+ x 1)} appears within the body of the outer \texttt{let}
+but not within the body of the inner \texttt{let}, the value of \texttt{x}
+must be 1 and hence the value of \texttt{(+ x 1)} is 2.
+What about \texttt{(+ x x)}?
+It appears within the body of both \texttt{let} expressions.
+Only the inner binding for \texttt{x} is visible, so \texttt{x} is 2
+and \texttt{(+ x x)} is 4.
+
+
+
+\label{start_s54}The inner binding for \texttt{x} is said to \textit{shadow} the
+outer binding.
+A \texttt{let}-bound variable is visible everywhere within the body of its
+\texttt{let} expression except where it is shadowed.
+The region where a variable binding is visible is called its
+\label{start_s55}\textit{scope}.
+The scope of the first \texttt{x} in the example above is the body of
+the outer \texttt{let} expression minus the body of the inner \texttt{let}
+expression, where it is shadowed by the second \texttt{x}.
+This form of scoping is referred to as \label{start_s56}\textit{lexical scoping},
+since the scope of each binding can be determined by a straightforward
+textual analysis of the program.
+
+
+
+Shadowing may be avoided by choosing different names
+for variables.
+The expression above could be rewritten so that the variable bound
+by the inner \texttt{let} is \texttt{new-x}.
+
+
+\begin{alltt}
+(let ([x 1])
+  (let ([new-x (+ x 1)])
+    (+ new-x new-x))) \(\Rightarrow\) 4
+\end{alltt}
+
+
+Although choosing different names can sometimes prevent confusion,
+shadowing can help prevent the accidental use of an
+``old'' value.
+For example, with the original version of the preceding example,
+it would be impossible for us to mistakenly refer to the outer \texttt{x}
+within the body of the inner \texttt{let}.
+
+
+\paragraph{Exercise \label{start_g18}2.4.1}
+
+
+\label{start_s57}Rewrite the following expressions, using \texttt{let} to remove common
+subexpressions and to improve the structure of the code.
+Do not perform any algebraic simplifications.
+
+
+ 
+ \begin{enumerate}[\it a. ]
+\item \texttt{(+ (- (* 3 a) b) (+ (* 3 a) b))}
+\item \texttt{(cons (car (list a b c)) (cdr (list a b c)))}
+\end{enumerate}
+
+
+
+
+\paragraph{Exercise \label{start_g19}2.4.2}
+
+
+\label{start_s58}Determine the value of the following expression.
+Explain how you derived this value.
+
+
+\begin{alltt}
+(let ([x 9])
+  (* x
+     (let ([x (/ x 3)])
+       (+ x x))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \label{start_g20}2.4.3}
+
+
+\label{start_s59}Rewrite the following expressions to give unique names to each different
+\texttt{let}-bound variable so that none of the variables is shadowed.
+Verify that the value of your expression is the same as that of the
+original expression.
+
+
+ 
+ \begin{enumerate}[\it a. ]
+\item 
+\begin{alltt}
+(let ([x 'a] [y 'b])
+  (list (let ([x 'c]) (cons x y))
+        (let ([y 'd]) (cons x y))))
+\end{alltt}
+
+\item 
+\begin{alltt}
+(let ([x '((a b) c)])
+  (cons (let ([x (cdr x)])
+          (car x))
+        (let ([x (car x)])
+          (cons (let ([x (cdr x)])
+                  (car x))
+                (cons (let ([x (car x)])
+                        x)
+                      (cdr x))))))
+\end{alltt}
+
+\end{enumerate}
+
+
+
+
+\section{\label{start_g21}\label{start_h5}Lambda Expressions\label{start_SECTGSLAMBDA}}
+
+
+
+In the expression \texttt{(let ([x (* 3 4)]) (+ x x))}, the variable
+\texttt{x} is bound to the value of \texttt{(* 3 4)}.
+What if we would like the value of \texttt{(+ x x)} where \texttt{x} is
+bound to the value of \texttt{(/ 99 11)}?
+Where \texttt{x} is bound to the value of \texttt{(- 2 7)}?
+In each case we need a different \texttt{let} expression.
+When the body of the \texttt{let} is complicated, however, having to
+repeat it can be inconvenient.
+
+
+Instead, we can use the syntactic form \label{start_s60}\texttt{lambda} to create a new
+\label{start_s61}procedure that has \texttt{x} as a parameter and has the same
+body as the \texttt{let} expression.
+
+
+\texttt{(lambda (x) (+ x x)) \(\Rightarrow\) \#{}\textless{}procedure\textgreater{}}
+
+The general form of a \texttt{lambda} expression is
+
+
+\texttt{(lambda (\textit{var} ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+The variables \texttt{\textit{var} ...} are the \label{start_s62}\textit{formal parameters}
+of the procedure, and the sequence of expressions
+\texttt{\textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...} is its body.
+(Actually, the true general form is somewhat more general than this,
+as you will see later.)
+
+
+A procedure is just as much an object as a number, string, symbol,
+or pair.
+It does not have any meaningful printed representation as
+far as Scheme is concerned, however, so this book uses the notation
+\texttt{\#{}\textless{}procedure\textgreater{}} to show that the value of an expression is a
+procedure.
+
+
+The most common operation to perform on a procedure is to apply it
+to one or more values.
+
+
+\texttt{((lambda (x) (+ x x)) (* 3 4)) \(\Rightarrow\) 24}
+
+This is no different from any other \label{start_s63}procedure application.
+The procedure is the value of \texttt{(lambda (x) (+ x x))}, and the
+only argument is the value of \texttt{(* 3 4)}, or 12.
+The argument values, or \label{start_s64}\textit{actual parameters}, are bound to the
+formal parameters within the body of the \texttt{lambda} expression
+in the same way as \texttt{let}-bound variables are bound to their values.
+In this case, \texttt{x} is bound to 12, and
+the value of \texttt{(+ x x)} is 24.
+Thus, the result of applying the procedure to the value 12 is 24.
+
+
+Because procedures are objects, we can establish
+a procedure as the value of a variable and use the procedure more
+than once.\label{start_s65}
+
+
+\begin{alltt}
+(let ([double (lambda (x) (+ x x))])
+  (list (double (* 3 4))
+        (double (/ 99 11))
+        (double (- 2 7)))) \(\Rightarrow\) (24 18 -10)
+\end{alltt}
+
+
+Here, we establish a binding for \texttt{double} to a procedure, then
+use this procedure to double three different values.
+
+
+The procedure expects its actual parameter to be a number, since
+it passes the actual parameter on to \texttt{+}.
+In general, the actual parameter may be any sort of object.
+Consider, for example, a similar procedure that uses \texttt{cons}
+instead of \texttt{+}.\label{start_s66}
+
+
+\begin{alltt}
+(let ([double-cons (lambda (x) (cons x x))])
+  (double-cons 'a)) \(\Rightarrow\) (a . a)
+\end{alltt}
+
+
+Noting the similarity between \texttt{double} and \texttt{double-cons},
+you should not be surprised to learn that they may be collapsed
+into a single procedure by adding an additional argument.
+
+
+\begin{alltt}
+(let ([double-any (lambda (f x) (f x x))])
+  (list (double-any + 13)
+        (double-any cons 'a))) \(\Rightarrow\) (26 (a . a))
+\end{alltt}
+
+
+This demonstrates that procedures may accept more than
+one argument and that arguments passed to a procedure may
+themselves be procedures.
+
+
+As with \texttt{let} expressions, \texttt{lambda} expressions become
+somewhat more interesting when they are nested within other
+\texttt{lambda} or \texttt{let} expressions.
+
+
+\begin{alltt}
+(let ([x 'a])
+  (let ([f (lambda (y) (list x y))])
+    (f 'b))) \(\Rightarrow\) (a b)
+\end{alltt}
+
+
+The occurrence of \texttt{x} within the \texttt{lambda} expression
+refers to the \texttt{x} outside the \texttt{lambda} that is bound by
+the outer \texttt{let} expression.
+The variable \texttt{x} is said to \label{start_s67}\textit{occur free}
+in the \texttt{lambda} expression or to be a
+\label{start_s68}\textit{free variable} of the \texttt{lambda} expression.
+The variable \texttt{y} does not occur free in the \texttt{lambda}
+expression since it is bound by the \texttt{lambda} expression.
+A variable that occurs free in a \texttt{lambda} expression
+should be bound, e.g., by an enclosing \texttt{lambda} or \texttt{let}
+expression, unless the variable is (like the names of primitive
+procedures) bound outside of the expression, as we discuss in
+the following section.
+
+
+What happens when the procedure is applied somewhere outside
+the scope of the bindings for variables that occur free
+within the procedure, as in the following expression?
+
+
+\begin{alltt}
+(let ([f (let ([x 'sam])
+           (lambda (y z) (list x y z)))])
+  (f 'i 'am)) \(\Rightarrow\) (sam i am)
+\end{alltt}
+
+
+The answer is that the same bindings that were in effect when
+the procedure was created are in effect again when the procedure
+is applied.
+This is true even if another binding for \texttt{x}
+is visible where the procedure is applied.
+
+
+\begin{alltt}
+(let ([f (let ([x 'sam])
+           (lambda (y z) (list x y z)))])
+  (let ([x 'not-sam])
+    (f 'i 'am))) \(\Rightarrow\) (sam i am)
+\end{alltt}
+
+
+In both cases, the value of \texttt{x} within the procedure named
+\texttt{f} is \texttt{sam}.
+
+
+
+Incidentally, a \texttt{let} expression is nothing more than the
+direct application of a \texttt{lambda} expression to a set of
+argument expressions.
+For example, the two expressions below are equivalent.
+
+
+\texttt{(let ([x 'a]) (cons x x))} \(\equiv\) \texttt{((lambda (x) (cons x x)) 'a)}
+
+
+In fact, a \label{start_s69}\texttt{let} expression is a syntactic extension defined
+in terms of \texttt{lambda} and procedure application, which are
+both core syntactic forms.
+In general, any expression of the form
+
+
+\texttt{(let ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+is equivalent to the following.
+
+
+\begin{alltt}
+((lambda (\textit{var} ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)
+ \textit{expr} ...)
+\end{alltt}
+
+
+See Section \ref{further_g50} for more about core forms and syntactic
+extensions.
+
+
+As mentioned above, the general form of
+\label{start_s70}\label{start_s71}\texttt{lambda} is a bit
+more complicated than the form we saw earlier, in that the
+formal parameter specification, \texttt{(\textit{var} ...)}, need not be a proper list,
+or indeed even a list at all.
+The formal parameter specification can be in any of the following three forms:
+
+\begin{itemize}
+\item 
+a proper list of variables, \texttt{(\textit{var\textsubscript{1}} ... \textit{var\textsubscript{n}})}, such
+as we have already seen,
+
+\item 
+a single variable, \texttt{\textit{var\textsubscript{r}}}, or
+
+\item 
+an improper list of variables,
+\texttt{(\textit{var\textsubscript{1}} ... \textit{var\textsubscript{n}} . \textit{var\textsubscript{r}})}.
+
+\end{itemize}
+
+
+In the first case, exactly \textit{n} actual parameters must
+be supplied, and
+each variable is bound to the corresponding actual parameter.
+In the second, any number of actual parameters is valid; all of the
+actual parameters
+are put into a single list and the single variable is bound to this
+list.
+The third case is a hybrid of the first two cases.
+At least \textit{n} actual parameters must be supplied.
+The variables \texttt{\textit{var\textsubscript{1}} ... \textit{var\textsubscript{n}}}
+are bound to the corresponding actual parameters,
+and the variable \texttt{\textit{var\textsubscript{r}}} is bound to a list containing
+the remaining actual parameters.
+In the second and third cases, \texttt{\textit{var\textsubscript{r}}} is sometimes referred to
+as a ``rest'' parameter because it holds the rest of the actual
+parameters beyond those that are individually named.
+
+
+Let's consider a few examples to help clarify the more general
+syntax of \texttt{lambda} expressions.
+
+
+\begin{alltt}
+(let ([f (lambda x x)])
+  (f 1 2 3 4)) \(\Rightarrow\) (1 2 3 4)
+
+(let ([f (lambda x x)])
+  (f)) \(\Rightarrow\) ()
+
+(let ([g (lambda (x . y) (list x y))])
+  (g 1 2 3 4)) \(\Rightarrow\) (1 (2 3 4))
+
+(let ([h (lambda (x y . z) (list x y z))])
+  (h 'a 'b 'c 'd)) \(\Rightarrow\) (a b (c d))
+\end{alltt}
+
+
+In the first two examples, the procedure named \texttt{f} accepts any
+number of arguments.
+These arguments are automatically formed into a list to which the
+variable \texttt{x} is bound; the value of \texttt{f} is this list.
+In the first example, the arguments are 1, 2, 3,
+and 4, so the answer is \texttt{(1 2 3 4)}.
+In the second, there are no arguments, so the answer is the empty
+list \texttt{()}.
+The value of the procedure named \texttt{g} in the third example
+is a list whose first element is the first argument and whose
+second element is a list containing the remaining arguments.
+The procedure named \texttt{h} is similar but separates out the
+second argument.
+While \texttt{f} accepts any number of arguments, \texttt{g} must receive
+at least one and \texttt{h} must receive at least two.
+
+
+\paragraph{Exercise \label{start_g22}2.5.1}
+
+
+\label{start_s72}Determine the values of the expressions below.
+
+
+ 
+ \begin{enumerate}[\it a. ]
+\item 
+\begin{alltt}
+(let ([f (lambda (x) x)])
+  (f 'a))
+\end{alltt}
+
+\item 
+\begin{alltt}
+(let ([f (lambda x x)])
+  (f 'a))
+\end{alltt}
+
+\item 
+\begin{alltt}
+(let ([f (lambda (x . y) x)])
+  (f 'a))
+\end{alltt}
+
+\item 
+\begin{alltt}
+(let ([f (lambda (x . y) y)])
+  (f 'a))
+\end{alltt}
+
+\end{enumerate}
+
+
+
+
+\paragraph{Exercise \label{start_g23}2.5.2}
+
+
+\label{start_s73}How might the primitive procedure \texttt{list} be defined?
+
+
+
+
+\paragraph{Exercise \label{start_g24}2.5.3}
+
+
+\label{start_s74}List the variables that \label{start_s75}occur free in each of the \texttt{lambda}
+expressions below.
+Do not omit variables that name primitive procedures such as
+\texttt{+} or \texttt{cons}.
+
+
+ 
+ \begin{enumerate}[\it a. ]
+\item \texttt{(lambda (f x) (f x))}
+\item \texttt{(lambda (x) (+ x x))}
+\item \texttt{(lambda (x y) (f x y))}
+\item 
+\begin{alltt}
+(lambda (x)
+  (cons x (f x y)))
+\end{alltt}
+
+\item 
+\begin{alltt}
+(lambda (x)
+  (let ([z (cons x y)])
+    (x y z)))
+\end{alltt}
+
+\item 
+\begin{alltt}
+(lambda (x)
+  (let ([y (cons x y)])
+    (x y z)))
+\end{alltt}
+
+\end{enumerate}
+
+
+
+
+\section{\label{start_g25}\label{start_h6}Top-Level Definitions\label{start_SECTGSTOPLEVEL}}
+
+
+
+\label{start_s76}The \label{start_s77}variables bound by \texttt{let} and \texttt{lambda}
+expressions are not visible outside the bodies of these expressions.
+Suppose you have created an object, perhaps a procedure, that must
+be accessible anywhere, like \texttt{+} or \texttt{cons}.
+What you need is a \textit{top-level definition}, which may be established
+with \label{start_s78}\texttt{define}.
+Top-level definitions, which are supported by most interactive Scheme
+systems, are visible in every expression you enter,
+except where shadowed by another binding.
+
+
+Let's establish a top-level definition of the \label{start_s79}\texttt{double-any}
+procedure of the last section.
+
+
+\begin{alltt}
+(define double-any
+  (lambda (f x)
+    (f x x)))
+\end{alltt}
+
+
+The variable \texttt{double-any} now has the same status as \texttt{cons}
+or the name of any other primitive procedure.
+We can use \texttt{double-any} as if it were a primitive procedure.
+
+
+\begin{alltt}
+(double-any + 10) \(\Rightarrow\) 20
+(double-any cons 'a) \(\Rightarrow\) (a . a)
+\end{alltt}
+
+
+A top-level definition may be established for any object, not just
+for procedures.
+
+
+\begin{alltt}
+(define sandwich "peanut-butter-and-jelly")
+
+sandwich \(\Rightarrow\) "peanut-butter-and-jelly"
+\end{alltt}
+
+
+\label{start_s80}Most often, though, top-level definitions are
+used for procedures.
+
+
+\label{start_s81}As suggested above, top-level definitions may be shadowed
+by \texttt{let} or \texttt{lambda} bindings.
+
+
+\begin{alltt}
+(define xyz '(x y z))
+(let ([xyz '(z y x)])
+  xyz) \(\Rightarrow\) (z y x)
+\end{alltt}
+
+
+Variables with top-level definitions act almost as if they were bound
+by a \texttt{let} expression enclosing all of the expressions you type.
+
+
+\label{start_defn_list}Given only the simple tools you have read about up to this point,
+it is already possible to define some of the primitive procedures
+provided by Scheme and described later in this book.
+If you completed the exercises from the last section, you should
+already know how to define \label{start_s82}\texttt{list}.
+
+
+\texttt{(define list (lambda x x))}
+
+Also, Scheme provides the abbreviations \label{start_s83}\texttt{cadr} and \label{start_s84}\texttt{cddr} for
+the compositions of \texttt{car} with \texttt{cdr} and \texttt{cdr} with \texttt{cdr}.
+That is, \texttt{(cadr \textit{list})} is equivalent to
+\texttt{(car (cdr \textit{list}))}, and, similarly,
+\texttt{(cddr \textit{list})} is equivalent to
+\texttt{(cdr (cdr \textit{list}))}.
+They are easily defined as follows.
+
+
+\begin{alltt}
+(define cadr
+  (lambda (x)
+    (car (cdr x))))
+
+(define cddr
+  (lambda (x)
+    (cdr (cdr x))))
+\end{alltt}
+
+
+\begin{alltt}
+(cadr '(a b c)) \(\Rightarrow\) b
+(cddr '(a b c)) \(\Rightarrow\) (c)
+\end{alltt}
+
+
+Any definition \texttt{(define \textit{var} \textit{expr})} where \texttt{\textit{expr}} is a
+\texttt{lambda} expression can be written in a shorter form that suppresses
+the \texttt{lambda}.
+The exact syntax depends upon the format of the \texttt{lambda} expression's
+formal parameter specifier, i.e., whether it is a proper list of
+variables, a single variable, or an improper list of variables.
+A definition of the form
+
+
+\begin{alltt}
+(define \textit{var\textsubscript{0}}
+  (lambda (\textit{var\textsubscript{1}} ... \textit{var\textsubscript{n}})
+    \textit{e\textsubscript{1}} \textit{e\textsubscript{2}} ...))
+\end{alltt}
+
+
+may be abbreviated
+
+
+\begin{alltt}
+(define (\textit{var\textsubscript{0}} \textit{var\textsubscript{1}} ... \textit{var\textsubscript{n}})
+  \textit{e\textsubscript{1}} \textit{e\textsubscript{2}} ...)
+\end{alltt}
+
+
+while
+
+
+\begin{alltt}
+(define \textit{var\textsubscript{0}}
+  (lambda \textit{var\textsubscript{r}}
+    \textit{e\textsubscript{1}} \textit{e\textsubscript{2}} ...))
+\end{alltt}
+
+
+may be abbreviated
+
+
+\begin{alltt}
+(define (\textit{var\textsubscript{0}} . \textit{var\textsubscript{r}})
+  \textit{e\textsubscript{1}} \textit{e\textsubscript{2}} ...)
+\end{alltt}
+
+
+and
+
+
+\begin{alltt}
+(define \textit{var\textsubscript{0}}
+  (lambda (\textit{var\textsubscript{1}} ... \textit{var\textsubscript{n}} . \textit{var\textsubscript{r}})
+    \textit{e\textsubscript{1}} \textit{e\textsubscript{2}} ...))
+\end{alltt}
+
+
+may be abbreviated
+
+
+\begin{alltt}
+(define (\textit{var\textsubscript{0}} \textit{var\textsubscript{1}} ... \textit{var\textsubscript{n}} . \textit{var\textsubscript{r}})
+  \textit{e\textsubscript{1}} \textit{e\textsubscript{2}} ...)
+\end{alltt}
+
+
+For example, the definitions of \label{start_s85}\texttt{cadr} and \label{start_s86}\texttt{list} might be written
+as follows.
+
+
+\begin{alltt}
+(define (cadr x)
+  (car (cdr x)))
+
+(define (list . x) x)
+\end{alltt}
+
+
+This book does not often employ this alternative syntax.
+Although it is shorter, it tends to mask the reality that procedures
+are not intimately tied to variables, or names, as they are in many
+other languages.
+This syntax is often referred to, somewhat pejoratively,
+as the \label{start_s87}``defun'' syntax for \texttt{define}, after the
+\texttt{defun} form provided by Lisp languages in which procedures are more
+closely tied to their names.
+
+
+Top-level definitions make it easier for us to experiment with a
+procedure interactively
+because we need not retype the procedure each time it is used.
+Let's try defining a somewhat more complicated variation of \texttt{double-any},
+one that turns an ``ordinary'' two-argument procedure into a ``doubling''
+one-argument \label{start_s88}procedure.
+
+
+\begin{alltt}
+(define doubler
+  (lambda (f)
+    (lambda (x) (f x x))))
+\end{alltt}
+
+\texttt{doubler} accepts one argument, \texttt{f}, which must be a
+procedure that accepts two arguments.
+The procedure returned by \texttt{doubler} accepts one argument, which
+it uses for both arguments in an application of \texttt{f}.
+We can define, with \texttt{doubler}, the simple
+\label{start_s89}\texttt{double} and
+\label{start_s90}\texttt{double-cons} procedures
+of the last section.
+
+\begin{alltt}
+(define double (doubler +))
+(double 13/2) \(\Rightarrow\) 13
+
+(define double-cons (doubler cons))
+(double-cons 'a) \(\Rightarrow\) (a . a)
+\end{alltt}
+
+
+We can also define \texttt{double-any} with \texttt{doubler}.
+
+
+\begin{alltt}
+(define double-any
+  (lambda (f x)
+    ((doubler f) x)))
+\end{alltt}
+
+
+Within \texttt{double} and
+\texttt{double-cons}, \texttt{f} has the appropriate value, i.e., \texttt{+}
+or \texttt{cons}, even though the procedures are clearly applied outside the
+scope of \texttt{f}.
+
+
+What happens if you attempt to use a variable that is not bound by a
+\texttt{let} or \texttt{lambda} expression and that does not have a top-level
+definition?
+Try using the variable \texttt{i-am-not-defined} to see what happens.
+
+
+\texttt{(i-am-not-defined 3)}
+
+Most Scheme systems print a message
+indicating that an unbound- or undefined-variable exception
+has occurred.
+
+
+The system should not, however, complain
+about the appearance of an undefined variable
+within a \texttt{lambda} expression, until and unless the resulting procedure
+is applied.
+The following should \textit{not} cause an exception, even though we have not yet
+established a top-level definition of \texttt{proc2}.
+
+
+\begin{alltt}
+(define proc1
+  (lambda (x y)
+    (proc2 y x)))
+\end{alltt}
+
+
+If you try to apply \texttt{proc1} before defining \texttt{proc2}, you should get
+a undefined exception message.
+Let's give \texttt{proc2} a top-level definition and try \texttt{proc1}.
+
+
+\begin{alltt}
+(define proc2 cons)
+(proc1 'a 'b) \(\Rightarrow\) (b . a)
+\end{alltt}
+
+
+When you define \texttt{proc1}, the system accepts your promise to define
+\texttt{proc2}, and does not complain unless you use \texttt{proc1} before
+defining \texttt{proc2}.
+This allows you to define procedures in any order you please.
+This is especially useful when you are trying to organize a file full of
+procedure definitions in a way that makes your program more readable.
+It is necessary when two procedures defined at top level depend upon
+each other; we will see some examples of this later.
+
+
+\paragraph{Exercise \label{start_g26}2.6.1}
+
+
+\label{start_s91}What would happen if you were to type
+
+
+\texttt{(double-any double-any double-any)}
+
+given the definition of \texttt{double-any} from the beginning of this
+section?
+
+
+
+
+\paragraph{Exercise \label{start_g27}2.6.2}
+
+
+\label{start_s92}A more elegant (though possibly less efficient) way to define \label{start_s93}\texttt{cadr}
+and \label{start_s94}\texttt{cddr} than given in this
+section is to define a procedure that composes two procedures to create
+a third.
+Write the procedure \label{start_s95}\texttt{compose}, such that
+\texttt{(compose \textit{p\textsubscript{1}} \textit{p\textsubscript{2}})} is the composition of
+\texttt{\textit{p\textsubscript{1}}} and \texttt{\textit{p\textsubscript{2}}} (assuming both take one argument).
+That is, \texttt{(compose \textit{p\textsubscript{1}} \textit{p\textsubscript{2}})} should return a new
+procedure of one argument that applies \texttt{\textit{p\textsubscript{1}}} to the result of
+applying \texttt{\textit{p\textsubscript{2}}} to the argument.
+Use \texttt{compose} to define \texttt{cadr} and \texttt{cddr}.
+
+
+
+
+\paragraph{Exercise \label{start_g28}2.6.3}
+
+
+\label{start_s96}Scheme also provides
+\label{start_s97}\texttt{caar}, \texttt{cdar}, \texttt{caaar}, \texttt{caadr},
+and so on, with any combination of up to four \texttt{a}'s (representing
+\texttt{car}) and \texttt{d}'s (representing \texttt{cdr}) between the \texttt{c}
+and the \texttt{r} (see Section \ref{objects_g109}).
+Define each of these with the \texttt{compose} procedure of the preceding
+exercise.
+
+
+
+
+\section{\label{start_g29}\label{start_h7}Conditional Expressions\label{start_SECTGSCONDITIONALS}}
+
+
+
+So far we have considered expressions that perform a given task
+unconditionally.
+Suppose that we wish to write the procedure \label{start_s98}\texttt{abs}.
+If its argument \textit{x} is negative, \texttt{abs}
+returns -\textit{x}; otherwise, it returns \textit{x}.
+The most straightforward way to write \texttt{abs} is to determine
+whether the argument is negative and if so negate it, using the
+\label{start_s99}\texttt{if} syntactic form.
+
+
+
+\begin{alltt}
+(define abs
+  (lambda (n)
+    (if (\textless{} n 0)
+        (- 0 n)
+        n)))
+
+(abs 77) \(\Rightarrow\) 77
+(abs -77) \(\Rightarrow\) 77
+\end{alltt}
+
+
+An \texttt{if} expression has the form
+\texttt{(if \textit{test} \textit{consequent} \textit{alternative})}, where
+\texttt{\textit{consequent}} is the expression to evaluate if \texttt{\textit{test}} is true
+and 
+\texttt{\textit{alternative}} is the expression to evaluate if \texttt{\textit{test}} is false.
+In the expression above, \texttt{\textit{test}} is \texttt{(\textless{} n 0)}, \texttt{\textit{consequent}}
+is \texttt{(- 0 n)}, and \texttt{\textit{alternative}} is \texttt{n}.
+
+
+The procedure \texttt{abs} could be written in a variety of other ways.
+Any of the following are valid definitions of \texttt{abs}.
+
+
+\begin{alltt}
+(define abs
+  (lambda (n)
+    (if (\textgreater{}= n 0)
+        n
+        (- 0 n))))
+
+(define abs
+  (lambda (n)
+    (if (not (\textless{} n 0))
+        n
+        (- 0 n))))
+
+(define abs
+  (lambda (n)
+    (if (or (\textgreater{} n 0) (= n 0))
+        n
+        (- 0 n))))
+
+(define abs
+  (lambda (n)
+    (if (= n 0)
+        0
+        (if (\textless{} n 0)
+            (- 0 n)
+            n))))
+
+(define abs
+  (lambda (n)
+    ((if (\textgreater{}= n 0) + -)
+     0
+     n)))
+\end{alltt}
+
+
+The first of these definitions asks if \texttt{n} is greater
+than or equal to zero, inverting the test.
+The second asks if \texttt{n} is not less than zero, using the procedure
+\label{start_s100}\texttt{not} with \texttt{\textless{}}.
+The third asks if \texttt{n} is greater than zero or \texttt{n} is equal to
+zero, using the syntactic form \label{start_s101}\texttt{or}.
+The fourth treats zero separately, though there is no benefit in doing so.
+The fifth is somewhat tricky; \texttt{n} is either added to or subtracted from
+zero, depending upon whether \texttt{n} is greater than or equal to zero.
+
+
+Why is \label{start_s102}\texttt{if} a syntactic form and not a procedure?
+In order to answer this, let's revisit the definition of
+\texttt{reciprocal} from the first section of this chapter.
+
+
+\begin{alltt}
+(define reciprocal
+  (lambda (n)
+    (if (= n 0)
+        "oops!"
+        (/ 1 n))))
+\end{alltt}
+
+
+The second argument to the division procedure should not be zero,
+since the result is mathematically undefined.
+Our definition of \texttt{reciprocal} avoids this problem by
+testing for zero before dividing.
+Were \texttt{if} a procedure, its arguments (including \texttt{(/ 1 n)})
+would be evaluated before it had a chance to choose between the
+consequent and alternative.
+Like \texttt{quote}, which does not evaluate its only subexpression,
+\texttt{if} does not evaluate all of its subexpressions and so cannot
+be a procedure.
+
+
+The syntactic form \label{start_s103}\texttt{or} operates in a manner similar to \texttt{if}.
+The general form of an \texttt{or} expression is \texttt{(or \textit{expr} ...)}.
+If there are no subexpressions, i.e., the expression is simply \texttt{(or)},
+the value is false.
+Otherwise, each \texttt{\textit{expr}} is evaluated in turn until either (a) one of
+the expressions evaluates to true or (b) no more expressions are left.
+In case (a), the value is true; in case (b), the value is false.
+
+
+To be more precise, in case (a), the value of the \texttt{or}
+expression is the value of the last subexpression evaluated.
+This clarification is necessary because there are many possible true
+values.
+Usually, the value of a test expression is one of the two objects
+\label{start_s104}\texttt{\#{}t}, for true, or \label{start_s105}\texttt{\#{}f}, for false.
+
+
+\begin{alltt}
+(\textless{} -1 0) \(\Rightarrow\) \#{}t
+(\textgreater{} -1 0) \(\Rightarrow\) \#{}f
+\end{alltt}
+
+
+Every Scheme object, however, is considered to be either \label{start_s106}true
+or \label{start_s107}false by conditional expressions and by
+the procedure \texttt{not}.
+Only \texttt{\#{}f} is considered false; all other objects are considered
+true.
+
+
+\begin{alltt}
+(if \#{}t 'true 'false) \(\Rightarrow\) true
+(if \#{}f 'true 'false) \(\Rightarrow\) false
+(if '() 'true 'false) \(\Rightarrow\) true
+(if 1 'true 'false) \(\Rightarrow\) true
+(if '(a b c) 'true 'false) \(\Rightarrow\) true
+
+(not \#{}t) \(\Rightarrow\) \#{}f
+(not "false") \(\Rightarrow\) \#{}f
+(not \#{}f) \(\Rightarrow\) \#{}t
+
+(or) \(\Rightarrow\) \#{}f
+(or \#{}f) \(\Rightarrow\) \#{}f
+(or \#{}f \#{}t) \(\Rightarrow\) \#{}t
+(or \#{}f 'a \#{}f) \(\Rightarrow\) a
+\end{alltt}
+
+
+The \label{start_s108}\texttt{and} syntactic form is similar in form to \texttt{or}, but an
+\texttt{and} expression is true if all its subexpressions are true, and
+false otherwise.
+In the case where there are no subexpressions, i.e., the expression is
+simply \texttt{(and)}, the value is true.
+Otherwise, the subexpressions are evaluated in turn until either
+no more subexpressions are left or the value of a subexpression is
+false.
+The value of the \texttt{and} expression
+is the value of the last subexpression evaluated.
+
+
+Using \texttt{and}, we can define a slightly different version of
+\label{start_s109}\texttt{reciprocal}.
+
+
+\begin{alltt}
+(define reciprocal
+  (lambda (n)
+    (and (not (= n 0))
+         (/ 1 n))))
+
+(reciprocal 3) \(\Rightarrow\) 1/3
+(reciprocal 0.5) \(\Rightarrow\) 2.0
+(reciprocal 0) \(\Rightarrow\) \#{}f
+\end{alltt}
+
+
+In this version, the value is \texttt{\#{}f} if \texttt{n} is zero and \texttt{1/n} otherwise.
+
+
+The procedures \texttt{=}, \texttt{\textless{}}, \texttt{\textgreater{}}, \texttt{\textless{}=}, and \texttt{\textgreater{}=} are
+called \label{start_s110}\textit{predicates}.
+A predicate is a procedure that answers a specific question about its
+arguments and returns one of the two values \texttt{\#{}t} or \texttt{\#{}f}.
+The names of most predicates end with a
+\label{start_s111}\label{start_s112}question mark ( \texttt{?} ); the
+common numeric procedures listed above are exceptions to this
+rule.
+Not all predicates require numeric arguments, of course.
+The predicate \label{start_s113}\texttt{null?} returns true if its argument is the empty
+list \texttt{()} and false otherwise.
+
+
+\begin{alltt}
+(null? '()) \(\Rightarrow\) \#{}t
+(null? 'abc) \(\Rightarrow\) \#{}f
+(null? '(x y z)) \(\Rightarrow\) \#{}f
+(null? (cdddr '(x y z))) \(\Rightarrow\) \#{}t
+\end{alltt}
+
+
+The procedure \label{start_s114}\texttt{cdr} must not be passed anything other than a pair,
+and an exception is raised when this happens.
+Common Lisp, however, defines \texttt{(cdr '())} to be \texttt{()}.
+The following procedure, \label{start_s115}\texttt{lisp-cdr}, is 
+defined using \texttt{null?} to return
+\texttt{()} if its argument is \texttt{()}.
+
+
+\begin{alltt}
+(define lisp-cdr
+  (lambda (x)
+    (if (null? x)
+        '()
+        (cdr x))))
+
+(lisp-cdr '(a b c)) \(\Rightarrow\) (b c)
+(lisp-cdr '(c)) \(\Rightarrow\) ()
+(lisp-cdr '()) \(\Rightarrow\) ()
+\end{alltt}
+
+
+Another useful predicate is \label{start_s116}\texttt{eqv?}, which
+requires two arguments.
+If the two arguments are equivalent, \texttt{eqv?} returns true.
+Otherwise, \texttt{eqv?} returns false.
+
+
+\begin{alltt}
+(eqv? 'a 'a) \(\Rightarrow\) \#{}t
+(eqv? 'a 'b) \(\Rightarrow\) \#{}f
+(eqv? \#{}f \#{}f) \(\Rightarrow\) \#{}t
+(eqv? \#{}t \#{}t) \(\Rightarrow\) \#{}t
+(eqv? \#{}f \#{}t) \(\Rightarrow\) \#{}f
+(eqv? 3 3) \(\Rightarrow\) \#{}t
+(eqv? 3 2) \(\Rightarrow\) \#{}f
+(let ([x "Hi Mom!"])
+  (eqv? x x)) \(\Rightarrow\) \#{}t
+(let ([x (cons 'a 'b)])
+  (eqv? x x)) \(\Rightarrow\) \#{}t
+(eqv? (cons 'a 'b) (cons 'a 'b)) \(\Rightarrow\) \#{}f
+\end{alltt}
+
+
+As you can see, \texttt{eqv?} returns true if the arguments are the same
+symbol, boolean, number, pair, or string.
+Two pairs are not the same by \texttt{eqv?} if they are created by different
+calls to \texttt{cons}, even if they have the same contents.
+Detailed equivalence rules for \texttt{eqv?} are given in Section \ref{objects_g108}.
+
+
+Scheme also provides a set
+of \label{start_s117}\textit{type predicates} that return true
+or false depending on the type of the object, e.g., \label{start_s118}\texttt{pair?},
+\label{start_s119}\texttt{symbol?}, \label{start_s120}\texttt{number?}, and \label{start_s121}\texttt{string?}.
+The predicate \label{start_s122}\texttt{pair?}, for example, returns true only if its argument
+is a pair.
+
+
+\begin{alltt}
+(pair? '(a . c)) \(\Rightarrow\) \#{}t
+(pair? '(a b c)) \(\Rightarrow\) \#{}t
+(pair? '()) \(\Rightarrow\) \#{}f
+(pair? 'abc) \(\Rightarrow\) \#{}f
+(pair? "Hi Mom!") \(\Rightarrow\) \#{}f
+(pair? 1234567890) \(\Rightarrow\) \#{}f
+\end{alltt}
+
+
+Type predicates are useful for deciding if the argument passed to a
+procedure is of the appropriate type.
+For example, the following version of \label{start_s123}\texttt{reciprocal} checks first to
+see that its argument is a number before testing against zero or
+performing the division. 
+
+
+\begin{alltt}
+(define reciprocal
+  (lambda (n)
+    (if (and (number? n) (not (= n 0)))
+        (/ 1 n)
+        "oops!")))
+
+(reciprocal 2/3) \(\Rightarrow\) 3/2
+(reciprocal 'a) \(\Rightarrow\) "oops!"
+\end{alltt}
+
+
+By the way, the code that uses \texttt{reciprocal} must check to see that
+the returned value is a number and not a string.
+To relieve the caller of this obligation, it is usually preferable
+to report the error, using \texttt{assertion-violation},
+as follows.
+
+
+\begin{alltt}
+(define reciprocal
+  (lambda (n)
+    (if (and (number? n) (not (= n 0)))
+        (/ 1 n)
+        (assertion-violation 'reciprocal
+          "improper argument"
+          n))))
+
+(reciprocal .25) \(\Rightarrow\) 4.0
+(reciprocal 0) \(\Rightarrow\) \textit{exception in reciprocal: improper argument 0}
+(reciprocal 'a) \(\Rightarrow\) \textit{exception in reciprocal: improper argument a}
+\end{alltt}
+
+
+The first argument to \texttt{assertion-violation} is a symbol identifying where
+the message originates, the second is a string describing the error,
+and the third and subsequent arguments are ``irritants'' to be included with
+the error message.
+
+
+Let's look at one more conditional expression, \label{start_s124}\texttt{cond}, that is often
+useful in place of \label{start_s125}\texttt{if}.
+\texttt{cond} is similar to \texttt{if} except that it allows multiple
+test and alternative expressions.
+Consider the following definition of \texttt{sign}, which returns
+\texttt{-1} for negative inputs,
+\texttt{+1} for positive inputs, and
+\texttt{0} for zero.
+
+
+\begin{alltt}
+(define sign
+  (lambda (n)
+    (if (\textless{} n 0)
+        -1
+        (if (\textgreater{} n 0)
+            +1
+            0))))
+\end{alltt}
+
+
+\begin{alltt}
+(sign -88.3) \(\Rightarrow\) -1
+(sign 0) \(\Rightarrow\) 0
+(sign 333333333333) \(\Rightarrow\) 1
+(* (sign -88.3) (abs -88.3)) \(\Rightarrow\) -88.3
+\end{alltt}
+
+
+The two \texttt{if} expressions may be replaced by a single \texttt{cond}
+expression as follows.
+
+
+\begin{alltt}
+(define sign
+  (lambda (n)
+    (cond
+      [(\textless{} n 0) -1]
+      [(\textgreater{} n 0) +1]
+      [else 0])))
+\end{alltt}
+
+
+A \texttt{cond} expression usually takes the form
+
+
+\texttt{(cond (\textit{test} \textit{expr}) ... (else \textit{expr}))}
+
+though the \texttt{else} clause may be omitted.
+This should be done only when there is no possibility that all the tests
+will fail, as in the new version of \texttt{sign} below.
+
+
+\begin{alltt}
+(define sign
+  (lambda (n)
+    (cond
+      [(\textless{} n 0) -1]
+      [(\textgreater{} n 0) +1]
+      [(= n 0) 0])))
+\end{alltt}
+
+
+These definitions of \texttt{sign} do not depend on the order in which the
+tests are performed, since only one of the tests can be true for any
+value of \texttt{n}.
+The following procedure computes the tax on a given amount of income in
+a progressive tax system with breakpoints at 10,000, 20,000, and 30,000
+dollars.
+
+
+\begin{alltt}
+(define income-tax
+  (lambda (income)
+    (cond
+      [(\textless{}= income 10000) (* income .05)]
+      [(\textless{}= income 20000) (+ (* (- income 10000) .08) 500.00)]
+      [(\textless{}= income 30000) (+ (* (- income 20000) .13) 1300.00)]
+      [else (+ (* (- income 30000) .21) 2600.00)])))
+\end{alltt}
+
+
+\begin{alltt}
+(income-tax 5000) \(\Rightarrow\) 250.0
+(income-tax 15000) \(\Rightarrow\) 900.0
+(income-tax 25000) \(\Rightarrow\) 1950.0
+(income-tax 50000) \(\Rightarrow\) 6800.0
+\end{alltt}
+
+
+In this example, the order in which the tests are performed,
+left to right (top to bottom), is significant.
+
+
+\paragraph{Exercise \label{start_g30}2.7.1}
+
+
+\label{start_s126}Define the predicate \label{start_s127}\texttt{atom?}, which returns true if its argument
+is not a pair and false if it is.
+
+
+
+
+\paragraph{Exercise \label{start_g31}2.7.2}
+
+
+\label{start_s128}\label{start_EXSHORTER1}The procedure \texttt{length} returns the length of its argument, which
+must be a list.
+For example, \texttt{(length '(a b c))} is 3.
+Using \texttt{length}, define the procedure \label{start_s129}\texttt{shorter}, which returns the
+shorter of two list arguments.
+Have it return the first list if they have the same length.
+
+
+\begin{alltt}
+(shorter '(a b) '(c d e)) \(\Rightarrow\) (a b)
+(shorter '(a b) '(c d)) \(\Rightarrow\) (a b)
+(shorter '(a b) '(c)) \(\Rightarrow\) (c)
+\end{alltt}
+
+
+
+\section{\label{start_g32}\label{start_h8}Simple Recursion\label{start_SECTGSRECURSION}}
+
+
+
+\label{start_s130}We have seen how we can control whether or not
+expressions are evaluated with \texttt{if}, \texttt{and}, \texttt{or},
+and \texttt{cond}.
+We can also perform an expression more than once by creating a
+procedure containing the expression and invoking the procedure
+more than once.
+What if we need to perform some expression repeatedly, say for
+all the elements of a list or all the numbers from one to ten?
+We can do so via \label{start_s131}recursion.
+Recursion is a simple concept: the application of a procedure from
+within that procedure.
+It can be tricky to master recursion at first, but once mastered it
+provides expressive power far beyond ordinary looping constructs.
+
+
+A \label{start_s132}\textit{recursive procedure} is a procedure that applies itself.
+Perhaps the simplest recursive procedure is the following, which we will
+call \label{start_s133}\texttt{goodbye}.
+
+
+\begin{alltt}
+(define goodbye
+  (lambda ()
+    (goodbye)))
+
+(goodbye) \(\Rightarrow\)
+\end{alltt}
+
+
+This procedure takes no arguments and simply applies itself immediately.
+There is no value after the \(\Rightarrow\) because \texttt{goodbye} never returns.
+
+
+Obviously, to make practical use out of a recursive procedure, we must
+have some way to terminate the recursion.
+Most recursive procedures should have at least two basic elements, a
+\label{start_s134}\textit{base case} and a \label{start_s135}\textit{recursion step}.
+The base case terminates the recursion, giving the value of the
+procedure for some base argument.
+The recursion step gives the value in terms of the value of the procedure
+applied to a different argument.
+In order for the recursion to terminate, the different argument must
+be closer to the base argument in some way.
+
+
+\label{start_s136}Let's consider the problem of finding the length of a
+proper list recursively.
+We need a base case and a recursion step.
+The logical base argument for recursion on lists is nearly always the empty
+list.
+The length of the empty list is zero, so the base case should give the
+value zero for the empty list.
+In order to become closer to the empty list, the natural recursion step
+involves the cdr of the argument.
+A nonempty list is one element longer than its cdr, so the recursion
+step gives the value as one more than the length of the cdr of the
+list\label{start_defn_simplelength}.
+
+
+\begin{alltt}
+(define length
+  (lambda (ls)
+    (if (null? ls)
+        0
+        (+ (length (cdr ls)) 1))))
+\end{alltt}
+
+
+\begin{alltt}
+(length '()) \(\Rightarrow\) 0
+(length '(a)) \(\Rightarrow\) 1
+(length '(a b)) \(\Rightarrow\) 2
+\end{alltt}
+
+
+The \texttt{if} expression asks if the list is empty.
+If so, the value is zero.
+This is the base case.
+If not, the value is one more than the length of the cdr of the list.
+This is the recursion step.
+
+
+Many Scheme implementations allow you to trace the execution of a procedure to
+see how it operates.
+\label{start_s137}\label{start_s138}In
+\label{start_s139}Chez Scheme, for example, one way to
+trace a procedure is to type \texttt{(trace \textit{name})}, where
+\texttt{\textit{name}} is the name of a procedure you have defined at top level.
+If you trace \texttt{length} as defined above and pass it the argument
+\texttt{'(a b c d)}, you should see something like this:
+
+
+\begin{alltt}
+\textbar{}(length (a b c d))
+\textbar{} (length (b c d))
+\textbar{} \textbar{}(length (c d))
+\textbar{} \textbar{} (length (d))
+\textbar{} \textbar{} \textbar{}(length ())
+\textbar{} \textbar{} \textbar{}0
+\textbar{} \textbar{} 1
+\textbar{} \textbar{}2
+\textbar{} 3
+\textbar{}4
+\end{alltt}
+
+
+The indentation shows the nesting level of the recursion; the vertical
+lines associate applications visually with their values.
+Notice that on each application of \texttt{length} the list gets smaller until
+it finally reaches \texttt{()}.
+The value at \texttt{()} is 0, and each outer level adds 1 to arrive
+at the final value.
+
+
+Let's write a procedure, \label{start_s140}\texttt{list-copy}, that returns a copy of its
+argument, which must be a list.
+That is, \texttt{list-copy} returns a new list consisting of the elements
+(but not the pairs) of the old list.
+Making a copy might be useful if either the original list or the copy
+might be altered via \texttt{set-car!} or \texttt{set-cdr!}, which we discuss later.
+
+
+\begin{alltt}
+(list-copy '()) \(\Rightarrow\) ()
+(list-copy '(a b c)) \(\Rightarrow\) (a b c)
+\end{alltt}
+
+
+See if you can define \texttt{list-copy} before studying the definition below.
+
+
+\begin{alltt}
+(define list-copy
+  (lambda (ls)
+    (if (null? ls)
+        '()
+        (cons (car ls)
+              (list-copy (cdr ls))))))
+\end{alltt}
+
+
+The definition of \texttt{list-copy} is similar to the definition of
+\texttt{length}.
+The test in the base case is the same, \texttt{(null? ls)}.
+The value in the base case is \texttt{()}, however, not 0, because we
+are building up a list, not a number.
+The recursive call is the same, but instead of adding one, \texttt{list-copy}
+conses the car of the list onto the value of the recursive call.
+
+
+There is no reason why there cannot be more than one base case.
+The procedure \label{start_s141}\texttt{memv} takes two arguments, an object and a list.
+It returns the first sublist, or \textit{tail},
+of the list whose car is equal to the object, or
+\texttt{\#{}f} if the object is not found in the list.
+The value of \texttt{memv} may be used as a list or as a truth value
+in a conditional expression.
+
+
+\begin{alltt}
+(define memv
+  (lambda (x ls)
+    (cond
+      [(null? ls) \#{}f]
+      [(eqv? (car ls) x) ls]
+      [else (memv x (cdr ls))])))
+\end{alltt}
+
+
+\begin{alltt}
+(memv 'a '(a b b d)) \(\Rightarrow\) (a b b d)
+(memv 'b '(a b b d)) \(\Rightarrow\) (b b d)
+(memv 'c '(a b b d)) \(\Rightarrow\) \#{}f
+(memv 'd '(a b b d)) \(\Rightarrow\) (d)
+(if (memv 'b '(a b b d))
+    "yes"
+    "no") \(\Rightarrow\) "yes"
+\end{alltt}
+
+
+Here there are two conditions to check, hence the use of \label{start_s142}\texttt{cond}.
+The first cond clause checks for the base value of \texttt{()}; no object is a
+member of \texttt{()}, so the answer is \texttt{\#{}f}.
+The second clause asks if the car of the list is the object, in which
+case the list is returned, being the first tail whose car contains
+the object.
+The recursion step just continues down the list.
+
+
+There may also be more than one recursion case.
+Like \texttt{memv}, the procedure \label{start_s143}\texttt{remv} defined below takes two
+arguments, an object and a list.
+It returns a new list with all occurrences of the object removed from
+the list.
+
+
+\begin{alltt}
+(define remv
+  (lambda (x ls)
+    (cond
+      [(null? ls) '()]
+      [(eqv? (car ls) x) (remv x (cdr ls))]
+      [else (cons (car ls) (remv x (cdr ls)))])))
+\end{alltt}
+
+
+\begin{alltt}
+(remv 'a '(a b b d)) \(\Rightarrow\) (b b d)
+(remv 'b '(a b b d)) \(\Rightarrow\) (a d)
+(remv 'c '(a b b d)) \(\Rightarrow\) (a b b d)
+(remv 'd '(a b b d)) \(\Rightarrow\) (a b b)
+\end{alltt}
+
+
+This definition is similar to the definition of \texttt{memv} above,
+except \texttt{remv} does not quit once it finds the element in the car
+of the list.
+Rather, it continues, simply ignoring the element.
+If the element is not found in the car of the list, \texttt{remv} does
+the same thing as \texttt{list-copy} above: it conses the car of the list
+onto the recursive value.
+
+
+Up to now, the recursion has been only on the cdr of a list.
+It is sometimes useful, however, for a procedure to recur on
+the car as well as the cdr of the list.
+The procedure \label{start_s144}\texttt{tree-copy} defined below
+treats the structure of pairs as a tree
+rather than as a list, with the left subtree being the car of the pair and
+the right subtree being the cdr of the pair.
+It performs a similar operation to \texttt{list-copy}, building new pairs
+while leaving the elements (leaves) alone.
+
+
+\begin{alltt}
+(define tree-copy
+  (lambda (tr)
+    (if (not (pair? tr))
+        tr
+        (cons (tree-copy (car tr))
+              (tree-copy (cdr tr))))))
+\end{alltt}
+
+
+\texttt{(tree-copy '((a . b) . c)) \(\Rightarrow\) ((a . b) . c)}
+The natural base argument for a tree structure is anything that is not a
+pair, since the recursion traverses pairs rather than lists.
+The recursive step in this case is \textit{doubly recursive}, finding the
+value recursively for the car as well as the cdr of the argument.
+
+
+At this point, readers who are familiar with other languages that provide
+special iteration constructs, e.g., \textit{while} or \textit{for} loops, might
+wonder whether similar constructs are required in Scheme.
+Such constructs are unnecessary; \label{start_s145}iteration in Scheme
+is expressed more clearly and succinctly via recursion.
+Recursion is more general and eliminates the need for the variable
+assignments required by many other languages' iteration constructs,
+resulting in code that is more reliable and easier to follow.
+Some recursion is essentially iteration and executes as such;
+Section \ref{further_g55} has more to say about this.
+Often, there is no need to make a distinction, however.
+Concentrate instead on writing clear, concise, and correct programs.
+
+
+Before we leave the topic of recursion, let's consider a special form of
+repetition called \label{start_s146}\textit{mapping}.
+Consider the following procedure, \texttt{abs-all}, that takes a list of
+numbers as input and returns a list of their absolute values.
+
+
+\begin{alltt}
+(define abs-all
+  (lambda (ls)
+    (if (null? ls)
+        '()
+        (cons (abs (car ls))
+              (abs-all (cdr ls))))))
+\end{alltt}
+
+
+\texttt{(abs-all '(1 -2 3 -4 5 -6)) \(\Rightarrow\) (1 2 3 4 5 6)}
+This procedure forms a new list from the input list by applying the
+procedure \texttt{abs} to each element.
+We say that \texttt{abs-all} \textit{maps} \texttt{abs} over the input list to
+produce the output list.
+Mapping a procedure over a list is a fairly common thing to do, so Scheme
+provides the procedure \texttt{map}, which maps its first argument,
+a procedure, over its second, a list.
+We can use \label{start_s147}\texttt{map} to define \texttt{abs-all}.
+
+
+\begin{alltt}
+(define abs-all
+  (lambda (ls)
+    (map abs ls)))
+\end{alltt}
+
+
+We really do not need \texttt{abs-all}, however, since the corresponding
+direct application of \texttt{map} is just as short and perhaps clearer.
+
+
+\texttt{(map abs '(1 -2 3 -4 5 -6)) \(\Rightarrow\) (1 2 3 4 5 6)}
+
+Of course, we can use \texttt{lambda} to create the procedure argument to
+\texttt{map}, e.g., to square the elements of a list of numbers.
+
+
+\begin{alltt}
+(map (lambda (x) (* x x))
+     '(1 -3 -5 7)) \(\Rightarrow\) (1 9 25 49)
+\end{alltt}
+
+
+We can map a multiple-argument procedure over multiple lists, as
+in the following example.
+
+
+\texttt{(map cons '(a b c) '(1 2 3)) \(\Rightarrow\) ((a . 1) (b . 2) (c . 3))}
+
+The lists must be of the same length, and the procedure should accept as
+many arguments as there are lists.
+Each element of the output list is the result of applying the procedure
+to corresponding members of the input list.
+
+
+Looking at the first definition of \texttt{abs-all} above, you should be able
+to derive, before studying it, the following definition of
+\label{start_s148}\texttt{map1}, a restricted version of
+\texttt{map} that maps a one-argument procedure over a single list.
+
+
+\begin{alltt}
+(define map1\label{start_defn_map1}
+  (lambda (p ls)
+    (if (null? ls)
+        '()
+        (cons (p (car ls))
+              (map1 p (cdr ls))))))
+\end{alltt}
+
+
+\texttt{(map1 abs '(1 -2 3 -4 5 -6)) \(\Rightarrow\) (1 2 3 4 5 6)}
+All we have done is to replace the call to \texttt{abs} in \texttt{abs-all}
+with a call to the new parameter \texttt{p}.
+A definition of the more general \texttt{map} is given in Section \ref{control_g100}.
+
+
+
+\paragraph{Exercise \label{start_g33}2.8.1}
+
+
+\label{start_s149}Describe what would happen if you switched the order of the arguments
+to \texttt{cons} in the definition of \texttt{tree-copy}.
+
+
+
+
+\paragraph{Exercise \label{start_g34}2.8.2}
+
+
+\label{start_s150}Consult Section \ref{objects_g109} for the description of
+\label{start_s151}\texttt{append} and
+define a two-argument version of it.
+What would happen if you switched the order of the arguments in the
+call to \texttt{append} within your definition of \texttt{append}?
+
+
+
+
+\paragraph{Exercise \label{start_g35}2.8.3}
+
+
+\label{start_s152}Define the procedure \label{start_s153}\texttt{make-list}, which
+takes a nonnegative integer
+\texttt{\textit{n}} and an object and returns a new list, \texttt{\textit{n}} long, each
+element of which is the object.
+
+
+\texttt{(make-list 7 '()) \(\Rightarrow\) (() () () () () () ())}
+
+[\textit{Hint}: The base test should be \texttt{(= \textit{n} 0)}, and the recursion
+step should involve \texttt{(- \textit{n} 1)}.
+Whereas \texttt{()} is the natural base case for recursion on lists, 0
+is the natural base case for recursion on nonnegative integers.
+Similarly, subtracting 1 is the natural way to bring a nonnegative
+integer closer to 0.]
+
+
+
+
+\paragraph{Exercise \label{start_g36}2.8.4}
+
+
+\label{start_s154}The procedures \texttt{list-ref} and \texttt{list-tail} return the
+\textit{n}th element and \textit{n}th tail of a list \textit{ls}.
+
+
+\begin{alltt}
+(list-ref '(1 2 3 4) 0) \(\Rightarrow\) 1
+(list-tail '(1 2 3 4) 0) \(\Rightarrow\) (1 2 3 4)
+(list-ref '(a short (nested) list) 2) \(\Rightarrow\) (nested)
+(list-tail '(a short (nested) list) 2) \(\Rightarrow\) ((nested) list)
+\end{alltt}
+
+
+Define both procedures.
+
+
+
+
+\paragraph{Exercise \label{start_g37}2.8.5}
+
+
+\label{start_s155}Exercise \hyperref[start_g31]{2.7.2} had you use \texttt{length} in the definition
+of \label{start_s156}\texttt{shorter},
+which returns the shorter of its two list arguments, or the first
+if the two have the same length.
+Write \texttt{shorter} without using \texttt{length}.
+[\textit{Hint}: Define a recursive helper,
+\label{start_s157}\texttt{shorter?}, and use it
+in place of the length comparison.]
+
+
+
+
+\paragraph{Exercise \label{start_g38}2.8.6}
+
+
+\label{start_s158}\label{start_EXEVENODD}All of the recursive procedures shown so far have been directly recursive.
+That is, each procedure directly applies itself to a new argument.
+It is also possible to write two procedures that use each other, resulting
+in indirect recursion.
+Define the procedures \label{start_s159}\texttt{odd?} and \label{start_s160}\texttt{even?}, each in terms of the
+other.
+[\textit{Hint}: What should each return when its argument is 0?]
+
+
+\begin{alltt}
+(even? 17) \(\Rightarrow\) \#{}f
+(odd? 17) \(\Rightarrow\) \#{}t
+\end{alltt}
+
+
+
+
+\paragraph{Exercise \label{start_g39}2.8.7}
+
+
+\label{start_s161}Use \label{start_s162}\texttt{map} to define a procedure, \texttt{transpose}, that takes a list
+of pairs and returns a pair of lists as follows.
+
+
+\texttt{(transpose '((a . 1) (b . 2) (c . 3))) \(\Rightarrow\) ((a b c) 1 2 3)}
+
+[\textit{Hint}: \texttt{((a b c) 1 2 3)} is the same as
+\texttt{((a b c) . (1 2 3))}.]
+
+
+
+
+\section{\label{start_g40}\label{start_h9}Assignment\label{start_SECTGSASSIGNMENT}}
+
+
+
+Although many programs can be written without them, \label{start_s163}assignments to top-level
+\label{start_s164}variables or \texttt{let}-bound and \texttt{lambda}-bound variables are sometimes useful.
+Assignments do not create new bindings, as with \texttt{let} or
+\texttt{lambda}, but rather change the values of existing bindings.
+Assignments are performed with \label{start_s165}\texttt{set!}.
+
+
+\begin{alltt}
+(define abcde '(a b c d e))
+abcde \(\Rightarrow\) (a b c d e)
+(set! abcde (cdr abcde))
+abcde \(\Rightarrow\) (b c d e)
+(let ([abcde '(a b c d e)])
+  (set! abcde (reverse abcde))
+  abcde) \(\Rightarrow\) (e d c b a)
+\end{alltt}
+
+
+Many languages require the use of assignments to initialize local
+variables, separate from the declaration or binding of the variables.
+In Scheme, all local variables are given a value immediately upon binding.
+Besides making the separate assignment to initialize local variables
+unnecessary, it ensures that the programmer cannot forget to initialize them,
+a common source of errors in most languages.
+
+
+In fact, most of the assignments that are either necessary or convenient in
+other languages are both unnecessary and inconvenient in Scheme, since there
+is typically a clearer way to express the same algorithm without assignments.
+One common practice in some languages is to sequence expression evaluation
+with a series of assignments, as in the following procedure that finds the
+roots of a quadratic equation.
+
+
+\begin{alltt}
+(define quadratic-formula
+  (lambda (a b c)
+    (let ([root1 0] [root2 0] [minusb 0] [radical 0] [divisor 0])
+      (set! minusb (- 0 b))
+      (set! radical (sqrt (- (* b b) (* 4 (* a c)))))
+      (set! divisor (* 2 a))
+      (set! root1 (/ (+ minusb radical) divisor))
+      (set! root2 (/ (- minusb radical) divisor))
+      (cons root1 root2))))
+\end{alltt}
+
+
+The roots are computed according to the well-known quadratic formula,
+
+
+\[\frac{-b \pm \sqrt{b^2-4ac}}{2a}\]
+
+
+which yields the solutions to the equation 0 = \textit{ax}\textsuperscript{2} + \textit{bx} + \textit{c}.
+The \texttt{let} expression in this definition is employed solely to establish
+the variable bindings, corresponding to the declarations required in other
+languages.
+The first three assignment expressions compute subpieces of the formula,
+namely -\textit{b}, \(\sqrt{b^2-4ac}\), and 2\textit{a}.
+The last two assignment expressions compute the two roots in terms of the
+subpieces.
+A pair of the two roots is the value of \label{start_s166}\texttt{quadratic-formula}.
+For example, the two roots of 2\textit{x}\textsuperscript{2} - 4\textit{x} - 6 are \textit{x} = 3 and \textit{x} = -1.
+
+
+\texttt{(quadratic-formula 2 -4 -6) \(\Rightarrow\) (3 . -1)}
+
+The definition above works, but it can be written more clearly without the
+assignments, as shown below.
+
+
+\begin{alltt}
+(define quadratic-formula
+  (lambda (a b c)
+    (let ([minusb (- 0 b)]
+          [radical (sqrt (- (* b b) (* 4 (* a c))))]
+          [divisor (* 2 a)])
+      (let ([root1 (/ (+ minusb radical) divisor)]
+            [root2 (/ (- minusb radical) divisor)])
+        (cons root1 root2)))))
+\end{alltt}
+
+
+In this version, the \texttt{set!} expressions are gone, and we are left with
+essentially the same algorithm.
+By employing two \texttt{let} expressions, however, the definition makes
+clear the dependency of \texttt{root1} and \texttt{root2} on the values of
+\texttt{minusb}, \texttt{radical}, and \texttt{divisor}.
+Equally important, the \texttt{let} expressions make clear the \textit{lack} of
+dependencies among \texttt{minusb}, \texttt{radical}, and \texttt{divisor} and
+between \texttt{root1} and \texttt{root2}.
+
+
+Assignments do have some uses in Scheme, otherwise the language
+would not support them.
+Consider the following version of \texttt{cons} that counts the number of times
+it is called, storing the count in a variable named \texttt{cons-count}.
+It uses \texttt{set!} to increment the count; there is no way to achieve the
+same behavior without assignments.
+
+
+\begin{alltt}
+(define kons-count 0)
+(define kons
+  (lambda (x y)
+    (set! kons-count (+ kons-count 1))
+    (cons x y)))
+
+(kons 'a '(b c)) \(\Rightarrow\) (a b c)
+kons-count \(\Rightarrow\) 1
+(kons 'a (kons 'b (kons 'c '()))) \(\Rightarrow\) (a b c)
+kons-count \(\Rightarrow\) 4
+\end{alltt}
+
+
+Assignments are commonly used to implement procedures that must maintain
+some \label{start_s167}internal state.
+For example, suppose we would like to define a procedure that returns
+0 the first time it is called, 1 the second time, 2 the third time,
+and so on indefinitely.
+We could write something similar to the definition of \texttt{cons-count}
+above:
+
+
+\begin{alltt}
+(define next 0)
+(define count
+  (lambda ()
+    (let ([v next])
+      (set! next (+ next 1))
+      v)))
+
+(count) \(\Rightarrow\) 0
+(count) \(\Rightarrow\) 1
+\end{alltt}
+
+
+This solution is somewhat undesirable in that the variable \texttt{next} is visible
+at top level even though it need not be.
+Since it is visible at top level, any code in the system can change its
+value, perhaps inadvertently affecting the behavior of
+\texttt{count} in a subtle way.
+We can solve this problem by \texttt{let}-binding \texttt{next} outside of the
+\texttt{lambda} expression:
+
+
+\begin{alltt}
+(define count
+  (let ([next 0])
+    (lambda ()
+      (let ([v next])
+        (set! next (+ next 1))
+        v))))
+\end{alltt}
+
+
+The latter solution also generalizes easily to provide multiple counters,
+each with its own local counter.
+The procedure \label{start_s168}\texttt{make-counter}, defined below, returns a new counting
+procedure each time it is called.
+
+
+\begin{alltt}
+(define make-counter
+  (lambda ()
+    (let ([next 0])
+      (lambda ()
+        (let ([v next])
+          (set! next (+ next 1))
+          v)))))
+\end{alltt}
+
+
+Since \texttt{next} is bound inside of \texttt{make-counter} but outside of
+the procedure returned by \texttt{make-counter}, each procedure it returns
+maintains its own unique counter.
+
+
+\begin{alltt}
+(define count1 (make-counter))
+(define count2 (make-counter))
+
+(count1) \(\Rightarrow\) 0
+(count2) \(\Rightarrow\) 0
+(count1) \(\Rightarrow\) 1
+(count1) \(\Rightarrow\) 2
+(count2) \(\Rightarrow\) 1
+\end{alltt}
+
+
+If a state variable must be shared by more than one
+procedure defined at top level, but we do not want the state
+variable to be visible at top level, we can use \texttt{let}
+to bind the variable and \texttt{set!} to make the procedures
+visible at top level.\label{start_s169}\label{start_s170}
+
+
+\begin{alltt}
+(define shhh \#{}f)
+(define tell \#{}f)
+(let ([secret 0])
+  (set! shhh
+    (lambda (message)
+      (set! secret message)))
+  (set! tell
+    (lambda ()
+      secret)))
+
+(shhh "sally likes harry")
+(tell) \(\Rightarrow\) "sally likes harry"
+secret \(\Rightarrow\) \textit{exception: variable secret is not bound}
+\end{alltt}
+
+
+Variables must be defined
+before they can be assigned, so we define 
+\texttt{shhh} and \texttt{tell} to be
+\texttt{\#{}f} initially.
+(Any initial value would do.)
+We'll see this structure again in Section \ref{further_g79}
+and a better way to structure code like this as a library in
+Section \ref{further_g84}.
+
+
+\label{start_s171}Local state is sometimes useful for caching
+computed values or allowing a computation to be
+evaluated \textit{lazily}, i.e., only once and only on demand.
+The procedure \label{start_s172}\texttt{lazy} below accepts a
+\label{start_s173}\textit{thunk}, or
+zero-argument procedure, as an argument.
+Thunks are often used to ``freeze'' computations that must be
+delayed for some reason, which is exactly what we need to do in
+this situation.
+When passed a thunk \texttt{\textit{t}}, \texttt{lazy} returns a new thunk that, when
+invoked, returns the value of invoking \texttt{\textit{t}}.
+Once computed, the value is saved in a local variable so that the
+computation need not be performed again.
+A boolean flag is used to record whether \texttt{\textit{t}} has been
+invoked and its value saved.
+
+
+\begin{alltt}
+(define lazy
+  (lambda (t)
+    (let ([val \#{}f] [flag \#{}f])
+      (lambda ()
+        (if (not flag)
+            (begin (set! val (t))
+                   (set! flag \#{}t)))
+        val))))
+\end{alltt}
+
+
+The syntactic form \label{start_s174}\texttt{begin}, used here for the first time, evaluates
+its subexpressions in sequence from left to right and returns the value
+of the last subexpression,
+like the body of a \texttt{let} or \texttt{lambda} expression.
+We also see that the \texttt{\textit{alternative}} subexpression of an \label{start_s175}\texttt{if}
+expression can be omitted.
+This should be done only when the value of the \texttt{if} is discarded, as
+it is in this case.
+
+
+Lazy evaluation is especially useful for values that require
+considerable time to compute.
+By delaying the evaluation, we might avoid computing the value
+altogether, and by saving the value, we avoid computing it
+more than once.
+
+
+The operation of \texttt{lazy} can best be illustrated by printing a
+message from within a thunk passed to \texttt{lazy}.
+
+
+\begin{alltt}
+(define p
+  (lazy (lambda ()
+          (display "Ouch!")
+          (newline)
+          "got me")))
+\end{alltt}
+
+
+The first time \texttt{p} is invoked, the message \texttt{Ouch!} is printed
+and the string \texttt{"got me"} is returned.
+Thereafter, \texttt{"got me"} is returned but the message is not printed.
+The procedures \texttt{display} and \texttt{newline} are the first examples
+of explicit input/output we have seen; \texttt{display} prints the string
+without quotation marks, and \texttt{newline} prints a newline character.
+
+
+To further illustrate the use of \texttt{set!},
+let's consider the implementation of \label{start_s176}stack objects whose
+internal workings are not visible on the outside.
+A stack object accepts one of four \label{start_s177}\textit{messages}: \texttt{empty?}, which
+returns \texttt{\#{}t} if the stack is empty; \texttt{push!}, which adds an object
+to the top of the stack; \texttt{top}, which returns the object on the top of
+the stack; and \texttt{pop!}, which removes the object on top of the stack.
+The procedure \label{start_s178}\texttt{make-stack} given below creates a new stack each time
+it is called in a manner similar to \texttt{make-counter}.
+
+
+\begin{alltt}
+(define make-stack
+  (lambda ()
+    (let ([ls '()])
+      (lambda (msg . args)
+        (cond
+          [(eqv? msg 'empty?) (null? ls)]
+          [(eqv? msg 'push!) (set! ls (cons (car args) ls))]
+          [(eqv? msg 'top) (car ls)]
+          [(eqv? msg 'pop!) (set! ls (cdr ls))]
+          [else "oops"])))))
+\end{alltt}
+
+
+Each stack is stored as a list bound to the variable \texttt{ls}; \texttt{set!}
+is used to change this binding for \texttt{push!} and \texttt{pop!}.
+Notice that the argument list of the inner \texttt{lambda} expression uses the
+improper list syntax to bind \texttt{args} to a list of all arguments but the
+first.
+This is useful here because in the case of \texttt{empty?}, \texttt{top}, and
+\texttt{pop!} there is only one argument (the message), but in the case of
+\texttt{push!} there are two (the message and the object to push onto the
+stack).
+
+
+\begin{alltt}
+(define stack1 (make-stack))
+(define stack2 (make-stack))
+(list (stack1 'empty?) (stack2 'empty?)) \(\Rightarrow\) (\#{}t \#{}t)
+
+(stack1 'push! 'a)
+(list (stack1 'empty?) (stack2 'empty?)) \(\Rightarrow\) (\#{}f \#{}t)
+
+(stack1 'push! 'b)
+(stack2 'push! 'c)
+(stack1 'top) \(\Rightarrow\) b
+(stack2 'top) \(\Rightarrow\) c
+
+(stack1 'pop!)
+(stack1 'top) \(\Rightarrow\) a
+(list (stack1 'empty?) (stack2 'empty?)) \(\Rightarrow\) (\#{}f \#{}f)
+
+(stack1 'pop!)
+(list (stack1 'empty?) (stack2 'empty?)) \(\Rightarrow\) (\#{}t \#{}f)
+\end{alltt}
+
+
+As with the counters created by \texttt{make-counter}, the state maintained
+by each stack object is directly accessible only within the object.
+Each reference or change to this state is made explicitly by the object
+itself.
+One important benefit is that we can change the internal structure
+of the stack, perhaps to use a vector (see Section \ref{objects_g115}) instead
+of a list to hold the elements,
+without changing its external behavior.
+Because the behavior of the object is known abstractly (not operationally),
+it is known as an \textit{abstract object}.
+See Section \ref{examples_g193} for more about creating \label{start_s179}abstract objects.
+
+
+In addition to changing the values of variables, we can also change
+the values of the car and cdr fields of a pair, using the procedures
+\texttt{set-car!} and \texttt{set-cdr!}.
+
+
+\begin{alltt}
+(define p (list 1 2 3))
+(set-car! (cdr p) 'two)
+p \(\Rightarrow\) (1 two 3)
+(set-cdr! p '())
+p \(\Rightarrow\) (1)
+\end{alltt}
+
+
+\label{start_queue_datatype}\label{start_s180}We can use these operators to define a queue
+data type, which is like a stack except that new elements are added at
+one end and extracted from the other.
+The following queue implementation uses a \label{start_s181}\textit{tconc}
+structure.
+A tconc consists of a nonempty list and a header.
+The header is a pair whose car points to the first pair (head) of the
+list and whose cdr points to the last pair (end) of the list.
+
+
+\begin{figure}[H]
+\centering
+%\includegraphics{math/6.eps}
+\input{math/6.tikz}
+\end{figure}
+
+
+
+The last element of the list is a placeholder and not considered part
+of the queue.
+
+
+Four operations on queues are defined below:
+\label{start_s182}\texttt{make-queue}, which constructs a queue;
+\label{start_s183}\texttt{putq!}, which adds an element to the end
+of a queue;
+\label{start_s184}\texttt{getq}, which retrieves the element at the
+front of a queue; and
+\label{start_s185}\texttt{delq!}, which removes the element at the
+front of a queue.
+
+
+\begin{alltt}
+(define make-queue
+  (lambda ()
+    (let ([end (cons 'ignored '())])
+      (cons end end))))
+
+(define putq!
+  (lambda (q v)
+    (let ([end (cons 'ignored '())])
+      (set-car! (cdr q) v)
+      (set-cdr! (cdr q) end)
+      (set-cdr! q end))))
+
+(define getq
+  (lambda (q)
+    (car (car q))))
+
+(define delq!
+  (lambda (q)
+    (set-car! q (cdr (car q)))))
+\end{alltt}
+
+
+All are simple operations except for \texttt{putq!}, which modifies the
+end pair to contain the new value and adds a new end pair.
+
+
+\begin{alltt}
+(define myq (make-queue))
+
+(putq! myq 'a)
+(putq! myq 'b)
+(getq myq) \(\Rightarrow\) a
+(delq! myq)
+(getq myq) \(\Rightarrow\) b
+(delq! myq)
+(putq! myq 'c)
+(putq! myq 'd)
+(getq myq) \(\Rightarrow\) c
+(delq! myq)
+(getq myq) \(\Rightarrow\) d
+\end{alltt}
+
+\paragraph{Exercise \label{start_g41}2.9.1}
+
+
+\label{start_s186}Modify \label{start_s187}\texttt{make-counter} to take two
+arguments: an initial value for the
+counter to use in place of 0 and an amount to increment the counter
+by each time.
+
+
+
+
+\paragraph{Exercise \label{start_g42}2.9.2}
+
+
+\label{start_s188}Look up the description of \label{start_s189}\texttt{case} in Section \ref{control_g99}.
+Replace the \texttt{cond} expression in
+\label{start_s190}\texttt{make-stack} with an equivalent
+\texttt{case} expression.
+Add \texttt{mt?} as a second name for the \texttt{empty?} message.
+
+
+
+
+\paragraph{Exercise \label{start_g43}2.9.3}
+
+
+\label{start_s191}\label{start_EXSTACKREFANDSET}Modify the \texttt{stack} object to allow the two messages \texttt{ref} and
+\texttt{set!}.
+\texttt{(\textit{stack} 'ref \textit{i})} should return the \texttt{\textit{i}}th element from
+the top of the stack; \texttt{(\textit{stack} 'ref 0)} should be equivalent
+to \texttt{(\textit{stack} 'top)}.
+\texttt{(\textit{stack} 'set! \textit{i} \textit{v})} should change the \texttt{\textit{i}}th
+element from the top of the stack to \texttt{\textit{v}}.
+
+
+\begin{alltt}
+(define stack (make-stack))
+
+(stack 'push! 'a)
+(stack 'push! 'b)
+(stack 'push! 'c)
+
+(stack 'ref 0) \(\Rightarrow\) c
+(stack 'ref 2) \(\Rightarrow\) a
+(stack 'set! 1 'd)
+(stack 'ref 1) \(\Rightarrow\) d
+(stack 'top) \(\Rightarrow\) c
+(stack 'pop!)
+(stack 'top) \(\Rightarrow\) d
+\end{alltt}
+
+
+[\textit{Hint}: Use \texttt{list-ref} to implement \texttt{ref} and \texttt{list-tail}
+with \texttt{set-car!} to implement \texttt{set!}.]
+
+
+
+
+\paragraph{Exercise \label{start_g44}2.9.4}
+
+
+\label{start_s192}\label{start_s193}Scheme supports \textit{vectors} as well as lists.
+Like lists, vectors are aggregate objects that contain other
+objects.
+Unlike lists, vectors have a fixed size and are laid out
+in one flat block of memory, typically with a header containing
+the length of the vector, as in the ten-element vector below.
+
+
+\begin{figure}[H]
+\centering
+%\includegraphics{math/7.eps}
+\input{math/7.tikz}
+\end{figure}
+
+
+
+This makes vectors more suitable for applications needing
+fast access to any element of the aggregate but less suitable for
+applications needing data structures that grow and shrink
+as needed.
+
+
+Look up the basic vector operations in
+Section \ref{objects_g115} and reimplement the
+\texttt{stack} object to use a vector instead of a list to hold
+the stack contents.
+Include the \texttt{ref} and \texttt{set!} messages of
+Exercise \hyperref[start_g43]{2.9.3}.
+Have the new \texttt{make-stack} accept a size argument \textit{n}
+and make the vector length \textit{n}, but do not otherwise change
+the external (abstract) interface.
+
+
+
+
+\paragraph{Exercise \label{start_g45}2.9.5}
+
+
+\label{start_s194}Define a predicate, \texttt{emptyq?}, for determining if a queue is empty.
+Modify \texttt{getq} and \texttt{delq!} to raise an exception when an empty
+queue is found, using \texttt{assertion-violation}.
+
+
+
+
+\paragraph{Exercise \label{start_g46}2.9.6}
+
+
+\label{start_s195}In the queue implementation, the last pair in the encapsulated
+list is a placeholder, i.e., it never holds anything useful.
+Recode the queue operators to avoid this wasted pair.
+Make sure that the series of queue operations given earlier
+works with the new implementation.
+Which implementation do you prefer?
+
+
+
+
+\paragraph{Exercise \label{start_g47}2.9.7}
+
+
+\label{start_s196}Using \label{start_s197}\texttt{set-cdr!}, it is possible to create \label{start_s198}\textit{cyclic lists}.
+For example, the following expression evaluates to a list whose
+car is the symbol \texttt{a} and whose cdr is the list itself.
+
+
+\begin{alltt}
+(let ([ls (cons 'a '())])
+  (set-cdr! ls ls)
+  ls)
+\end{alltt}
+
+
+What happens when you enter the above expression during an interactive
+Scheme session?
+What will the implementation of \texttt{length} on page \pageref{start_defn_simplelength}
+do when given a cyclic list?
+What does the built-in \texttt{length} primitive do?
+
+
+
+
+\paragraph{Exercise \label{start_g48}2.9.8}
+
+
+\label{start_s199}\label{start_EXLIST_}Define the predicate \label{start_s200}\texttt{list?}, which returns
+\texttt{\#{}t} if its argument is a \label{start_s201}proper list and \texttt{\#{}f} otherwise
+(see Section \ref{objects_g109}).
+It should return \texttt{\#{}f} for cyclic lists as well as for lists
+terminated by objects other than \texttt{()}.
+
+
+\begin{alltt}
+(list? '()) \(\Rightarrow\) \#{}t
+(list? '(1 2 3)) \(\Rightarrow\) \#{}t
+(list? '(a . b)) \(\Rightarrow\) \#{}f
+(list? (let ([ls (cons 'a '())])
+         (set-cdr! ls ls)
+         ls)) \(\Rightarrow\) \#{}f
+\end{alltt}
+
+
+First write a simplified version of \texttt{list?} that does not handle
+cyclic lists, then extend this to handle cyclic lists correctly.
+Revise your definition until you are satisfied that it is as clear
+and concise as possible.
+[\textit{Hint}: Use the following "\label{start_s202}hare and tortoise" algorithm to
+detect cycles.
+Define a recursive help procedure of two arguments, the hare and the tortoise.
+Start both the hare and the tortoise at the beginning of the list.
+Have the hare advance by two cdrs each time the tortoise
+advances by one cdr.
+If the hare catches the tortoise, there must be a cycle.]
+
+
+
+
+

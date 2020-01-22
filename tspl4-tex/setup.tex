@@ -1,0 +1,29 @@
+\setlist{noitemsep}
+
+\hypersetup{
+	bookmarksnumbered,
+	colorlinks, % hidelinks,
+	pdfpagemode=UseNone,
+	pdfstartview=FitH
+}
+
+\usetikzlibrary{calc,shapes.multipart,chains,arrows,matrix}
+\tikzset{>=latex'}
+\tikzstyle{list}=[
+	 rectangle split,
+	 rectangle split parts=2, draw,
+	 rectangle split horizontal,
+	 rectangle split part align=base,
+	 text width=3ex, text centered
+    ]
+    
+\newcommand{\pFF}[2]{\draw[->] let \p1 = (#1.one), \p2 = (#1.center), \p3 = (#2.one), \p4 = (#2.north) in (\x1,\y2) -- (\x3,\y4)}
+\newcommand{\pSF}[2]{\draw[->] let \p1 = (#1.two), \p2 = (#1.center), \p3 = (#2.west), \p4 = (#2.center) in (\x1,\y2) -- (\x3,\y4)}
+
+\newcolumntype{L}{>{\RaggedRight}X}
+
+\newcommand{\SpecialChapter}[1]{%
+  \chapter*{#1}%
+  \addcontentsline{toc}{chapter}{#1}%
+  \markboth{\MakeUppercase{#1}}{\MakeUppercase{#1}}
+}

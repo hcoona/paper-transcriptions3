@@ -1,0 +1,517 @@
+\SpecialChapter{Formal Syntax\label{grammar_APPENDIXFORMALSYNTAX}}
+
+\label{grammar_h0}
+
+
+
+
+\label{grammar_s0}The formal grammars and accompanying text appearing here describe the
+written syntax of Scheme data values, or \textit{datums}.
+The grammars also effectively cover the written syntax of Scheme syntactic
+forms, since every Scheme syntactic form has a representation as a Scheme
+datum.
+In particular, parenthesized syntactic forms are written
+as lists, and identifiers (e.g., keywords and variables) are written
+as symbols.
+The high-level structure of each syntactic form is described in detail by
+the entries marked ``syntax'' in Chapters \ref{binding_g88}
+through \hyperref[exceptions_g147]{11}, and the syntactic forms are summarized in
+the Summary of Forms.
+
+
+\label{grammar_s1}The written representation of a datum involves tokens, whitespace, and comments.
+\textit{Tokens} are sequences of one or more characters representing atomic
+datums or serving as punctuation marks.
+The tokens that represent atomic datums are symbols, numbers, strings,
+booleans, and characters, while the tokens
+serving as punctuation marks are
+open and close parentheses, open and close brackets, the open vector
+parenthesis \texttt{\#{}(}, the open bytevector parenthesis \texttt{\#{}vu8(},
+the dotted pair marker \texttt{.} (dot), the quotation marks
+\texttt{'} and \texttt{`}, the
+unquotation marks \texttt{,} and \texttt{,\@{}}, the
+syntax quotation marks 
+\texttt{\#{}'} and \texttt{\#{}`}, and the syntax
+unquotation marks \texttt{\#{},} and \texttt{\#{},\@{}}.
+
+
+\label{grammar_s2}\label{grammar_s3}\label{grammar_s4}\textit{Whitespace} consists of space, tab, newline, form-feed,
+carriage-return, and next-line characters along with any additional
+characters categorized as Zs, Zl, or Zp by the Unicode
+standard [\hyperref[bibliography_g248]{30}].
+A newline character is also called a linefeed character.
+Some whitespace characters or character sequences serve as \textit{line endings},
+which are recognized as part of the syntax of line comments and strings.
+A line ending is a newline character, a next-line character,
+a line-separator character, a carriage-return character followed by a
+newline character, a carriage return followed by a next-line
+character, or a carriage return not followed by a newline
+or next-line character.
+A different set of whitspace characters serve as \textit{intraline whitespace},
+which are recognized as part of the syntax of strings.
+Intraline whitespace includes spaces, tabs, and any additional Unicode
+characters whose general category is Zs.
+The sets of intraline whitespace characters and line endings are disjoint,
+and there are other whitespace characters, such as form feed, that are
+not in either set.
+
+
+\label{grammar_s5}\label{grammar_s6}\label{grammar_s7}\label{grammar_s8}\label{grammar_s9}\label{grammar_s10}\label{grammar_s11}\textit{Comments} come in three flavors:  line comments, block comments, and datum
+comments.
+A line comment consists of a semicolon ( \texttt{;} )
+followed by any number of characters up to the next line ending or
+end of input.
+A block comment consists of a \texttt{\#{}\textbar{}} prefix, any number of
+characters and nested block comments, and a \texttt{\textbar{}\#{}}
+suffix.
+A datum comment consists of a \texttt{\#{};} prefix followed by
+any datum.
+
+
+Symbols, numbers, characters, booleans, and the dotted pair
+marker ( \texttt{.} ) must be delimited by the end the
+input, whitespace, the start of a comment, an open or close
+parenthesis, an open or close bracket, a string quote ( \texttt{"} ), or
+a hash mark ( \texttt{\#{}} ).
+Any token may be preceded or followed by any number of whitespace
+characters and comments.
+
+
+Case is significant in the syntax of characters, strings, and symbols
+except within a hex scalar value, where the
+hexadecimal digits ``a'' through ``f'' may be written in either
+upper or lower case.
+(Hex scalar values are hexadecimal numbers denoting Unicode scalar values.)
+Case is insignificant in the syntax of booleans and numbers.
+For example, \texttt{Hello} is distinct from
+\texttt{hello}, \texttt{\#{}\textbackslash{}A} is distinct from \texttt{\#{}\textbackslash{}a}, and
+\texttt{"String"} is distinct from \texttt{"string"}, while
+\texttt{\#{}T} is equivalent to \texttt{\#{}t}, \texttt{\#{}E1E3} is equivalent to
+\texttt{\#{}e1e3}, \texttt{\#{}X2aBc} is equivalent to \texttt{\#{}x2abc},
+and \texttt{\#{}\textbackslash{}x3BA} is equivalent to \texttt{\#{}\textbackslash{}x3ba}.
+
+
+A conforming implementation of the Revised\textsuperscript{6} Report is not permitted to
+extend the syntax of datums, with one exception:  it is permitted to
+recognize any token starting with the prefix \texttt{\#{}!} as a flag
+indicating certain extensions are valid in the text following the flag.
+So, for example, an implementation might recognize the flag
+\texttt{\#{}!braces} and switch to a mode in which lists may be enclosed in
+braces as well as in parentheses and brackets.
+
+
+\texttt{\#{}!braces '\{a b c\} \(\Rightarrow\) (a b c)}
+
+\label{grammar_s12}The flag \texttt{\#{}!r6rs} may be used to declare that the subsequent text is
+written in R6RS syntax.
+It is good practice to include \texttt{\#{}!r6rs} at the start of any file
+containing a portable library or top-level program to specify that R6RS
+syntax is being used, in the event that future reports extend the syntax
+in ways that are incompatible with the text of the library or program.
+\texttt{\#{}!r6rs} is otherwise treated as a comment.
+
+
+In the grammars appearing below, \textless{}empty\textgreater{} stands for an
+empty sequence of characters.
+An item followed by an asterisk ( * ) represents zero or more
+occurrences of the item, and an item followed by a raised plus sign
+( \textsuperscript{+} ) represents one or more occurrences.
+Spacing between items within a production appears for readability only and
+should be treated as if it were not present.
+
+
+\textbf{Datums\label{grammar_grammar_datums}.}  \label{grammar_s13}A datum is a boolean, character, symbol, string, number, list, vector,
+or bytevector.
+
+
+  
+  
+  {\footnotesize
+\begin{tabular}[H]{lcl}
+
+\textless{}datum\textgreater{} & \(\longrightarrow\) & \textless{}boolean\textgreater{} \\
+
+     & \textbar{} & \textless{}character\textgreater{} \\
+
+     & \textbar{} & \textless{}symbol\textgreater{} \\
+
+     & \textbar{} & \textless{}string\textgreater{} \\
+
+     & \textbar{} & \textless{}number\textgreater{} \\
+
+     & \textbar{} & \textless{}list\textgreater{} \\
+
+     & \textbar{} & \textless{}vector\textgreater{} \\
+
+     & \textbar{} & \textless{}bytevector\textgreater{}
+ \\
+\end{tabular}
+}
+
+
+Lists, vectors, and bytevectors are compound datums formed from groups of
+tokens possibly separated by whitespace and comments.
+The others are single tokens.
+
+
+\textbf{Booleans\label{grammar_grammar_booleans}.}  \label{grammar_s14}Boolean false is written \texttt{\#{}f}.
+While all other values count as true, the canonical true value (and only
+other value to be considered a boolean value by the \texttt{boolean?}
+predicate) is written \texttt{\#{}t}.
+
+
+  
+  
+  {\footnotesize
+\begin{tabular}[H]{lcl}
+
+\textless{}boolean\textgreater{} & \(\longrightarrow\) & \texttt{\#{}t} \textbar{} \texttt{\#{}f}
+ \\
+\end{tabular}
+}
+
+
+Case is not significant in the syntax of booleans, so these may also be written
+as \texttt{\#{}T} and \texttt{\#{}F}.
+
+
+\textbf{Characters\label{grammar_grammar_characters}.}  \label{grammar_s15}A character object is written as the prefix \texttt{\#{}\textbackslash{}} followed by a single
+character, a character name, or a sequence of characters specifying a
+Unicode scalar value.
+
+
+  
+  
+  {\footnotesize
+\begin{tabular}[H]{lcl}
+
+\textless{}character\textgreater{} & \(\longrightarrow\) & \texttt{\#{}\textbackslash{}} \textless{}any character\textgreater{} \textbar{} \texttt{\#{}\textbackslash{}} \textless{}character name\textgreater{}
+                    \textbar{} \texttt{\#{}\textbackslash{}x} \textless{}hex scalar value\textgreater{} \\
+
+\textless{}character name\textgreater{} & \(\longrightarrow\) & \texttt{alarm} \textbar{} \texttt{backspace} \textbar{} \texttt{delete} \textbar{} \texttt{esc} \textbar{}\texttt{linefeed} \\
+
+   & \textbar{} & \texttt{newline} \textbar{} \texttt{page} \textbar{} \texttt{return} \textbar{} \texttt{space} \textbar{} \texttt{tab} \textbar{} \texttt{vtab} \\
+
+\textless{}hex scalar value\textgreater{} & \(\longrightarrow\) & \textless{}digit 16\textgreater{}\textsuperscript{+} \\
+\end{tabular}
+}
+
+
+The named characters correspond to the Unicode characters
+alarm (Unicode scalar value 7, i.e., U+0007),
+backspace (U+0008),
+delete (U+007F),
+esc (U+001B),
+linefeed (U+000A; same as newline),
+newline (U+000A),
+page (U+000C),
+return (U+000D),
+space (U+0020),
+tab (U+0009) and 
+vertical tab (U+000B).
+
+
+A hex scalar value represents a Unicode scalar value \textit{n},
+\(0 \leq n \leq \mathrm{D800_16}\) or
+\(\mathrm{E000_16} \leq n \leq \mathrm{10FFF_16}\).
+The \textless{}digit 16\textgreater{} nonterminal is defined under \textbf{Numbers} below.
+
+
+A \texttt{\#{}\textbackslash{}} prefix followed by a character name is always interpreted as
+a named character, e.g., \texttt{\#{}\textbackslash{}page} is treated as \texttt{\#{}\textbackslash{}page}
+rather than \texttt{\#{}\textbackslash{}p} followed by the symbol \texttt{age}.
+Characters must also be delimited, as described above, so that \texttt{\#{}\textbackslash{}pager}
+is treated as a syntax error rather than as the character \texttt{\#{}\textbackslash{}p} followed
+by the symbol \texttt{ager} or the character \texttt{\#{}\textbackslash{}page} followed by the
+symbol \texttt{r}.
+
+
+Case is significant in the syntax of character objects, except within a hex scalar value.
+
+
+\textbf{Strings\label{grammar_grammar_strings}.}  \label{grammar_s16}A string is written as a sequence of string elements enclosed in string quotes
+(double quotes).
+Any character other than a string quote or backslash can appear as a
+string element.
+A string element can also consist of a backslash followed by a single
+character, a backslash followed by sequence of characters specifying a
+Unicode scalar value, or a backslash followed by sequence of intraline
+whitespace characters that includes a single line ending.
+
+
+  
+  
+  {\footnotesize
+\begin{tabular}[H]{lcl}
+
+\textless{}string\textgreater{} & \(\longrightarrow\) & \texttt{"} \textless{}string character\textgreater{}* \texttt{"} \\
+
+\textless{}string element\textgreater{} & \(\longrightarrow\) & \textless{}any character except \texttt{"} or \texttt{\textbackslash{}}\textgreater{} \\
+
+   & \textbar{} & \texttt{\textbackslash{}"} \textbar{} \texttt{\textbackslash{}\textbackslash{}} \textbar{} \texttt{\textbackslash{}a} \textbar{} \texttt{\textbackslash{}b}
+        \textbar{} \texttt{\textbackslash{}f} \textbar{} \texttt{\textbackslash{}n} \textbar{} \texttt{\textbackslash{}r} \textbar{} \texttt{\textbackslash{}t} \textbar{} \texttt{\textbackslash{}v} \\
+
+   & \textbar{} & \texttt{\textbackslash{}x} \textless{}hex scalar value\textgreater{} \texttt{;} \\
+
+   & \textbar{} & \texttt{\textbackslash{}} \textless{}intraline whitespace\textgreater{}* \textless{}line ending\textgreater{} \textless{}intraline whitespace\textgreater{}* \\
+\end{tabular}
+}
+
+
+A string element consisting of a single character represents that
+character, except that any single character or pair of characters
+representing a line ending represents a single newline character.
+A backslash followed by a double quote represents a double quote, while
+a backslash followed by a backslash represents a backslash.
+A backslash followed by
+\texttt{a} represents the alarm character (U+0007);
+by \texttt{b}, backspace (U+0008);
+by \texttt{f}, form feed (U+000C);
+by \texttt{n}, newline (U+000A);
+by \texttt{r}, carriage return (U+000D);
+by \texttt{t}, tab (U+0009); and
+by \texttt{v}, vertical tab (U+000B).
+A backslash followed by \texttt{x}, a hex scalar value, and a semi-colon
+( \texttt{;} ) represents the Unicode character specified by the scalar value.
+The \textless{}hex scalar value\textgreater{} nonterminal is defined under \textbf{Characters} above.
+Finally, a sequence of characters consisting of a backslash followed by
+intraline whitespace that includes a single line ending represents no characters.
+
+
+Case is significant in the syntax of strings, except within a hex scalar value.
+
+
+\textbf{Symbols\label{grammar_grammar_symbols}.}  \label{grammar_s17}A symbol is written either as an ``initial'' character followed by a sequence of
+``subsequent'' characters or as a ``peculiar symbol.''
+Initial characters are letters, certain special characters, an additional
+set of Unicode characters, or arbitrary characters specified by Unicode
+scalar values.
+Subsequent characters are initial characters, digits, certain additional
+special characters, and a set of additional Unicode characters.
+The peculiar symbols are \texttt{+}, \texttt{-}, \texttt{...}, and any
+sequence of subsequent characters prefixed by \texttt{-\textgreater{}}.
+
+
+  
+  
+  {\footnotesize
+\begin{tabular}[H]{lcl}
+
+\textless{}symbol\textgreater{} & \(\longrightarrow\) & \textless{}initial\textgreater{} \textless{}subsequent\textgreater{}* \\
+
+\textless{}initial\textgreater{} & \(\longrightarrow\) & \textless{}letter\textgreater{} \textbar{} \texttt{!} \textbar{} \texttt{\${}} \textbar{} \texttt{\%{}}
+    \textbar{} \texttt{\&{}} \textbar{} \texttt{*} \textbar{} \texttt{/} \textbar{} \texttt{:}
+    \textbar{} \texttt{\textless{}} \textbar{} \texttt{=} \textbar{} \texttt{\textgreater{}} \textbar{} \texttt{?}
+    \textbar{} \texttt{\~{}} \textbar{} \texttt{\_{}} \textbar{} \texttt{\^{}} \\
+
+   & \textbar{} & \textless{}Unicode Lu, Ll, Lt, Lm, Lo, Mn, Nl, No, Pd, Pc, Po, Sc, Sm, Sk, So, or Co\textgreater{} \\
+
+   & \textbar{} & \texttt{\textbackslash{}x} \textless{}hex scalar value\textgreater{} \texttt{;} \\
+
+\textless{}subsequent\textgreater{} & \(\longrightarrow\) & \textless{}initial\textgreater{} \textbar{} \textless{}digit 10\textgreater{} \textbar{} \texttt{.}
+    \textbar{} \texttt{+} \textbar{} \texttt{-} \textbar{} \texttt{\@{}} \textbar{} \textless{}Unicode Nd, Mc, or Me\textgreater{} \\
+
+\textless{}letter\textgreater{} & \(\longrightarrow\) & \texttt{a} \textbar{} \texttt{b} \textbar{} ... \textbar{} \texttt{z}
+              \textbar{} \texttt{A} \textbar{} \texttt{B} \textbar{} ... \textbar{} \texttt{Z}
+ \\
+\end{tabular}
+}
+
+
+\textless{}Unicode Lu, Ll, Lt, Lm, Lo, Mn, Nl, No, Pd, Pc, Po, Sc, Sm, Sk, So,
+or Co\textgreater{} represents any character whose Unicode scalar value is greater than
+127 and whose Unicode category is one of the listed categories.
+\textless{}Unicode Nd, Mc, or Me\textgreater{} represents any character whose Unicode
+category is one of the listed categories.
+The \textless{}hex scalar value\textgreater{} nonterminal is defined under \textbf{Characters} above,
+and \textless{}digit 10\textgreater{} is defined under \textbf{Numbers} below.
+
+
+Case is significant in symbols.
+
+
+\textbf{Numbers\label{grammar_grammar_numbers}.}  \label{grammar_s18}Numbers can appear in one of four radices:
+2, 8, 10, and 16, with 10 the default.
+Several of the productions below are parameterized by the radix,
+\texttt{\textit{r}}, and each represents four productions, one for each of the
+four possible radices.
+Numbers that contain radix points or exponents are constrained to
+appear in radix
+10, so \textless{}decimal \texttt{\textit{r}}\textgreater{} is valid only when \texttt{\textit{r}} is 10.
+
+
+  
+  
+  {\footnotesize
+\begin{tabular}[H]{lcl}
+
+\textless{}number\textgreater{} & \(\longrightarrow\) & \textless{}num 2\textgreater{} \textbar{} \textless{}num 8\textgreater{} \textbar{} \textless{}num 10\textgreater{} \textbar{} \textless{}num 16\textgreater{} \\
+
+\textless{}num \texttt{\textit{r}}\textgreater{} & \(\longrightarrow\) & \textless{}prefix \texttt{\textit{r}}\textgreater{} \textless{}complex \texttt{\textit{r}}\textgreater{} \\
+
+\textless{}prefix \texttt{\textit{r}}\textgreater{} & \(\longrightarrow\) & \textless{}radix \texttt{\textit{r}}\textgreater{} \textless{}exactness\textgreater{} \textbar{} \textless{}exactness\textgreater{} \textless{}radix \texttt{\textit{r}}\textgreater{} \\
+
+\textless{}radix 2\textgreater{} & \(\longrightarrow\) & \texttt{\#{}b} \\
+
+\textless{}radix 8\textgreater{} & \(\longrightarrow\) & \texttt{\#{}o} \\
+
+\textless{}radix 10\textgreater{} & \(\longrightarrow\) & \textless{}empty\textgreater{} \textbar{} \texttt{\#{}d} \\
+
+\textless{}radix 16\textgreater{} & \(\longrightarrow\) & \texttt{\#{}x} \\
+
+\textless{}exactness\textgreater{} & \(\longrightarrow\) & \textless{}empty\textgreater{} \textbar{} \texttt{\#{}i} \textbar{} \texttt{\#{}e} \\
+
+\textless{}complex \texttt{\textit{r}}\textgreater{} & \(\longrightarrow\) & \textless{}real \texttt{\textit{r}}\textgreater{} \textbar{} \textless{}real \texttt{\textit{r}}\textgreater{} \@{} \textless{}real \texttt{\textit{r}}\textgreater{} \\
+
+  & \textbar{} & \textless{}real \texttt{\textit{r}}\textgreater{} \texttt{+} \textless{}imag \texttt{\textit{r}}\textgreater{} \textbar{} \textless{}real \texttt{\textit{r}}\textgreater{} \texttt{-} \textless{}imag \texttt{\textit{r}}\textgreater{} \\
+
+  & \textbar{} & \texttt{+} \textless{}imag \texttt{\textit{r}}\textgreater{} \textbar{} \texttt{-} \textless{}imag \texttt{\textit{r}}\textgreater{} \\
+
+\textless{}real \texttt{\textit{r}}\textgreater{} & \(\longrightarrow\) & \textless{}sign\textgreater{} \textless{}ureal \texttt{\textit{r}}\textgreater{} \textbar{} \texttt{+nan.0} \textbar{} \texttt{-nan.0} \textbar{} \texttt{+inf.0} \textbar{} \texttt{-inf.0} \\
+
+\textless{}imag \texttt{\textit{r}}\textgreater{} & \(\longrightarrow\) & \texttt{i} \textbar{} \textless{}ureal \texttt{\textit{r}}\textgreater{} \texttt{i} \textbar{} \texttt{inf.0} \texttt{i} \textbar{} \texttt{nan.0} \texttt{i} \\
+
+\textless{}ureal \texttt{\textit{r}}\textgreater{} & \(\longrightarrow\) & \textless{}uinteger \texttt{\textit{r}}\textgreater{} \textbar{} \textless{}uinteger \texttt{\textit{r}}\textgreater{} \texttt{/} \textless{}uinteger \texttt{\textit{r}}\textgreater{} \textbar{} \textless{}decimal \texttt{\textit{r}}\textgreater{} \textless{}suffix\textgreater{} \\
+
+\textless{}uinteger \texttt{\textit{r}}\textgreater{} & \(\longrightarrow\) & \textless{}digit \texttt{\textit{r}}\textgreater{}\textsuperscript{+} \\
+
+\textless{}decimal 10\textgreater{} & \(\longrightarrow\) & \textless{}uinteger 10\textgreater{} \textless{}suffix\textgreater{} \\
+
+  & \textbar{} & \texttt{.} \textless{}digit 10\textgreater{}\textsuperscript{+} \textless{}suffix\textgreater{} \\
+
+  & \textbar{} & \textless{}digit 10\textgreater{}\textsuperscript{+} \texttt{.} \textless{}digit 10\textgreater{}* \textless{}suffix\textgreater{} \\
+
+\textless{}suffix\textgreater{} & \(\longrightarrow\) & \textless{}exponent\textgreater{} \textless{}mantissa width\textgreater{} \\
+
+\textless{}exponent\textgreater{} & \(\longrightarrow\) & \textless{}empty\textgreater{} \textbar{} \textless{}exponent marker\textgreater{} \textless{}sign\textgreater{} \textless{}digit 10\textgreater{}\textsuperscript{+} \\
+
+\textless{}exponent marker\textgreater{} & \(\longrightarrow\) & \texttt{e} \textbar{} \texttt{s} \textbar{} \texttt{f}
+                 \textbar{} \texttt{d} \textbar{} \texttt{l} \\
+
+\textless{}mantissa width\textgreater{} & \(\longrightarrow\) & \textless{}empty\textgreater{} \textbar{} \texttt{\textbar{}} \textless{}digit 10\textgreater{}\textsuperscript{+} \\
+
+\textless{}sign\textgreater{} & \(\longrightarrow\) & \textless{}empty\textgreater{} \textbar{} \texttt{+} \textbar{} \texttt{-} \\
+
+\textless{}digit 2\textgreater{} & \(\longrightarrow\) & \texttt{0} \textbar{} \texttt{1} \\
+
+\textless{}digit 8\textgreater{} & \(\longrightarrow\) & \texttt{0} \textbar{} \texttt{1} \textbar{} \texttt{2} \textbar{} \texttt{3} \textbar{} \texttt{4}
+                     \textbar{} \texttt{5} \textbar{} \texttt{6} \textbar{} \texttt{7} \\
+
+\textless{}digit 10\textgreater{} & \(\longrightarrow\) & \texttt{0} \textbar{} \texttt{1} \textbar{} \texttt{2} \textbar{} \texttt{3} \textbar{} \texttt{4}
+                     \textbar{} \texttt{5} \textbar{} \texttt{6} \textbar{} \texttt{7} \textbar{} \texttt{8} \textbar{} \texttt{9} \\
+
+\textless{}digit 16\textgreater{} & \(\longrightarrow\) & \textless{}digit 10\textgreater{} \textbar{} \texttt{a} \textbar{} \texttt{b}
+               \textbar{} \texttt{c} \textbar{} \texttt{d} \textbar{} \texttt{e}
+               \textbar{} \texttt{f}
+ \\
+\end{tabular}
+}
+
+
+A number written as above is inexact if it is prefixed by \texttt{\#{}i}
+or if it is not prefixed by \texttt{\#{}e} and contains a decimal point,
+nonempty exponent, or nonempty mantissa width.
+Otherwise, it is exact.
+
+
+Case is not significant in the syntax of numbers.
+
+
+\textbf{Lists\label{grammar_grammar_lists}.}  \label{grammar_s19}\label{grammar_s20}\label{grammar_s21}Lists are compound datums formed from groups of tokens and possibly
+involving other datums, including other lists.
+Lists are written as a sequence of datums within parentheses
+or brackets; as a nonempty sequence of datums,
+dotted-pair marker ( . ), and single datum enclosed within
+parentheses or brackets; or as an abbreviation.
+
+
+  
+  
+  {\footnotesize
+\begin{tabular}[H]{lcl}
+
+\textless{}list\textgreater{} & \(\longrightarrow\) & \texttt{(}\textless{}datum\textgreater{}*\texttt{)} \textbar{} \texttt{[}\textless{}datum\textgreater{}*\texttt{]} \\
+
+   & \textbar{} & \texttt{(}\textless{}datum\textgreater{}\textsuperscript{+} \texttt{.} \textless{}datum\textgreater{}\texttt{)} \textbar{} \texttt{[}\textless{}datum\textgreater{}\textsuperscript{+} \texttt{.} \textless{}datum\textgreater{}\texttt{]} \\
+
+   & \textbar{} & \textless{}abbreviation\textgreater{} \\
+
+\textless{}abbreviation\textgreater{} & \(\longrightarrow\) & \texttt{'} \textless{}datum\textgreater{} \textbar{} \texttt{`} \textless{}datum\textgreater{} 
+                       \textbar{} \texttt{,} \textless{}datum\textgreater{} \textbar{} \texttt{,\@{}} \textless{}datum\textgreater{} \\
+
+ & \textbar{} & \texttt{\#{}'} \textless{}datum\textgreater{} \textbar{} \texttt{\#{}`} \textless{}datum\textgreater{} 
+                       \textbar{} \texttt{\#{},} \textless{}datum\textgreater{} \textbar{} \texttt{\#{},\@{}} \textless{}datum\textgreater{}
+ \\
+\end{tabular}
+}
+
+
+If no dotted-pair marker appears in a list enclosed in parentheses or brackets,
+it is a proper list, and the datums are the elements of the list, in the order
+given.
+If a dotted-pair marker appears, the initial elements of the list are those
+before the marker, and the datum that follows the marker is the tail of the
+list.
+The dotted-pair marker is typically used only when the datum that follows
+the marker is not itself a list.
+While any proper list may be written without a dotted-pair marker, a
+proper list can be written in dotted-pair notation by placing a list after
+the dotted-pair marker.
+
+
+The abbreviations are equivalent to the corresponding two-element lists
+shown below. 
+Once an abbreviation has been read, the result is indistinguishable from
+its nonabbreviated form.
+
+
+\begin{alltt}
+'\textless{}datum\textgreater{} \(\rightarrow\) (quote \textless{}datum\textgreater{})
+`\textless{}datum\textgreater{} \(\rightarrow\) (quasiquote \textless{}datum\textgreater{})
+,\textless{}datum\textgreater{} \(\rightarrow\) (unquote \textless{}datum\textgreater{})
+,\@{}\textless{}datum\textgreater{} \(\rightarrow\) (unquote-splicing \textless{}datum\textgreater{})
+\#{}'\textless{}datum\textgreater{} \(\rightarrow\) (syntax \textless{}datum\textgreater{})
+\#{}`\textless{}datum\textgreater{} \(\rightarrow\) (quasisyntax \textless{}datum\textgreater{})
+\#{},\textless{}datum\textgreater{} \(\rightarrow\) (unsyntax \textless{}datum\textgreater{})
+\#{},\@{}\textless{}datum\textgreater{} \(\rightarrow\) (unsyntax-splicing \textless{}datum\textgreater{})
+\end{alltt}
+
+
+\textbf{Vectors\label{grammar_grammar_vectors}.}  \label{grammar_s22}Vectors are compound datums formed from groups of tokens and possibly
+involving other datums, including other vectors.
+A vector is written as an open vector parenthesis followed by a
+sequence of datums and a close parenthesis.
+
+
+  
+  
+  {\footnotesize
+\begin{tabular}[H]{lcl}
+
+\textless{}vector\textgreater{} & \(\longrightarrow\) & \texttt{\#{}(}\textless{}datum\textgreater{}*\texttt{)}
+ \\
+\end{tabular}
+}
+
+
+\textbf{Bytevectors\label{grammar_grammar_bytevectors}.}  \label{grammar_s23}Bytevectors are compound datums formed from groups of tokens, but the
+syntax does not permit them to contain arbitrary nested datums.
+A bytevector is written as an open bytevector parenthesis followed by a
+sequence of octets (unsigned 8-bit exact integers) and a close
+parenthesis.
+
+
+  
+  
+  {\footnotesize
+\begin{tabular}[H]{lcl}
+
+\textless{}bytevector\textgreater{} & \(\longrightarrow\) & \texttt{\#{}vu8(}\textless{}octet\textgreater{}*\texttt{)} \\
+
+\textless{}octet\textgreater{} & \(\longrightarrow\) & \textless{}any \textless{}number\textgreater{} representing an exact integer \texttt{\textit{n}}, 0 ≤ \textit{n} ≤ 255\textgreater{}
+ \\
+\end{tabular}
+}
+
+
+

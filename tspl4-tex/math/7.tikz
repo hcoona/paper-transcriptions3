@@ -1,0 +1,11 @@
+\begin{tikzpicture}
+\tikzstyle{bplus}=[
+    rectangle split,
+    rectangle split horizontal,
+    rectangle split ignore empty parts,
+    rectangle split part align=base,
+    rectangle split parts=10,
+    text width=4ex, align=center,
+    draw]
+\node[bplus] {$10$ \nodepart{two} a \nodepart{three} b \nodepart{four} c \nodepart{five} d \nodepart{six} e \nodepart{seven} f \nodepart{eight} g \nodepart{nine} h \nodepart{ten} i};
+\end{tikzpicture}

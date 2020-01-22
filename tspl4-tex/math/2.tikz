@@ -1,0 +1,17 @@
+\begin{tikzpicture}
+
+\matrix [row sep = 1em, column sep = 1em]
+{
+  \node[list] (A1) {\phantom{null} \nodepart{two} \phantom{null}}; & \node[list] (A2) {\phantom{null} \nodepart{two} \phantom{null}}; & \node[list] (A3) {\texttt{()} \nodepart{two} \texttt{()}}; \\
+  \node[list] (B1) {a \nodepart{two} b}; & \node[list] (B2) {\phantom{null} \nodepart{two} \phantom{null}}; & \node[list] (B3) {d \nodepart{two} \texttt{()}}; \\
+  & \node[list] (C1) {c \nodepart{two} \phantom{null}}; & \\
+};
+  
+\pSF{A1}{A2};
+\pSF{A2}{A3};
+\pSF{B2}{B3};
+
+\pFF{A1}{B1};
+\pFF{B2}{C1};
+
+\end{tikzpicture}

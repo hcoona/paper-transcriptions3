@@ -1,0 +1,17 @@
+\begin{tikzpicture}[start chain]
+
+\node[list,on chain] (A1) {a \nodepart{two} \phantom{null}};
+\node[list,on chain] (A2) {b \nodepart{two} \phantom{null}};
+\node[list,on chain] (A3) {c \nodepart{two} \phantom{null}};
+\node[list,on chain] (A4) {d \nodepart{two} \texttt{()}};
+
+\node[list,above=of A2] (R) {\phantom{null} \nodepart{two} \phantom{null}};
+  
+\pSF{A1}{A2};
+\pSF{A2}{A3};
+\pSF{A3}{A4};
+
+\pFF{R}{A1};
+\pSF{R}{A4};
+
+\end{tikzpicture}f

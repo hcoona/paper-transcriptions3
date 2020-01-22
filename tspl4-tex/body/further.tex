@@ -1,0 +1,2063 @@
+\chapter{Going Further\label{further_CHPTGOINGFURTHER}}
+\label{further_g49}
+\label{further_h0}
+\begin{figure}[H]
+\centering
+\setlength{\fboxrule}{3pt}
+\fbox{
+\includegraphics[width=0.9\textwidth]{canned/ch3.png}
+\begin{rotate}{90}
+\copyright~2009 Jean-Pierre H\'{e}bert
+\end{rotate}}
+\end{figure}
+\clearpage
+
+
+
+
+
+The preceding chapter prepared you to write Scheme programs using
+a small set of the most useful primitive syntactic forms and
+procedures.
+This chapter introduces a number of additional features and
+programming techniques that will allow you to write more sophisticated
+and efficient programs.
+
+
+\section{\label{further_g50}\label{further_h1}Syntactic Extension\label{further_SECTGFSYNTAX}}
+
+
+
+As we saw in Section \ref{start_g21}, the \texttt{let} syntactic form is merely
+a \textit{syntactic extension} defined in terms of a \texttt{lambda} expression and
+a procedure application, both \label{further_s0}core syntactic forms.
+At this point, you might be wondering which \label{further_s1}syntactic forms are core forms
+and which are \label{further_s2}syntactic extensions, and how new syntactic extensions
+may be defined.  This section provides some answers to these questions.
+
+
+In truth, it is not necessary for us to draw a distinction between
+core forms and syntactic extensions, since once defined, a syntactic
+extension has exactly the same status as a core form.
+Drawing a distinction, however, makes understanding the language
+easier, since it allows us to focus attention on the core forms
+and to understand all others in terms of them.
+
+
+It \textit{is} necessary for a Scheme implementation to distinguish between core
+forms and syntactic extensions.
+A Scheme implementation \label{further_s3}expands syntactic extensions
+into core forms as the first step of compilation or interpretation, allowing
+the rest of the compiler or interpreter to focus only on the core forms.
+The set of core forms remaining after expansion to be handled directly
+by the compiler or interpreter is implementation-dependent, however,
+and may be different from the set of forms described as core here.
+
+
+The exact set of syntactic forms making up the core of the language
+is thus subject to debate, although it must be possible to derive
+all other forms from any set of forms declared to be core forms.
+The set described here is among the simplest for which this constraint
+is satisfied.
+
+
+The core syntactic forms include top-level \texttt{define} forms,
+constants, variables, procedure applications,
+\label{further_s4}\label{further_s5}\texttt{quote} expressions,
+\label{further_s6}\texttt{lambda} expressions,
+\label{further_s7}\texttt{if} expressions,
+and \label{further_s8}\texttt{set!} expressions.
+The grammar below describes the core syntax of Scheme in terms
+of these definitions and expressions.
+In the grammar, vertical bars ( \textbar{} ) separate alternatives, and a form
+followed by an asterisk ( * ) represents zero or more occurrences
+of the form.
+\textless{}variable\textgreater{} is any Scheme identifier.
+\textless{}datum\textgreater{} is any Scheme object, such as a number, list, symbol, or
+vector.
+\textless{}boolean\textgreater{} is either \texttt{\#{}t} or \texttt{\#{}f},
+\textless{}number\textgreater{} is any number,
+\textless{}character\textgreater{} is any character, and
+\textless{}string\textgreater{} is any string.
+We have already seen examples of numbers, strings, lists, symbols, and
+booleans.
+See Chapter \ref{objects_g106} or the formal syntax description starting on
+page \pageref{grammar_APPENDIXFORMALSYNTAX}
+for more on the object-level syntax of these
+and other objects.
+
+
+  
+  
+  {\footnotesize
+\begin{tabular}[H]{lcl}
+
+\textless{}program\textgreater{} & \(\longrightarrow\) & \textless{}form\textgreater{}* \\
+
+\textless{}form\textgreater{} & \(\longrightarrow\) & \textless{}definition\textgreater{} \textbar{} \textless{}expression\textgreater{}  \\
+
+\textless{}definition\textgreater{} & \(\longrightarrow\) & \textless{}variable definition\textgreater{} \textbar{} \texttt{(begin} \textless{}definition\textgreater{}*\texttt{)}  \\
+
+\textless{}variable definition\textgreater{} & \(\longrightarrow\) & \texttt{(define} \textless{}variable\textgreater{} \textless{}expression\textgreater{}\texttt{)}  \\
+
+\textless{}expression\textgreater{} & \(\longrightarrow\) & \textless{}constant\textgreater{}  \\
+
+       & \textbar{} & \textless{}variable\textgreater{}  \\
+
+       & \textbar{} & \texttt{(quote} \textless{}datum\textgreater{}\texttt{)}  \\
+
+       & \textbar{} & \texttt{(lambda} \textless{}formals\textgreater{} \textless{}expression\textgreater{} \textless{}expression\textgreater{}*\texttt{)}  \\
+
+       & \textbar{} & \texttt{(if} \textless{}expression\textgreater{} \textless{}expression\textgreater{} \textless{}expression\textgreater{}\texttt{)}  \\
+
+       & \textbar{} & \texttt{(set!} \textless{}variable\textgreater{} \textless{}expression\textgreater{}\texttt{)}  \\
+
+       & \textbar{} & \textless{}application\textgreater{}  \\
+
+\textless{}constant\textgreater{} & \(\longrightarrow\) & \textless{}boolean\textgreater{} \textbar{} \textless{}number\textgreater{} \textbar{} \textless{}character\textgreater{} \textbar{} \textless{}string\textgreater{}  \\
+
+\textless{}formals\textgreater{} & \(\longrightarrow\) & \textless{}variable\textgreater{}  \\
+
+        & \textbar{} & \texttt{(}\textless{}variable\textgreater{}*\texttt{)}  \\
+
+        & \textbar{} & \texttt{(}\textless{}variable\textgreater{} \textless{}variable\textgreater{}* \texttt{.} \textless{}variable\textgreater{}\texttt{)}  \\
+
+\textless{}application\textgreater{} & \(\longrightarrow\) & \texttt{(}\textless{}expression\textgreater{} \textless{}expression\textgreater{}*\texttt{)}
+ \\
+\end{tabular}
+}
+
+
+The grammar is ambiguous in that the syntax for procedure applications
+conflicts with the syntaxes for \texttt{quote}, \texttt{lambda},
+\texttt{if}, and \texttt{set!} expressions.
+In order to qualify as a procedure application, the first \textless{}expression\textgreater{} must
+not be one of these keywords, unless the keyword has been redefined
+or locally bound.
+
+
+The \label{further_s9}``defun'' syntax for \texttt{define} given in
+Section \ref{start_g25}
+is not included in the core, since definitions in that form are
+straightforwardly translated into the simpler \texttt{define} syntax.
+Similarly, the core syntax for \texttt{if} does not permit the
+\texttt{\textit{alternative}} to be omitted, as did one example in
+Section \ref{start_g40}.
+An \texttt{if} expression lacking an \texttt{\textit{alternative}} can be translated
+into the core syntax for \texttt{if} merely by replacing the missing
+subexpression with an arbitrary constant, such as \texttt{\#{}f}.
+
+
+A \label{further_s10}\texttt{begin} that contains only definitions
+is considered to be a
+definition in the grammar; this is permitted in order to allow
+syntactic extensions to expand into more than one definition.
+\texttt{begin} expressions, i.e., \texttt{begin} forms containing expressions,
+are not considered core forms.
+A \texttt{begin} expression of the form
+
+
+\texttt{(begin \textit{e\textsubscript{1}} \textit{e\textsubscript{2}} ...)}
+
+is equivalent to the \texttt{lambda} application
+
+
+\texttt{((lambda () \textit{e\textsubscript{1}} \textit{e\textsubscript{2}} ...))}
+
+and hence need not be considered core.
+
+
+\label{further_s11}Now that we have established
+a set of core syntactic forms, let's turn to a discussion of
+\label{further_s12}syntactic extensions.
+Syntactic extensions are so called because they extend the syntax of Scheme
+beyond the core syntax.
+All syntactic extensions in a Scheme program must ultimately
+be derived from the core forms.
+One syntactic extension, however, may be defined
+in terms of another syntactic extension, as long as the latter
+is in some sense ``closer'' to the core syntax.
+Syntactic forms may appear anywhere an expression or definition is
+expected, as long as the extended form expands into a definition or
+expression as appropriate.
+
+
+Syntactic extensions are defined with \label{further_s13}\texttt{define-syntax}.
+\texttt{define-syntax} is similar to \texttt{define}, except that \texttt{define-syntax} associates
+a syntactic transformation procedure, or \label{further_s14}\textit{transformer}, with
+a \label{further_s15}keyword (such as \texttt{let}), rather than associating a value with
+a variable.
+Here is how we might define \texttt{let} with \texttt{define-syntax}.
+
+
+\begin{alltt}
+(define-syntax let
+  (syntax-rules ()
+    [(\_{} ((x e) ...) b1 b2 ...)
+     ((lambda (x ...) b1 b2 ...) e ...)]))
+\end{alltt}
+
+
+The identifier appearing after \texttt{define-syntax} is the name, or keyword,
+of the syntactic extension being defined, in this case \texttt{let}.
+The \texttt{syntax-rules} form is an expression that evaluates to a
+transformer.
+The item following \texttt{syntax-rules} is a list of
+\label{further_s16}\textit{auxiliary keywords} and is nearly always \texttt{()}.
+An example of an auxiliary keyword is the \texttt{else} of \texttt{cond}.
+(Other examples requiring the use of auxiliary keywords are given in
+Chapter \ref{syntax_g133}.)
+Following the list of auxiliary keywords is a sequence of one or more
+\textit{rules}, or \textit{pattern/template} pairs.
+Only one rule appears in our definition of \texttt{let}.
+The pattern part of a rule specifies the form that the input must take,
+and the template specifies to what the input should be transformed.
+
+
+The pattern should always be a structured expression whose first element
+is an \label{further_s17}underscore ( \texttt{\_{}} )\label{further_s18}.
+(As we will see in Chapter \ref{syntax_g133}, the use of \texttt{\_{}} is only a
+convention, but it is a good one to follow.)
+If more than one rule is present, the appropriate one
+is chosen by matching the patterns, in order, against the input during
+expansion.
+It is a syntax violation if none of the patterns match the input.
+
+
+Identifiers other than an underscore or ellipsis appearing within a
+pattern are \label{further_s19}\textit{pattern variables}, unless they
+are listed as auxiliary keywords.
+Pattern variables match any substructure and are bound to that
+substructure within the corresponding template.
+\label{further_s20}\label{further_s21}The notation
+\texttt{\textit{pat} ...} in the pattern allows for zero or more
+expressions matching the ellipsis prototype \texttt{\textit{pat}} in the input.
+Similarly, the notation \texttt{\textit{expr} ...} in the template produces
+zero or more expressions from the ellipsis prototype \texttt{\textit{expr}} in the output.
+The number of \texttt{\textit{pat}}s in the input determines the number of \texttt{\textit{expr}}s
+in the output; in order for this to work, any ellipsis prototype in the
+template must contain at least one pattern variable from an ellipsis
+prototype in the pattern.
+
+
+The single rule in our definition of \texttt{let} should be fairly
+self-explanatory, but a few points are worth mentioning.
+First, the syntax of \texttt{let} requires that the body contain at least one
+form; hence, we have specified \texttt{b1 b2 ...} instead of
+\texttt{b ...}, which might seem more natural.
+On the other hand, \texttt{let} does not require that there be at least one
+variable/value pair, so we were able to use, simply, \texttt{(x e) ...}.
+Second, the pattern variables \texttt{x} and \texttt{e}, though together within
+the same prototype in the pattern, are separated in the template; any sort
+of rearrangement or recombination is possible.
+Finally, the three pattern variables \texttt{x}, \texttt{e}, and \texttt{b2} that
+appear in ellipsis prototypes in the pattern also appear in ellipsis
+prototypes in the template.
+This is not a coincidence; it is a requirement.
+In general, if a pattern variable appears within an ellipsis prototype in
+the pattern, it cannot appear outside an ellipsis prototype in the template.
+
+
+The definition of \label{further_s22}\texttt{and} below is somewhat more complex than the
+one for \texttt{let}.
+
+
+\begin{alltt}
+(define-syntax and\label{further_defn_and}
+  (syntax-rules ()
+    [(\_{}) \#{}t]
+    [(\_{} e) e]
+    [(\_{} e1 e2 e3 ...)
+     (if e1 (and e2 e3 ...) \#{}f)]))
+\end{alltt}
+
+
+This definition is recursive and involves more than one rule.
+Recall that \texttt{(and)} evaluates to \texttt{\#{}t}; the first rule takes care of
+this case.
+The second and third rules specify the base case and recursion steps
+of the recursion and together translate \texttt{and} expressions with
+two or more subexpressions into nested \texttt{if} expressions.
+For example, \texttt{(and a b c)} expands first into
+
+
+\texttt{(if a (and b c) \#{}f)}
+
+then
+
+
+\texttt{(if a (if b (and c) \#{}f) \#{}f)}
+
+and finally
+
+
+\texttt{(if a (if b c \#{}f) \#{}f)}
+
+With this expansion, if \texttt{a} and \texttt{b} evaluate to a true value, then the value
+is the value of \texttt{c}, otherwise \texttt{\#{}f}, as desired.
+
+
+The version of \texttt{and} below is simpler but, unfortunately,
+incorrect.
+
+
+\begin{alltt}
+(define-syntax and ; incorrect!
+  (syntax-rules ()
+    [(\_{}) \#{}t]
+    [(\_{} e1 e2 ...)
+     (if e1 (and e2 ...) \#{}f)]))
+\end{alltt}
+
+
+The expression
+
+
+\texttt{(and (not (= x 0)) (/ 1 x))}
+
+should return the value of \texttt{(/ 1 x)} when \texttt{x}
+is not zero.
+With the incorrect version of \texttt{and}, the expression expands
+as follows.
+
+
+\begin{alltt}
+(if (not (= x 0)) (and (/ 1 x)) \#{}f) \(\rightarrow\)
+  (if (not (= x 0)) (if (/ 1 x) (and) \#{}f) \#{}f) \(\rightarrow\)
+  (if (not (= x 0)) (if (/ 1 x) \#{}t \#{}f) \#{}f)
+\end{alltt}
+
+
+The final answer if \texttt{x} is not zero is \texttt{\#{}t}, not the
+value of \texttt{(/ 1 x)}.
+
+
+The definition of \label{further_s23}\texttt{or} below is similar to the one for \texttt{and} except
+that a temporary variable must be introduced for each intermediate
+value so that we can both test the value and return it if it is a
+true value.
+(A temporary variable is not needed for \texttt{and} since there is only one
+false value, \texttt{\#{}f}.)
+
+
+\begin{alltt}
+(define-syntax or\label{further_defn_or}
+  (syntax-rules ()
+    [(\_{}) \#{}f]
+    [(\_{} e) e]
+    [(\_{} e1 e2 e3 ...)
+     (let ([t e1])
+       (if t t (or e2 e3 ...)))]))
+\end{alltt}
+
+
+Like variables bound by \texttt{lambda} or \texttt{let}, identifiers introduced
+by a template are \label{further_s24}lexically scoped, i.e., visible only within
+expressions introduced by the template.
+Thus, even if one of the expressions \texttt{e2 e3 ...} contains a reference
+to \texttt{t}, the introduced binding for \texttt{t} does not ``capture'' those
+references.
+This is typically accomplished via automatic renaming of introduced
+identifiers.
+
+
+As with the simpler version of \texttt{and} given above, the simpler
+version of \texttt{or} below is incorrect.
+
+
+\begin{alltt}
+(define-syntax or ; incorrect!
+  (syntax-rules ()
+    [(\_{}) \#{}f]
+    [(\_{} e1 e2 ...)
+     (let ([t e1])
+       (if t t (or e2 ...)))]))
+\end{alltt}
+
+
+The reason is more subtle, however, and is the subject of
+Exercise \hyperref[further_g61]{3.2.6}.
+
+
+\paragraph{Exercise \label{further_g51}3.1.1}
+
+
+\label{further_s25}Write out the expansion steps necessary to expand
+
+
+\begin{alltt}
+(let ([x (memv 'a ls)])
+  (and x (memv 'b x)))
+\end{alltt}
+
+
+into core forms.
+
+
+
+
+\paragraph{Exercise \label{further_g52}3.1.2}
+
+
+\label{further_s26}Write out the expansion steps necessary to expand
+
+
+\texttt{(or (memv x '(a b c)) (list x))}
+
+
+into core forms.
+
+
+\paragraph{Exercise \label{further_g53}3.1.3}
+
+
+\label{further_s27}\label{further_s28}\texttt{let*} is similar to \texttt{let} but evaluates its bindings
+in sequence.
+Each of the right-hand-side expressions is within the scope of
+the earlier bindings.
+
+
+\begin{alltt}
+(let* ([a 5] [b (+ a a)] [c (+ a b)])
+  (list a b c)) \(\Rightarrow\) (5 10 15)
+\end{alltt}
+
+\texttt{let*} can be implemented as nested \texttt{let} expressions.
+For example, the \texttt{let*} expression above is equivalent to the nested
+\texttt{let} expressions below.
+
+\begin{alltt}
+(let ([a 5])
+  (let ([b (+ a a)])
+    (let ([c (+ a b)])
+      (list a b c)))) \(\Rightarrow\) (5 10 15)
+\end{alltt}
+
+
+Define \texttt{let*} with \texttt{define-syntax}.
+
+
+
+
+\paragraph{Exercise \label{further_g54}3.1.4}
+
+
+\label{further_s29}As we saw in Section \ref{start_g40},
+it is legal to omit the third, or \textit{alternative}, subexpression
+of an \texttt{if} expression.
+Doing so, however, often leads to confusion.
+Scheme provides two syntactic forms,
+\label{further_s30}\texttt{when} and \label{further_s31}\texttt{unless},
+that may be used in place of
+such ``one-armed'' \texttt{if} expressions.
+
+
+\begin{alltt}
+(when \textit{test} \textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...)
+(unless \textit{test} \textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...)
+\end{alltt}
+
+
+With both forms, \texttt{test} is evaluated first.
+For \texttt{when}, if \texttt{test} evaluates to true, the remaining
+forms are evaluated in sequence as if enclosed in an implicit
+\texttt{begin} expression.
+If \texttt{test} evaluates to false, the remaining forms are not
+evaluated, and the result is unspecified.
+\texttt{unless} is similar except that
+the remaining forms are evaluated only if \texttt{test}
+evaluates to false.
+
+
+\begin{alltt}
+(let ([x 3])
+  (unless (= x 0) (set! x (+ x 1)))
+  (when (= x 4) (set! x (* x 2)))
+  x) \(\Rightarrow\) 8
+\end{alltt}
+
+
+Define \texttt{when} as a syntactic extension in terms of \texttt{if}
+and \texttt{begin}, and define \texttt{unless}
+in terms of \texttt{when}.
+
+
+
+
+\section{\label{further_g55}\label{further_h2}More Recursion\label{further_SECTGFMORERECURSION}}
+
+
+
+\label{further_s32}In Section \ref{start_g32}, we saw how
+to define recursive procedures using top-level definitions.
+Before that, we saw how to create local bindings for procedures using
+\label{further_s33}\texttt{let}.
+It is natural to wonder whether a \texttt{let}-bound procedure can be
+recursive.
+The answer is no, at least not in a straightforward way.
+If you try to evaluate the \label{further_s34}expression
+
+
+\begin{alltt}
+(let ([sum (lambda (ls)
+             (if (null? ls)
+                 0
+                 (+ (car ls) (sum (cdr ls)))))])
+  (sum '(1 2 3 4 5)))
+\end{alltt}
+
+
+it will probably raise an exception with a message to the effect that \texttt{sum} is
+undefined.
+This is because the variable \texttt{sum} is visible only within the body
+of the \texttt{let} expression and not within the \texttt{lambda} expression
+whose value is bound to \texttt{sum}.
+We can get around this problem by passing the procedure \texttt{sum} to itself
+as follows.
+
+
+\begin{alltt}
+(let ([sum (lambda (sum ls)
+             (if (null? ls)
+                 0
+                 (+ (car ls) (sum sum (cdr ls)))))])
+  (sum sum '(1 2 3 4 5))) \(\Rightarrow\) 15
+\end{alltt}
+
+
+This works and is a clever solution, but there is an easier way,
+using \label{further_s35}\texttt{letrec}.
+Like \texttt{let}, the
+\texttt{letrec} syntactic form includes a set of variable-value pairs,
+along with a sequence of expressions referred to as the \textit{body} of the
+\texttt{letrec}.
+
+
+\texttt{(letrec ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+Unlike \texttt{let}, the variables \texttt{\textit{var} ...} are visible not
+only within the body of the \texttt{letrec} but also within
+\texttt{\textit{expr} ...}.
+Thus, we can rewrite the expression above as follows.
+
+
+\begin{alltt}
+(letrec ([sum (lambda (ls)
+                (if (null? ls)
+                    0
+                    (+ (car ls) (sum (cdr ls)))))])
+  (sum '(1 2 3 4 5))) \(\Rightarrow\) 15
+\end{alltt}
+
+
+Using \texttt{letrec}, we can also define \label{further_s36}mutually recursive procedures, such
+as the procedures \label{further_s37}\texttt{even?} and \label{further_s38}\texttt{odd?} that were the subject of
+Exercise \hyperref[start_g38]{2.8.6}.
+
+
+\begin{alltt}
+(letrec ([even?\label{further_defn_even__odd_}
+          (lambda (x)
+            (or (= x 0)
+                (odd? (- x 1))))]
+         [odd?
+          (lambda (x)
+            (and (not (= x 0))
+                 (even? (- x 1))))])
+  (list (even? 20) (odd? 20))) \(\Rightarrow\) (\#{}t \#{}f)
+\end{alltt}
+
+
+In a \texttt{letrec} expression,
+\texttt{\textit{expr} ...} are most often \texttt{lambda} expressions,
+though this need not be the case.
+One restriction on the expressions must be obeyed, however.
+It must be possible to evaluate each \texttt{\textit{expr}} without
+evaluating any of the variables \texttt{\textit{var} ...}.
+This restriction is always satisfied if the expressions are all
+\texttt{lambda} expressions, since even though the variables may appear
+within the \texttt{lambda} expressions, they cannot be evaluated until
+the resulting procedures are invoked in the body of the \texttt{letrec}.
+The following \texttt{letrec} expression obeys this restriction.
+
+
+\begin{alltt}
+(letrec ([f (lambda () (+ x 2))]
+         [x 1])
+  (f)) \(\Rightarrow\) 3
+\end{alltt}
+
+
+while the following does not.
+
+
+\begin{alltt}
+(letrec ([y (+ x 2)]
+         [x 1])
+  y)
+\end{alltt}
+
+
+In this case, an exception is raised indicating that \texttt{x} is not
+defined where it is referenced.
+
+
+We can use \texttt{letrec} to hide the definitions of ``help'' procedures
+so that they do not clutter the top-level namespace.
+This is demonstrated by the definition of \label{further_s39}\texttt{list?} below, which
+follows the "\label{further_s40}hare and tortoise" algorithm
+outlined in Exercise \hyperref[start_g48]{2.9.8}.
+
+
+\begin{alltt}
+(define list?\label{further_defn_list_}
+  (lambda (x)
+    (letrec ([race
+              (lambda (h t)
+                (if (pair? h)
+                    (let ([h (cdr h)])
+                      (if (pair? h)
+                          (and (not (eq? h t))
+                               (race (cdr h) (cdr t)))
+                          (null? h)))
+                    (null? h)))])
+      (race x x))))
+\end{alltt}
+
+
+When a recursive procedure is called in only one place outside
+the procedure, as in the example above, it is often clearer to use
+a \label{further_s41}\textit{named} \texttt{let} expression.
+Named \texttt{let} expressions take the following form.
+
+
+\begin{alltt}
+(let \textit{name} ((\textit{var} \textit{expr}) ...)
+  \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)
+\end{alltt}
+
+
+Named \texttt{let} is similar to unnamed \texttt{let} in that it binds
+the variables \texttt{\textit{var} ...} to the values of
+\texttt{\textit{expr} ...} within
+the body \texttt{\textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...}.
+As with unnamed \texttt{let}, the variables are visible only within the
+body and not within \texttt{\textit{expr} ...}.
+In addition, the variable \texttt{\textit{name}} is bound within the body to
+a procedure that may be called to recur; the arguments to
+the procedure become the new values for the variables
+\texttt{\textit{var} ...}.
+
+
+The definition of \label{further_s42}\texttt{list?} has been rewritten below to use named
+\texttt{let}.
+
+
+\begin{alltt}
+(define list?
+  (lambda (x)
+    (let race ([h x] [t x])
+      (if (pair? h)
+          (let ([h (cdr h)])
+            (if (pair? h)
+                (and (not (eq? h t))
+                     (race (cdr h) (cdr t)))
+                (null? h)))
+          (null? h)))))
+\end{alltt}
+
+
+Just as \texttt{let} can be expressed as a simple direct application
+of a \texttt{lambda} expression to arguments, named \texttt{let} can be expressed
+as the application of a recursive procedure to arguments.
+A named \texttt{let} of the form
+
+
+\begin{alltt}
+(let \textit{name} ((\textit{var} \textit{expr}) ...)
+  \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)
+\end{alltt}
+
+
+can be rewritten in terms of \texttt{letrec} as follows.
+
+
+\begin{alltt}
+((letrec ((\textit{name} (lambda (\textit{var} ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)))
+   \textit{name})
+ \textit{expr} ...)
+\end{alltt}
+
+
+Alternatively, it can be rewritten as
+
+
+\begin{alltt}
+(letrec ((\textit{name} (lambda (\textit{var} ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)))
+  (\textit{name} \textit{expr} ...))
+\end{alltt}
+
+
+provided that the variable \texttt{\textit{name}} does not appear free within
+\texttt{\textit{expr} ...}.
+
+
+As we discussed in Section \ref{start_g32}, some recursion is
+essentially \label{further_s43}iteration and executes as such.
+When a procedure call is in tail position (see below) with respect to
+a \texttt{lambda}
+expression, it is considered to be a \label{further_s44}\textit{tail call}, and
+Scheme systems must treat it \textit{properly}, as a ``goto''
+or jump.
+When a procedure tail-calls itself or calls itself indirectly
+through a series of tail calls, the result is \label{further_s45}\textit{tail recursion}.
+Because tail calls are treated as jumps, tail recursion can be used
+for indefinite iteration in place of the more restrictive iteration
+constructs provided by other programming languages, without fear of
+overflowing any sort of recursion stack.
+
+
+A call is in tail position with respect to a \texttt{lambda} expression
+if its value is returned directly from the \texttt{lambda} expression,
+i.e., if nothing is left to do after the call but to return from the
+\texttt{lambda} expression.
+For example, a call is in tail position if
+it is the last expression in the body of a \texttt{lambda} expression,
+the \textit{consequent} or \textit{alternative} part of an \texttt{if} expression
+in tail position,
+the last subexpression of an \texttt{and} or \texttt{or} expression in tail
+position,
+the last expression in the body of a \texttt{let} or \texttt{letrec}
+in tail position, etc.
+Each of the calls to \texttt{f} in the expressions below
+are tail calls, but the calls to \texttt{g} are not.
+
+
+\begin{alltt}
+(lambda () (f (g)))
+(lambda () (if (g) (f) (f)))
+(lambda () (let ([x 4]) (f)))
+(lambda () (or (g) (f)))
+\end{alltt}
+
+
+In each case, the values of the calls to \texttt{f} are returned directly,
+whereas the calls to \texttt{g} are not.
+
+
+Recursion in general and named \texttt{let} in particular provide a natural
+way to implement many algorithms, whether iterative, recursive, or
+partly iterative and partly recursive; the programmer is not burdened
+with two distinct mechanisms.
+
+
+The following two definitions of \label{further_s46}\texttt{factorial} use named \texttt{let}
+expressions to compute the factorial, \textit{n}!, of a nonnegative integer \textit{n}.
+The first employs the recursive definition \textit{n}! = \textit{n} \(\times\) (\textit{n} - 1)!,
+where 0! is defined to be 1.
+
+
+\begin{alltt}
+(define factorial
+  (lambda (n)
+    (let fact ([i n])
+      (if (= i 0)
+          1
+          (* i (fact (- i 1)))))))
+\end{alltt}
+
+
+\begin{alltt}
+(factorial 0) \(\Rightarrow\) 1
+(factorial 1) \(\Rightarrow\) 1
+(factorial 2) \(\Rightarrow\) 2
+(factorial 3) \(\Rightarrow\) 6
+(factorial 10) \(\Rightarrow\) 3628800
+\end{alltt}
+
+
+The second is an iterative version that employs the iterative definition
+\textit{n}! = \textit{n} \(\times\) (\textit{n} - 1) \(\times\) (\textit{n} - 2) \(\times\) ... \(\times\) 1, using an accumulator,
+\texttt{a}, to hold the intermediate products.
+
+
+\begin{alltt}
+(define factorial
+  (lambda (n)
+    (let fact ([i n] [a 1])
+      (if (= i 0)
+          a
+          (fact (- i 1) (* a i))))))
+\end{alltt}
+
+
+\label{further_fibonacci}A similar problem is to compute the \textit{n}th Fibonacci number for a given
+\textit{n}.
+\label{further_s47}The \label{further_s48}\textit{Fibonacci numbers} are an infinite sequence of
+integers, 0, 1, 1, 2, 3, 5, 8, etc., in which each
+number is the sum of the two preceding numbers in the sequence.
+A procedure to compute the \textit{n}th Fibonacci number is most naturally
+defined recursively as follows.
+
+
+\begin{alltt}
+(define fibonacci
+  (lambda (n)
+    (let fib ([i n])
+      (cond
+        [(= i 0) 0]
+        [(= i 1) 1]
+        [else (+ (fib (- i 1)) (fib (- i 2)))]))))
+
+(fibonacci 0) \(\Rightarrow\) 0
+(fibonacci 1) \(\Rightarrow\) 1
+(fibonacci 2) \(\Rightarrow\) 1
+(fibonacci 3) \(\Rightarrow\) 2
+(fibonacci 4) \(\Rightarrow\) 3
+(fibonacci 5) \(\Rightarrow\) 5
+(fibonacci 6) \(\Rightarrow\) 8
+(fibonacci 20) \(\Rightarrow\) 6765
+(fibonacci 30) \(\Rightarrow\) 832040
+\end{alltt}
+
+
+This solution requires the computation of the two preceding Fibonacci
+numbers at each step and hence is \label{further_s49}\textit{doubly recursive}.
+For example, to compute \texttt{(fibonacci 4)} requires the computation of both
+\texttt{(fib 3)} and \texttt{(fib 2)}, to compute \texttt{(fib 3)} requires computing
+both \texttt{(fib 2)} and \texttt{(fib 1)}, and to compute \texttt{(fib 2)} requires
+computing both \texttt{(fib 1)} and \texttt{(fib 0)}.
+This is very inefficient, and it becomes more inefficient as \texttt{n} grows.
+A more efficient solution is to adapt the accumulator solution of the
+\texttt{factorial} example above to use two accumulators, \texttt{a1} for the
+current Fibonacci number and \texttt{a2} for the preceding one.
+
+
+\begin{alltt}
+(define fibonacci
+  (lambda (n)
+    (if (= n 0)
+        0
+        (let fib ([i n] [a1 1] [a2 0])
+          (if (= i 1)
+              a1
+              (fib (- i 1) (+ a1 a2) a1))))))
+\end{alltt}
+
+
+Here, zero is treated as a special case, since there is no preceding value.
+This allows us to use the single base case \texttt{(= i 1)}.
+The time it takes to compute the \textit{n}th Fibonacci number using this
+iterative solution grows linearly with \textit{n}, which makes a
+significant difference when compared to the doubly recursive version.
+To get a feel for the difference, try computing \texttt{(fibonacci 35)} and
+\texttt{(fibonacci 40)} using
+both definitions to see how long each takes.
+
+
+We can also get a feel for the difference by looking at a trace for
+each on small inputs.
+The first trace below shows the calls to \texttt{fib} in the non-tail-recursive
+version of \texttt{fibonacci}, with input 5.
+
+
+\begin{alltt}
+\textbar{}(fib 5)
+\textbar{} (fib 4)
+\textbar{} \textbar{}(fib 3)
+\textbar{} \textbar{} (fib 2)
+\textbar{} \textbar{} \textbar{}(fib 1)
+\textbar{} \textbar{} \textbar{}1
+\textbar{} \textbar{} \textbar{}(fib 0)
+\textbar{} \textbar{} \textbar{}0
+\textbar{} \textbar{} 1
+\textbar{} \textbar{} (fib 1)
+\textbar{} \textbar{} 1
+\textbar{} \textbar{}2
+\textbar{} \textbar{}(fib 2)
+\textbar{} \textbar{} (fib 1)
+\textbar{} \textbar{} 1
+\textbar{} \textbar{} (fib 0)
+\textbar{} \textbar{} 0
+\textbar{} \textbar{}1
+\textbar{} 3
+\textbar{} (fib 3)
+\textbar{} \textbar{}(fib 2)
+\textbar{} \textbar{} (fib 1)
+\textbar{} \textbar{} 1
+\textbar{} \textbar{} (fib 0)
+\textbar{} \textbar{} 0
+\textbar{} \textbar{}1
+\textbar{} \textbar{}(fib 1)
+\textbar{} \textbar{}1
+\textbar{} 2
+\textbar{}5
+\end{alltt}
+
+
+Notice how there are several calls to \texttt{fib} with arguments 2, 1, and 0.
+The second trace shows the calls to \texttt{fib} in the tail-recursive version,
+again with input 5.
+
+
+\begin{alltt}
+\textbar{}(fib 5 1 0)
+\textbar{}(fib 4 1 1)
+\textbar{}(fib 3 2 1)
+\textbar{}(fib 2 3 2)
+\textbar{}(fib 1 5 3)
+\textbar{}5
+\end{alltt}
+
+
+Clearly, there is quite a difference.
+
+
+The \label{further_s50}named \texttt{let} examples shown so far are either tail-recursive or not
+tail-recursive.
+It often happens that one recursive call within the same expression is
+tail-recursive while another is not.
+The definition of \label{further_s51}\texttt{factor} below computes the prime factors of its
+nonnegative integer argument.
+The first call to \texttt{f} is not
+tail-recursive, but the second one is.
+
+
+\begin{alltt}
+(define factor
+  (lambda (n)
+    (let f ([n n] [i 2])
+      (cond
+        [(\textgreater{}= i n) (list n)]
+        [(integer? (/ n i))
+         (cons i (f (/ n i) i))]
+        [else (f n (+ i 1))]))))
+
+(factor 0) \(\Rightarrow\) (0)
+(factor 1) \(\Rightarrow\) (1)
+(factor 12) \(\Rightarrow\) (2 2 3)
+(factor 3628800) \(\Rightarrow\) (2 2 2 2 2 2 2 2 3 3 3 3 5 5 7)
+(factor 9239) \(\Rightarrow\) (9239)
+\end{alltt}
+
+
+A trace of the calls to \texttt{f}, produced in Chez Scheme by
+replacing \texttt{let} with \texttt{trace-let},
+in the evaluation of \texttt{(factor 120)}
+below highlights the difference between the nontail calls and the
+tail calls.
+
+
+\begin{alltt}
+\textbar{}(f 120 2)
+\textbar{} (f 60 2)
+\textbar{} \textbar{}(f 30 2)
+\textbar{} \textbar{} (f 15 2)
+\textbar{} \textbar{} (f 15 3)
+\textbar{} \textbar{} \textbar{}(f 5 3)
+\textbar{} \textbar{} \textbar{}(f 5 4)
+\textbar{} \textbar{} \textbar{}(f 5 5)
+\textbar{} \textbar{} \textbar{}(5)
+\textbar{} \textbar{} (3 5)
+\textbar{} \textbar{}(2 3 5)
+\textbar{} (2 2 3 5)
+\textbar{}(2 2 2 3 5)
+\end{alltt}
+
+
+A nontail call to \texttt{f} is shown indented relative to its caller,
+since the caller is still active, whereas tail calls appear at
+the same level of indentation.
+
+
+\paragraph{Exercise \label{further_g56}3.2.1}
+
+
+\label{further_s52}Which of the recursive procedures defined in Section \ref{further_g55} are
+tail-recursive, and which are not?
+
+
+
+
+\paragraph{Exercise \label{further_g57}3.2.2}
+
+
+\label{further_s53}Rewrite \label{further_s54}\texttt{factor} using \texttt{letrec} to bind \texttt{f} in place of named \texttt{let}.
+Which version do you prefer?
+
+
+
+
+\paragraph{Exercise \label{further_g58}3.2.3}
+
+
+\label{further_s55}Can the \texttt{letrec} expression below
+be rewritten using named \texttt{let}?
+If not, why not?
+If so, do it.
+
+
+\begin{alltt}
+(letrec ([even?
+          (lambda (x)
+            (or (= x 0)
+                (odd? (- x 1))))]
+         [odd?
+          (lambda (x)
+            (and (not (= x 0))
+                 (even? (- x 1))))])
+  (even? 20))
+\end{alltt}
+
+
+
+\paragraph{Exercise \label{further_g59}3.2.4}
+
+
+\label{further_s56}Rewrite both definitions of \texttt{fibonacci} given in this section to count
+the number of recursive calls to \texttt{fib}, using a counter similar to the
+one used in the \texttt{cons-count} example of Section \ref{start_g40}.
+Count the number of recursive calls made in each case for several
+input values.
+What do you notice?
+
+
+
+
+\paragraph{Exercise \label{further_g60}3.2.5}
+
+
+\label{further_s57}Augment the definition of \texttt{let} given in Section \ref{further_g50} to
+handle named \texttt{let} as well as unnamed \texttt{let}, using two rules.
+
+
+
+
+\paragraph{Exercise \label{further_g61}3.2.6}
+
+
+\label{further_s58}\label{further_ex_incorrect_or}The following definition of \texttt{or} is simpler than the one given
+in Section \ref{further_g50}.
+
+
+\begin{alltt}
+(define-syntax or ; incorrect!
+  (syntax-rules ()
+    [(\_{}) \#{}f]
+    [(\_{} e1 e2 ...)
+     (let ([t e1])
+       (if t t (or e2 ...)))]))
+\end{alltt}
+
+
+Say why it is not correct.
+[\textit{Hint}: Think about what would happen if this version of \texttt{or}
+were used in the \texttt{even?} and \texttt{odd?} example given
+on page \pageref{further_defn_even__odd_} for very large inputs.]
+
+
+
+
+\paragraph{Exercise \label{further_g62}3.2.7}
+
+
+\label{further_s59}The definition of \label{further_s60}\texttt{factor} is not the most efficient possible.
+First, no factors of \textit{n} besides \textit{n} itself can possibly be found
+beyond \(\sqrt{n}\).
+Second, the division \texttt{(/ n i)} is performed twice when a factor is
+found.
+Third, after 2, no even factors can possibly be found.
+Recode \texttt{factor} to correct all three problems.
+Which is the most important problem to solve?
+Are there any additional improvements you can make?
+
+
+
+
+\section{\label{further_g63}\label{further_h3}Continuations\label{further_SECTGFCONTINUATIONS}}
+
+
+
+\label{further_s61}During the evaluation of a Scheme expression, the
+implementation must keep track of two things:
+(1) what to evaluate and (2) what to do with the value.
+Consider the evaluation of \texttt{(null? x)} within the expression
+below.
+
+
+\texttt{(if (null? x) (quote ()) (cdr x))}
+
+The implementation must first evaluate \texttt{(null? x)} and, based on its value,
+evaluate either \texttt{(quote ())} or \texttt{(cdr x)}.
+``What to evaluate'' is \texttt{(null? x)}, and ``what to do with the value''
+is to make the decision which of \texttt{(quote ())} and \texttt{(cdr x)} to
+evaluate and to do so.
+We call ``what to do with the value'' the \textit{continuation} of a
+computation.
+
+
+Thus, at any point during the evaluation of any expression, there is a
+continuation ready to complete, or at least \textit{continue}, the computation
+from that point.
+Let's assume that \texttt{x} has the value \texttt{(a b c)}.
+We can isolate six continuations during the evaluation of
+\texttt{(if (null? x) (quote ()) (cdr x))}, the continuations waiting for
+
+\begin{enumerate}
+\label{further_g64}\item 
+the value of \texttt{(if (null? x) (quote ()) (cdr x))},
+\label{further_g65}\item the value of \texttt{(null? x)},
+\label{further_g66}\item the value of \texttt{null?},
+\label{further_g67}\item the value of \texttt{x},
+\label{further_g68}\item the value of \texttt{cdr}, and
+\label{further_g69}\item the value of \texttt{x} (again).
+
+\end{enumerate}
+
+
+The continuation of \texttt{(cdr x)} is not listed because it is the same
+as the one waiting for \texttt{(if (null? x) (quote ()) (cdr x))}.
+
+
+Scheme allows the continuation of any expression to be captured with
+the procedure
+\label{further_s62}\texttt{call/cc}.
+\texttt{call/cc} must be passed a procedure \texttt{\textit{p}} of
+one argument.
+\texttt{call/cc} constructs a concrete representation of the
+current continuation and passes it to \texttt{\textit{p}}.
+The continuation itself is represented by a procedure \texttt{\textit{k}}.
+Each time \texttt{\textit{k}} is applied to a value, it returns
+the value to the continuation of the \texttt{call/cc} application.
+This value becomes, in essence, the value of the application of
+\texttt{call/cc}.
+
+
+If \texttt{\textit{p}} returns without invoking \texttt{\textit{k}},
+the value returned by the procedure becomes the value of the
+application of \texttt{call/cc}.
+
+
+Consider the simple examples below.
+
+
+\begin{alltt}
+(call/cc
+  (lambda (k)
+    (* 5 4))) \(\Rightarrow\) 20
+
+(call/cc
+  (lambda (k)
+    (* 5 (k 4)))) \(\Rightarrow\) 4
+
+(+ 2
+   (call/cc
+     (lambda (k)
+       (* 5 (k 4))))) \(\Rightarrow\) 6
+\end{alltt}
+
+
+In the first example, the continuation is captured and bound to \texttt{k},
+but \texttt{k} is never used, so the value is simply the product
+of 5 and 4.
+In the second, the continuation is invoked before the multiplication, so
+the value is the value passed to the continuation, 4.
+In the third, the continuation includes the addition by 2; thus, the
+value is the value passed to the continuation, 4, plus 2.
+
+
+\label{further_s63}Here is a less trivial example, showing the use of
+\texttt{call/cc} to provide a nonlocal exit from a recursion.
+
+
+\begin{alltt}
+(define product\label{further_defn_product_call_cc}
+  (lambda (ls)
+    (call/cc
+      (lambda (break)
+        (let f ([ls ls])
+          (cond
+            [(null? ls) 1]
+            [(= (car ls) 0) (break 0)]
+            [else (* (car ls) (f (cdr ls)))]))))))
+\end{alltt}
+
+
+\begin{alltt}
+(product '(1 2 3 4 5)) \(\Rightarrow\) 120
+(product '(7 3 8 0 1 9 5)) \(\Rightarrow\) 0
+\end{alltt}
+
+
+The nonlocal exit allows \texttt{product} to return immediately,
+without performing the pending multiplications,
+when a zero value is detected.
+
+
+Each of the continuation invocations above returns to the continuation
+while control remains within the procedure passed to \texttt{call/cc}.
+The following example uses the continuation after this procedure
+has already returned.
+
+
+\begin{alltt}
+(let ([x (call/cc (lambda (k) k))])
+  (x (lambda (ignore) "hi"))) \(\Rightarrow\) "hi"
+\end{alltt}
+
+
+The continuation captured by this invocation of \texttt{call/cc} may be described as
+"Take the value, bind it to \texttt{x}, and apply the value of \texttt{x} to
+the value of \texttt{(lambda (ignore) "hi")}."
+Since \texttt{(lambda (k) k)} returns its argument, \texttt{x} is bound to the
+continuation itself; this continuation is applied to the procedure resulting
+from the evaluation of \texttt{(lambda (ignore) "hi")}.
+This has the effect of binding \texttt{x} (again!) to this procedure and
+applying the procedure to itself.
+The procedure ignores its argument and returns \texttt{"hi"}.
+
+
+The following variation of the example above is probably the most confusing
+Scheme program of its size; it might be easy to guess what it returns,
+but it takes some thought to figure out why.
+
+
+\texttt{(((call/cc (lambda (k) k)) (lambda (x) x)) "HEY!") \(\Rightarrow\) "HEY!"}
+
+The value of the \texttt{call/cc} is its own continuation, as in the preceding
+example.
+This is applied to the identity procedure \texttt{(lambda (x) x)}, so the
+\texttt{call/cc} returns a second time with this value.
+Then, the identity procedure is applied to itself, yielding the identity
+procedure.
+This is finally applied to \texttt{"HEY!"}, yielding \texttt{"HEY!"}.
+
+
+Continuations used in this manner are not always so puzzling.
+Consider the following definition of \label{further_s64}\texttt{factorial} that saves the
+continuation at the base of the recursion before returning 1, by
+assigning the top-level variable \label{further_s65}\texttt{retry}\label{further_retry}.
+
+
+\begin{alltt}
+(define retry \#{}f)
+
+(define factorial
+  (lambda (x)
+    (if (= x 0)
+        (call/cc (lambda (k) (set! retry k) 1))
+        (* x (factorial (- x 1))))))
+\end{alltt}
+
+
+With this definition, \texttt{factorial} works as we expect
+\texttt{factorial} to work, except it has the side effect of assigning
+\texttt{retry}.
+
+
+\begin{alltt}
+(factorial 4) \(\Rightarrow\) 24
+(retry 1) \(\Rightarrow\) 24
+(retry 2) \(\Rightarrow\) 48
+\end{alltt}
+
+
+The continuation bound to \texttt{retry} might be described as "Multiply
+the value by 1, then multiply this result by 2, then multiply
+this result by 3, then multiply this result by 4."
+If we pass the continuation a different value, i.e., not 1, we will
+cause the base value to be something other than 1 and hence change
+the end result.
+
+
+\begin{alltt}
+(retry 2) \(\Rightarrow\) 48
+(retry 5) \(\Rightarrow\) 120
+\end{alltt}
+
+
+This mechanism could be the basis for a breakpoint package implemented with
+\texttt{call/cc}; each time a breakpoint is encountered, the continuation of
+the breakpoint is saved so that the computation may be restarted from the
+breakpoint (more than once, if desired).
+
+
+Continuations may be used to implement various forms of multitasking.
+The simple ``light-weight process'' mechanism defined below allows
+multiple computations to be interleaved.
+Since it is \textit{nonpreemptive}, it requires that each process voluntarily
+``pause'' from time to time in order to allow the others to run.
+
+
+\begin{alltt}
+(define lwp-list '())
+(define lwp
+  (lambda (thunk)
+    (set! lwp-list (append lwp-list (list thunk)))))
+
+(define start
+  (lambda ()
+    (let ([p (car lwp-list)])
+      (set! lwp-list (cdr lwp-list))
+      (p))))
+\end{alltt}
+
+
+\begin{alltt}
+(define pause
+  (lambda ()
+    (call/cc
+      (lambda (k)
+        (lwp (lambda () (k \#{}f)))
+        (start)))))
+\end{alltt}
+
+
+The following light-weight processes cooperate to print an
+infinite sequence of lines containing \texttt{"hey!"}.
+
+
+\begin{alltt}
+(lwp (lambda () (let f () (pause) (display "h") (f))))
+(lwp (lambda () (let f () (pause) (display "e") (f))))
+(lwp (lambda () (let f () (pause) (display "y") (f))))
+(lwp (lambda () (let f () (pause) (display "!") (f))))
+(lwp (lambda () (let f () (pause) (newline) (f))))
+(start) \(\Rightarrow\) \textit{hey!}
+         \textit{hey!}
+         \textit{hey!}
+         \textit{hey!}
+         \(\vdots\)
+\end{alltt}
+
+
+See Section \ref{examples_g208} for an implementation of \textit{engines},
+which support preemptive multitasking, with \texttt{call/cc}.
+
+
+\paragraph{Exercise \label{further_g70}3.3.1}
+
+
+\label{further_s66}Use \texttt{call/cc} to write a program that loops indefinitely, printing
+a sequence of numbers beginning at zero.
+Do not use any recursive procedures, and do not use any assignments.
+
+
+
+
+\paragraph{Exercise \label{further_g71}3.3.2}
+
+
+\label{further_s67}Rewrite \texttt{product} without \texttt{call/cc}, retaining the feature that no
+multiplications are performed if any of the list elements are zero.
+
+
+
+
+\paragraph{Exercise \label{further_g72}3.3.3}
+
+
+\label{further_s68}What would happen if a process created by \texttt{lwp} as defined above
+were to terminate, i.e., simply return without calling
+\texttt{pause}?
+Define a \texttt{quit} procedure that allows a process to terminate
+without otherwise affecting the \texttt{lwp} system.
+Be sure to handle the case in which the only remaining process
+terminates.
+
+
+
+
+\paragraph{Exercise \label{further_g73}3.3.4}
+
+
+\label{further_s69}Each time \texttt{lwp} is called, the list of processes is copied
+because \texttt{lwp} uses \texttt{append} to add its argument to the
+end of the process list.
+Modify the original \texttt{lwp} code to
+use the queue data type developed in Section \ref{start_g40}
+to avoid this problem.
+
+
+
+
+\paragraph{Exercise \label{further_g74}3.3.5}
+
+
+\label{further_s70}The light-weight process mechanism allows new processes to be created
+dynamically, although the example given in this section does not
+do so.
+Design an application that requires new processes to be created
+dynamically and implement it using the light-weight process mechanism.
+
+
+
+\section{\label{further_g75}\label{further_h4}Continuation Passing Style\label{further_SECTGFCPS}}
+
+
+
+\label{further_s71}\label{further_s72}As we discussed in the
+preceding section, a continuation
+waits for the value of each expression.
+In particular, a continuation is associated with each procedure call.
+When one procedure invokes another via a nontail call, the called
+procedure receives an implicit continuation that is responsible for
+completing what is left of the calling procedure's body plus returning
+to the calling procedure's continuation.
+If the call is a tail call, the called procedure simply receives
+the continuation of the calling procedure.
+
+
+We can make the continuations explicit by encapsulating ``what to do''
+in an explicit procedural argument passed along on each call.
+For example, the continuation of the call to \texttt{f} in
+
+
+\begin{alltt}
+(letrec ([f (lambda (x) (cons 'a x))]
+         [g (lambda (x) (cons 'b (f x)))]
+         [h (lambda (x) (g (cons 'c x)))])
+  (cons 'd (h '()))) \(\Rightarrow\) (d b a c)
+\end{alltt}
+
+
+conses the symbol \texttt{b} onto the value returned to it, then returns
+the result of this cons to the continuation of the call to \texttt{g}.
+This continuation is the same as the continuation of the call to
+\texttt{h}, which conses the symbol \texttt{d} onto the value returned to
+it.
+We can rewrite this in \textit{continuation-passing style}, or CPS,
+by replacing these implicit continuations with explicit procedures.
+
+
+\begin{alltt}
+(letrec ([f (lambda (x k) (k (cons 'a x)))]
+         [g (lambda (x k)
+              (f x (lambda (v) (k (cons 'b v)))))]
+         [h (lambda (x k) (g (cons 'c x) k))])
+  (h '() (lambda (v) (cons 'd v))))
+\end{alltt}
+
+
+Like the implicit continuation of \texttt{h} and \texttt{g} in the preceding
+example, the explicit continuation passed to \texttt{h} and on to \texttt{g},
+
+
+\texttt{(lambda (v) (cons 'd v))}
+
+conses the symbol \texttt{d} onto the value passed to it.
+Similarly,
+the continuation passed to \texttt{f},
+
+
+\texttt{(lambda (v) (k (cons 'b v)))}
+
+conses \texttt{b} onto the value passed to it, then passes this on to the
+continuation of \texttt{g}.
+
+
+Expressions written in CPS are more complicated, of course, but
+this style of programming has some useful applications.
+CPS allows
+a procedure to pass more than one result to its continuation,
+because the procedure that implements the continuation can
+take any number of arguments.
+
+
+\begin{alltt}
+(define car\&{}cdr
+  (lambda (p k)
+    (k (car p) (cdr p))))
+
+(car\&{}cdr '(a b c)
+  (lambda (x y)
+    (list y x))) \(\Rightarrow\) ((b c) a)
+(car\&{}cdr '(a b c) cons) \(\Rightarrow\) (a b c)
+(car\&{}cdr '(a b c a d) memv) \(\Rightarrow\) (a d)
+\end{alltt}
+
+
+(This can be done with multiple values as well; see Section \ref{control_g104}.)
+CPS also allows a procedure to take separate ``success'' and
+``failure'' continuations, which may accept different numbers of arguments.
+An example is \label{further_s73}\texttt{integer-divide} below, which passes the quotient
+and remainder of its first two arguments to its third, unless the
+second argument (the divisor) is zero, in which case it passes an
+error message to its fourth argument.
+
+
+\begin{alltt}
+(define integer-divide
+  (lambda (x y success failure)
+    (if (= y 0)
+        (failure "divide by zero")
+        (let ([q (quotient x y)])
+          (success q (- x (* q y)))))))
+
+(integer-divide 10 3 list (lambda (x) x)) \(\Rightarrow\) (3 1)
+(integer-divide 10 0 list (lambda (x) x)) \(\Rightarrow\) "divide by zero"
+\end{alltt}
+
+
+The procedure \texttt{quotient}, employed by \texttt{integer-divide},
+returns the quotient of its two arguments,
+truncated toward zero.
+
+
+Explicit success and failure continuations can sometimes
+help to avoid the extra communication necessary to separate successful
+execution of a procedure from unsuccessful execution.
+Furthermore, it is possible to have multiple success or failure
+continuations for different flavors of success or failure, each
+possibly taking different numbers and types of arguments.
+See Sections \ref{examples_g204} and \ref{examples_g208} for extended examples
+that employ continuation-passing style.
+
+
+At this point you might be wondering about the relationship between
+CPS and the continuations captured via \texttt{call/cc}.
+It turns out that any program that uses \texttt{call/cc} can be rewritten
+in CPS without \texttt{call/cc}, but a total rewrite of the program
+(sometimes including even system-defined primitives) might be
+necessary.
+Try to convert the \label{further_s74}\texttt{product} example on
+page \pageref{further_defn_product_call_cc}
+into CPS before looking at the version below.
+
+
+\begin{alltt}
+(define product
+  (lambda (ls k)
+    (let ([break k])
+      (let f ([ls ls] [k k])
+        (cond
+          [(null? ls) (k 1)]
+          [(= (car ls) 0) (break 0)]
+          [else (f (cdr ls)
+                   (lambda (x)
+                     (k (* (car ls) x))))])))))
+\end{alltt}
+
+
+\begin{alltt}
+(product '(1 2 3 4 5) (lambda (x) x)) \(\Rightarrow\) 120
+(product '(7 3 8 0 1 9 5) (lambda (x) x)) \(\Rightarrow\) 0
+\end{alltt}
+
+\paragraph{Exercise \label{further_g76}3.4.1}
+
+
+\label{further_s75}Rewrite the \label{further_s76}\texttt{reciprocal} example first given in
+Section \ref{start_g5} to accept both success and failure
+continuations, like \texttt{integer-divide} above.
+
+
+
+
+\paragraph{Exercise \label{further_g77}3.4.2}
+
+
+\label{further_s77}Rewrite the \label{further_s78}\texttt{retry} example from page \pageref{further_retry} to use CPS.
+
+
+
+
+\paragraph{Exercise \label{further_g78}3.4.3}
+
+
+\label{further_s79}Rewrite the following expression in CPS to avoid using \texttt{call/cc}.
+
+
+\begin{alltt}
+(define reciprocals
+  (lambda (ls)
+    (call/cc
+      (lambda (k)
+        (map (lambda (x)
+               (if (= x 0)
+                   (k "zero found")
+                   (/ 1 x)))
+             ls)))))
+\end{alltt}
+
+
+\begin{alltt}
+(reciprocals '(2 1/3 5 1/4)) \(\Rightarrow\) (1/2 3 1/5 4)
+(reciprocals '(2 1/3 0 5 1/4)) \(\Rightarrow\) "zero found"
+\end{alltt}
+
+
+[\textit{Hint}: A single-list version of \texttt{map} is
+defined on page \pageref{start_defn_map1}.]
+
+
+
+
+\section{\label{further_g79}\label{further_h5}Internal Definitions\label{further_SECTGFINTERNAL}}
+
+
+
+\label{further_s80}\label{further_s81}In Section \ref{start_g25}, we
+discussed top-level definitions.
+Definitions may also appear at the front of a \texttt{lambda}, \texttt{let},
+or \texttt{letrec} body, in which case the bindings they create are local
+to the body.
+
+
+\begin{alltt}
+(define f (lambda (x) (* x x)))
+(let ([x 3])
+  (define f (lambda (y) (+ y x)))
+  (f 4)) \(\Rightarrow\) 7
+(f 4) \(\Rightarrow\) 16
+\end{alltt}
+
+
+Procedures bound by internal definitions can be mutually recursive,
+as with \texttt{letrec}.
+For example, we can rewrite the \label{further_s82}\texttt{even?} and \label{further_s83}\texttt{odd?} example
+from Section \ref{further_g55}
+using internal definitions as follows.
+
+
+\begin{alltt}
+(let ()
+  (define even?
+    (lambda (x)
+      (or (= x 0)
+          (odd? (- x 1)))))
+  (define odd?
+    (lambda (x)
+      (and (not (= x 0))
+           (even? (- x 1)))))
+  (even? 20)) \(\Rightarrow\) \#{}t
+\end{alltt}
+
+
+Similarly, we can replace the use of \label{further_s84}\texttt{letrec} to bind \texttt{race}
+with an internal definition of \texttt{race} in our first definition of
+\label{further_s85}\texttt{list?}.
+
+
+\begin{alltt}
+(define list?
+  (lambda (x)
+    (define race
+      (lambda (h t)
+        (if (pair? h)
+            (let ([h (cdr h)])
+              (if (pair? h)
+                  (and (not (eq? h t))
+                       (race (cdr h) (cdr t)))
+                  (null? h)))
+            (null? h))))
+    (race x x)))
+\end{alltt}
+
+
+In fact, internal variable definitions and \texttt{letrec} are practically interchangeable.
+The only difference, other than the obvious difference in syntax, is that
+variable definitions are guaranteed to be evaluated from left to right,
+while the bindings of a letrec may be evaluated in any order.
+So we cannot quite replace a
+\texttt{lambda}, \texttt{let}, or
+\texttt{letrec} body containing internal definitions with a \texttt{letrec} expression.
+We can, however, use \texttt{letrec*}, which, like
+\texttt{let*}, guarantees left-to-right evaluation order.
+A body of the form
+
+
+\begin{alltt}
+(define \textit{var} \textit{expr\textsubscript{0}})
+  \(\vdots\)
+\textit{expr\textsubscript{1}}
+\textit{expr\textsubscript{2}}
+  \(\vdots\)
+\end{alltt}
+
+
+is equivalent to a \texttt{letrec*}
+expression binding the defined variables to the associated values
+in a body comprising the expressions.
+
+
+\texttt{(letrec* ((\textit{var} \textit{expr\textsubscript{0}}) ...) \textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...)}
+
+Conversely, a \texttt{letrec*} of the form
+
+
+\texttt{(letrec* ((\textit{var} \textit{expr\textsubscript{0}}) ...) \textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...)}
+
+can be replaced with a \texttt{let} expression containing internal definitions
+and the expressions from the body as follows.
+
+
+\begin{alltt}
+(let ()
+  (define \textit{var} \textit{expr\textsubscript{0}})
+    \(\vdots\)
+  \textit{expr\textsubscript{1}}
+  \textit{expr\textsubscript{2}}
+    \(\vdots\)
+)
+\end{alltt}
+
+
+The seeming lack of symmetry between these transformations is due to
+the fact that \texttt{letrec*} expressions can appear anywhere an expression
+is valid, whereas internal definitions can appear only at the front
+of a body.
+Thus, in replacing a \texttt{letrec*} with internal definitions, we must generally
+introduce a \texttt{let} expression to hold the definitions.
+
+
+Another difference between internal definitions and \texttt{letrec} or
+\texttt{letrec*} is that syntax definitions may appear among the internal
+definitions, while \texttt{letrec} and \texttt{letrec*} bind only
+variables.
+
+
+\begin{alltt}
+(let ([x 3])
+  (define-syntax set-x!
+    (syntax-rules ()
+      [(\_{} e) (set! x e)]))
+  (set-x! (+ x x))
+  x) \(\Rightarrow\) 6
+\end{alltt}
+
+
+The scope of a syntactic extension established by an internal syntax
+definition, as with an internal variable definition, is limited to
+the body in which the syntax definition appears.
+
+
+Internal definitions may be used in conjunction with top-level
+definitions and assignments to help modularize programs.
+Each module of a program should make visible only those bindings
+that are needed by other modules, while hiding other bindings that
+would otherwise clutter the top-level namespace and possibly
+result in unintended use or redefinition of those bindings.
+A common way of structuring a module is shown below.
+
+
+\begin{alltt}
+(define \textit{export-var} \#{}f)
+  \(\vdots\)
+(let ()
+  (define \textit{var} \textit{expr})
+    \(\vdots\)
+  \textit{init-expr}
+    \(\vdots\)
+  (set! \textit{export-var} \textit{export-val})
+    \(\vdots\)
+)
+\end{alltt}
+
+
+The first set of definitions establish top-level bindings for the
+variables we desire to export (make visible globally).
+The second set of definitions establish local bindings visible only
+within the module.
+The expressions \texttt{\textit{init-expr} ...} perform any initialization that
+must occur after the local bindings have been established.
+Finally, the \texttt{set!} expressions assign the exported variables to
+the appropriate values.
+
+
+An advantage of this form of modularization is that the bracketing
+\texttt{let} expression may be removed or ``commented out'' during
+program development, making the internal definitions top-level to
+facilitate interactive testing.
+This form of modularization also has several disadvantages, as we
+discuss in the next section.
+
+
+The following module exports a single variable, \texttt{calc}, which is
+bound to a procedure that implements a simple four-function
+calculator.
+
+
+\begin{alltt}
+(define calc \#{}f)
+(let ()
+  (define do-calc
+    (lambda (ek expr)
+      (cond
+        [(number? expr) expr]
+        [(and (list? expr) (= (length expr) 3))
+         (let ([op (car expr)] [args (cdr expr)])
+           (case op
+             [(add) (apply-op ek + args)]
+             [(sub) (apply-op ek - args)]
+             [(mul) (apply-op ek * args)]
+             [(div) (apply-op ek / args)]
+             [else (complain ek "invalid operator" op)]))]
+        [else (complain ek "invalid expression" expr)])))
+  (define apply-op
+    (lambda (ek op args)
+      (op (do-calc ek (car args)) (do-calc ek (cadr args)))))
+  (define complain
+    (lambda (ek msg expr)
+      (ek (list msg expr))))
+  (set! calc
+    (lambda (expr)
+      ; grab an error continuation ek
+      (call/cc
+        (lambda (ek)
+          (do-calc ek expr))))))
+
+(calc '(add (mul 3 2) -4)) \(\Rightarrow\) 2
+(calc '(div 1/2 1/6)) \(\Rightarrow\) 3
+(calc '(add (mul 3 2) (div 4))) \(\Rightarrow\) ("invalid expression" (div 4))
+(calc '(mul (add 1 -2) (pow 2 7))) \(\Rightarrow\) ("invalid operator" pow)
+\end{alltt}
+
+
+This example uses a \texttt{case} expression to determine which operator
+to apply.
+\texttt{case} is similar to \texttt{cond} except that the test is always the
+same: \texttt{(memv \textit{val} (\textit{key} ...))}, where \texttt{\textit{val}}
+is the value of the first \texttt{case} subform and \texttt{(\textit{key} ...)}
+is the list of items at the front of each \texttt{case} clause.
+The \texttt{case} expression in the example above could be rewritten
+using \texttt{cond} as follows.
+
+
+\begin{alltt}
+(let ([temp op])
+  (cond
+    [(memv temp '(add)) (apply-op ek + args)]
+    [(memv temp '(sub)) (apply-op ek - args)]
+    [(memv temp '(mul)) (apply-op ek * args)]
+    [(memv temp '(div)) (apply-op ek / args)]
+    [else (complain ek "invalid operator" op)]))
+\end{alltt}
+
+\paragraph{Exercise \label{further_g80}3.5.1}
+
+
+\label{further_s86}Redefine \texttt{complain} in the \texttt{calc} example as an equivalent syntactic
+extension.
+
+
+
+
+\paragraph{Exercise \label{further_g81}3.5.2}
+
+
+\label{further_s87}In the \texttt{calc} example, the error continuation \texttt{ek} is passed
+along on
+each call to \texttt{apply-op}, \texttt{complain}, and \texttt{do-calc}.
+Move the definitions of \texttt{apply-op}, \texttt{complain}, and
+\texttt{do-calc} inward as far as necessary to eliminate the
+\texttt{ek} argument from the definitions and applications
+of these procedures.
+
+
+
+
+\paragraph{Exercise \label{further_g82}3.5.3}
+
+
+\label{further_s88}Eliminate the \texttt{call/cc} from \texttt{calc} and rewrite \texttt{complain} to
+raise an exception using \texttt{assertion-violation}.
+
+
+
+
+\paragraph{Exercise \label{further_g83}3.5.4}
+
+
+\label{further_s89}Extend \texttt{calc} to handle unary minus expressions, e.g.,
+
+
+\texttt{(calc '(minus (add 2 3))) \(\Rightarrow\) -5}
+
+and other operators of your choice.
+
+
+
+
+\section{\label{further_g84}\label{further_h6}Libraries\label{further_SECTGFLIBRARIES}}
+
+
+
+At the end of the preceding section, we discussed a form of modularization
+that involves assigning a set of top-level variables from within a \texttt{let}
+while keeping unpublished helpers local to the \texttt{let}.
+This form of modularization has several drawbacks:
+
+\begin{itemize}
+  \item 
+It is unportable, because the behavior and even existence of an
+        interactive top level is not guaranteed by the Revised\textsuperscript{6} Report.
+  \item It requires assignments, which make the code appear somewhat awkward
+        and may inhibit compiler analyses and optimizations.
+  \item It does not support the publication of keyword bindings, since
+        there is no analogue to \texttt{set!} for keywords.
+
+\end{itemize}
+
+
+An alternative that does not share these drawbacks is to create a library.
+A library exports a set of identifiers, each defined within the library
+or imported from some other library.
+An exported identifier need not be bound as a variable; it may be bound
+as a keyword instead.
+
+
+The following library exports two identifiers: the variable
+\texttt{gpa-\textgreater{}grade} and the keyword \texttt{gpa}.
+The variable \texttt{gpa-\textgreater{}grade} is bound to a procedure that
+takes a grade-point average (GPA), represented as a number, and returns
+the corresponding letter grade, based on a four-point scale.
+The keyword \texttt{gpa} names a syntactic extension whose
+subforms must all be letter grades and whose value is the GPA
+computed from those letter grades.
+
+
+\begin{alltt}
+(library (grades)
+  (export gpa-\textgreater{}grade gpa)
+  (import (rnrs))
+
+  (define in-range?
+    (lambda (x n y)
+      (and (\textgreater{}= n x) (\textless{} n y))))
+
+  (define-syntax range-case 
+    (syntax-rules (- else)
+      [(\_{} expr ((x - y) e1 e2 ...) ... [else ee1 ee2 ...])
+       (let ([tmp expr])
+         (cond
+           [(in-range? x tmp y) e1 e2 ...]
+           ...
+           [else ee1 ee2 ...]))]
+      [(\_{} expr ((x - y) e1 e2 ...) ...)
+       (let ([tmp expr])
+         (cond
+           [(in-range? x tmp y) e1 e2 ...]
+           ...))]))
+
+  (define letter-\textgreater{}number
+    (lambda (x)
+      (case x
+        [(a)  4.0]
+        [(b)  3.0]
+        [(c)  2.0]
+        [(d)  1.0]
+        [(f)  0.0]
+        [else (assertion-violation 'grade "invalid letter grade" x)])))
+
+  (define gpa-\textgreater{}grade
+    (lambda (x)
+      (range-case x
+        [(0.0 - 0.5) 'f]
+        [(0.5 - 1.5) 'd]
+        [(1.5 - 2.5) 'c]
+        [(2.5 - 3.5) 'b]
+        [else 'a])))
+
+  (define-syntax gpa
+    (syntax-rules ()
+      [(\_{} g1 g2 ...)
+       (let ([ls (map letter-\textgreater{}number '(g1 g2 ...))])
+         (/ (apply + ls) (length ls)))])))
+\end{alltt}
+
+
+The name of the library is \texttt{(grades)}.
+This may seem like a funny kind of name, but all library names are
+parenthesized.
+The library imports from the standard \texttt{(rnrs)} library,
+which contains most of the primitive and keyword bindings we have
+used in this chapter and the last, and everything we need to
+implement \texttt{gpa-\textgreater{}grade} and \texttt{gpa}.
+
+
+Along with \texttt{gpa-\textgreater{}grade} and \texttt{gpa}, several other
+syntactic extensions and procedures are defined within the library,
+but none of the others are exported.
+The ones that aren't exported are simply helpers for the ones
+that are.
+Everything used within the library should be familiar, except
+for the \texttt{apply} procedure, which is described on
+page \pageref{control_desc_apply}.
+
+
+If your Scheme implementation supports \texttt{import} in the interactive
+top level, you can test the two exports as shown below.
+
+
+\begin{alltt}
+(import (grades))
+(gpa c a c b b) \(\Rightarrow\) 2.8
+(gpa-\textgreater{}grade 2.8) \(\Rightarrow\) b
+\end{alltt}
+
+
+Chapter \ref{libraries_g142} describes libraries in more detail and
+provides additional examples of their use.
+
+
+\paragraph{Exercise \label{further_g85}3.6.1}
+
+
+\label{further_s90}Modify \texttt{gpa} to handle "\texttt{x}" grades, which do not
+count in the grade-point average.
+Be careful to handle gracefully the situation where each grade is \texttt{x}.
+
+
+\begin{alltt}
+(import (grades))
+(gpa a x b c) \(\Rightarrow\) 3.0
+\end{alltt}
+
+
+
+
+\paragraph{Exercise \label{further_g86}3.6.2}
+
+
+\label{further_s91}Export from \texttt{(grades)} a new syntactic form, \texttt{distribution},
+that takes a set of grades, like \texttt{gpa}, but returns a list of the
+form \texttt{((\textit{n} \textit{g}) ...)}, where \texttt{\textit{n}} is the number of
+times \texttt{\textit{g}} appears in the set, with one entry for each \texttt{\textit{g}}.
+Have \texttt{distribution} call an unexported procedure to do the actual
+work.
+
+
+\begin{alltt}
+(import (grades))
+(distribution a b a c c c a f b a) \(\Rightarrow\) ((4 a) (2 b) (3 c) (0 d) (1 f))
+\end{alltt}
+
+
+
+\paragraph{Exercise \label{further_g87}3.6.3}
+
+
+\label{further_s92}Now read about output operations in Section \ref{io_g129} and define
+a new export, \texttt{histogram}, as a procedure that takes a
+\texttt{\textit{textual output port}} and a distribution, such as might be
+produced by \texttt{distribution}, and prints a histogram in the style
+illustrated by the example below.
+
+
+\begin{alltt}
+(import (grades))
+(histogram
+  (current-output-port)
+  (distribution a b a c c a c a f b a))
+
+\textit{prints:}
+  a: *****
+  b: **
+  c: ***
+  d: 
+  f: *
+\end{alltt}
+
+
+

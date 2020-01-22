@@ -1,0 +1,2145 @@
+\chapter{Control Operations\label{control_CHPTCONTROL}}
+\label{control_g96}
+\label{control_h0}
+\begin{figure}[H]
+\centering
+\setlength{\fboxrule}{3pt}
+\fbox{
+\includegraphics[width=0.9\textwidth]{canned/ch5.png}
+\begin{rotate}{90}
+\copyright~2009 Jean-Pierre H\'{e}bert
+\end{rotate}}
+\end{figure}
+\clearpage
+
+
+
+
+
+This chapter introduces the syntactic forms and procedures that
+serve as \label{control_s0}control structures for Scheme programs,
+The first section covers the most basic control structure, procedure
+application, and the remaining sections cover sequencing, conditional
+evaluation, recursion, mapping, continuations, delayed evaluation,
+multiple values, and evaluation of programs constructed at run time.
+
+
+\section{\label{control_g97}\label{control_h1}Procedure Application\label{control_SECTAPPLICATION}}
+
+
+\begin{description}
+
+\label{control_s1}\item[syntax] \texttt{(\textit{expr\textsubscript{0}} \textit{expr\textsubscript{1}} ...)}
+
+
+
+\item[returns] values of applying the value of \texttt{\textit{expr\textsubscript{0}}} to the values of \texttt{\textit{expr\textsubscript{1}} ...}
+\end{description}
+
+
+Procedure application is the most basic Scheme control structure.
+Any structured form without a syntax keyword in the first position is a
+procedure application.
+The expressions \texttt{\textit{expr\textsubscript{0}}} and \texttt{\textit{expr\textsubscript{1}} ...} are evaluated; each
+should evaluate to a single value.
+After each of these expressions has been evaluated, the value of
+\texttt{\textit{expr\textsubscript{0}}} is applied to the values of \texttt{\textit{expr\textsubscript{1}} ...}.
+If \texttt{\textit{expr\textsubscript{0}}} does not evaluate to a procedure, or if the procedure does not
+accept the number of arguments provided, an exception with condition type
+\texttt{\&{}assertion} is raised.
+
+
+\label{control_s2}The order in which the procedure and argument
+expressions are evaluated is unspecified.
+It may be left to right, right to left, or any other order.
+The evaluation is guaranteed to be sequential, however: whatever order
+is chosen, each expression is fully evaluated before evaluation of
+the next is started.
+
+
+\begin{alltt}
+(+ 3 4) \(\Rightarrow\) 7
+
+((if (odd? 3) + -) 6 2) \(\Rightarrow\) 8
+
+((lambda (x) x) 5) \(\Rightarrow\) 5
+
+(let ([f (lambda (x) (+ x x))])
+  (f 8)) \(\Rightarrow\) 16
+\end{alltt}
+
+\begin{description}
+
+\label{control_s3}\label{control_desc_apply}
+\item[procedure] \texttt{(apply \textit{procedure} \textit{obj} ... \textit{list})}
+
+
+
+\item[returns] the values of applying \texttt{\textit{procedure}} to \texttt{\textit{obj} ...} and
+the elements of \texttt{\textit{list}}
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{apply} invokes \texttt{\textit{procedure}}, passing
+the first \texttt{\textit{obj}} as the first argument,
+the second \texttt{\textit{obj}} as the second argument, and
+so on for each object in \texttt{\textit{obj} ...}, and passing the elements of
+\texttt{\textit{list}} in order as the remaining arguments.
+Thus, \texttt{\textit{procedure}} is called with as many arguments as there are
+\texttt{\textit{objs}} plus elements of \texttt{\textit{list}}.
+\texttt{apply} is useful when some or all of the arguments to be passed to
+a procedure are in a list, since it frees the programmer from
+explicitly destructuring the list.
+
+\begin{alltt}
+(apply + '(4 5)) \(\Rightarrow\) 9
+
+(apply min '(6 8 3 2 5)) \(\Rightarrow\) 2
+
+(apply min  5 1 3 '(6 8 3 2 5)) \(\Rightarrow\) 1
+
+(apply vector 'a 'b '(c d e)) \(\Rightarrow\) \#{}(a b c d e)
+
+(define first
+  (lambda (ls)
+    (apply (lambda (x . y) x) ls)))
+(define rest
+  (lambda (ls)
+    (apply (lambda (x . y) y) ls)))
+(first '(a b c d)) \(\Rightarrow\) a
+(rest '(a b c d)) \(\Rightarrow\) (b c d)
+
+(apply append
+  '(1 2 3)
+  '((a b) (c d e) (f))) \(\Rightarrow\) (1 2 3 a b c d e f)
+\end{alltt}
+
+\section{\label{control_g98}\label{control_h2}Sequencing\label{control_SECTSEQUENCING}}
+
+
+\begin{description}
+
+\label{control_s4}\item[syntax] \texttt{(begin \textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...)}
+
+
+
+\item[returns] the values of the last subexpression
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+The expressions \texttt{\textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...} are evaluated in sequence
+from left to right.
+\label{control_s5}\texttt{begin} is used to sequence assignments,
+input/output, or other operations that cause \label{control_s6}side effects.
+
+
+\begin{alltt}
+(define x 3)
+(begin
+  (set! x (+ x 1))
+  (+ x x)) \(\Rightarrow\) 8
+\end{alltt}
+
+
+A \texttt{begin} form may contain zero or more definitions in place of
+the expressions \texttt{\textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...}, in which case
+it is considered to be a definition and may appear only where definitions
+are valid.
+
+
+\begin{alltt}
+(let ()
+  (begin (define x 3) (define y 4))
+  (+ x y)) \(\Rightarrow\) 7
+\end{alltt}
+
+
+This form of \texttt{begin} is primarily used by syntactic extensions
+that must expand into multiple definitions.
+(See page \pageref{binding_multi_define_syntax}.)
+
+
+The bodies of many syntactic forms, including \texttt{lambda}, \texttt{case-lambda}, \texttt{let},
+\texttt{let*}, \texttt{letrec}, and \texttt{letrec*}, as well as the result clauses of \texttt{cond},
+\texttt{case}, and \texttt{do}, are treated as if they
+were inside an \label{control_s7}implicit \texttt{begin}; i.e., the expressions
+making up the body or result clause are executed in sequence, with the values of the
+last expression being returned.
+
+
+\begin{alltt}
+(define swap-pair!
+  (lambda (x)
+    (let ([temp (car x)])
+      (set-car! x (cdr x))
+      (set-cdr! x temp)
+      x)))
+(swap-pair! (cons 'a 'b)) \(\Rightarrow\) (b . a)
+\end{alltt}
+
+\section{\label{control_g99}\label{control_h3}Conditionals\label{control_SECTCONDITIONALS}}
+
+
+\begin{description}
+
+\label{control_s8}\item[syntax] \texttt{(if \textit{test} \textit{consequent} \textit{alternative})}
+
+
+
+\item[syntax] \texttt{(if \textit{test} \textit{consequent})}
+
+
+
+\item[returns] the values of \texttt{\textit{consequent}} or \texttt{\textit{alternative}} depending on the
+value of \texttt{\textit{test}}
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+\label{control_s9}The \texttt{\textit{test}}, \texttt{\textit{consequent}}, and \texttt{\textit{alternative}} subforms must be
+expressions.
+If \texttt{\textit{test}} evaluates to a true value (anything other than \texttt{\#{}f}),
+\texttt{consequent} is evaluated and its values are returned.
+Otherwise, \texttt{alternative} is evaluated and its values are returned.
+With the second, ``one-armed,'' form, which has no \texttt{\textit{alternative}},
+the result is unspecified if \texttt{\textit{test}} evaluates to false.
+
+
+\begin{alltt}
+(let ([ls '(a b c)])
+  (if (null? ls)
+      '()
+      (cdr ls))) \(\Rightarrow\) (b c)
+
+(let ([ls '()])
+  (if (null? ls)
+      '()
+      (cdr ls))) \(\Rightarrow\) ()
+
+(let ([abs
+       (lambda (x)
+         (if (\textless{} x 0)
+             (- 0 x)
+             x))])
+  (abs -4)) \(\Rightarrow\) 4
+
+(let ([x -4])
+  (if (\textless{} x 0)
+      (list 'minus (- 0 x))
+      (list 'plus 4))) \(\Rightarrow\) (minus 4)
+\end{alltt}
+
+\begin{description}
+
+\label{control_s10}\item[procedure] \texttt{(not \textit{obj})}
+
+
+
+\item[returns] \texttt{\#{}t} if \texttt{\textit{obj}} is false, \texttt{\#{}f} otherwise
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{not} is equivalent to \texttt{(lambda (x) (if x \#{}f \#{}t))}.
+
+\begin{alltt}
+(not \#{}f) \(\Rightarrow\) \#{}t
+(not \#{}t) \(\Rightarrow\) \#{}f
+(not '()) \(\Rightarrow\) \#{}f
+(not (\textless{} 4 5)) \(\Rightarrow\) \#{}f
+\end{alltt}
+
+\begin{description}
+
+\label{control_s11}\item[syntax] \texttt{(and \textit{expr} ...)}
+
+
+
+\item[returns] see below
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+If no subexpressions are present, the \texttt{and} form evaluates to \texttt{\#{}t}.
+Otherwise, \texttt{and} evaluates each subexpression in sequence from left to right
+until only one subexpression remains or a subexpression returns \texttt{\#{}f}.
+If one subexpression remains, it is evaluated and its values are returned.
+If a subexpression returns \texttt{\#{}f}, \texttt{and} returns \texttt{\#{}f} without
+evaluating the remaining subexpressions.
+A syntax definition of \texttt{and} appears on page \pageref{further_defn_and}.
+
+
+\begin{alltt}
+(let ([x 3])
+  (and (\textgreater{} x 2) (\textless{} x 4))) \(\Rightarrow\) \#{}t
+
+(let ([x 5])
+  (and (\textgreater{} x 2) (\textless{} x 4))) \(\Rightarrow\) \#{}f
+
+(and \#{}f '(a b) '(c d)) \(\Rightarrow\) \#{}f
+(and '(a b) '(c d) '(e f)) \(\Rightarrow\) (e f)
+\end{alltt}
+
+\begin{description}
+
+\label{control_s12}\item[syntax] \texttt{(or \textit{expr} ...)}
+
+
+
+\item[returns] see below
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+If no subexpressions are present, the \texttt{or} form evaluates to \texttt{\#{}f}.
+Otherwise, \texttt{or} evaluates each subexpression in sequence from left to right
+until only one subexpression remains or a subexpression returns a value other
+than \texttt{\#{}f}.
+If one subexpression remains, it is evaluated and its values are returned.
+If a subexpression returns a value other than \texttt{\#{}f}, \texttt{or} returns
+that value without evaluating the remaining subexpressions.
+A syntax definition of \texttt{or} appears on page \pageref{further_defn_or}.
+
+
+\begin{alltt}
+(let ([x 3])
+  (or (\textless{} x 2) (\textgreater{} x 4))) \(\Rightarrow\) \#{}f
+
+(let ([x 5])
+  (or (\textless{} x 2) (\textgreater{} x 4))) \(\Rightarrow\) \#{}t
+
+(or \#{}f '(a b) '(c d)) \(\Rightarrow\) (a b)
+\end{alltt}
+
+\begin{description}
+
+\label{control_s13}\item[syntax] \texttt{(cond \textit{clause\textsubscript{1}} \textit{clause\textsubscript{2}} ...)}
+
+
+
+\item[returns] see below
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+Each \texttt{\textit{clause}} but the last must take one of the forms
+\label{control_s14}below.
+
+
+\begin{alltt}
+(\textit{test})
+(\textit{test} \textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...)
+(\textit{test} =\textgreater{} \textit{expr})
+\end{alltt}
+
+
+The last clause may be in any of the above forms, or it may be
+an "\label{control_s15}\texttt{else} clause" of the form
+
+
+\texttt{(else \textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...)}
+
+Each \texttt{\textit{test}} is evaluated in order until one evaluates to a true
+value or until all of the tests have been evaluated.
+If the first clause whose \texttt{\textit{test}} evaluates to a true value is
+in the first form given above, the
+value of \texttt{\textit{test}} is returned.
+
+
+If the first clause whose \texttt{\textit{test}} evaluates to a true value is
+in the second form given above, the
+expressions \texttt{\textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}}...} are evaluated in
+sequence and the values of the last expression are returned.
+
+
+If the first clause whose \texttt{\textit{test}} evaluates to a true value is
+in the third form given above, the expression \texttt{\textit{expr}} is
+evaluated.
+The value should be a procedure of one argument, which is applied
+to the value of \texttt{\textit{test}}.
+The values of this application are returned.
+
+
+If none of the tests evaluates to a true value and an \texttt{else} clause
+is present, the expressions \texttt{\textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...} of the \texttt{else}
+clause are evaluated in sequence and the values of the last expression
+are returned.
+
+
+If none of the tests evaluates to a true value and no \texttt{else} clause
+is present, the value or values are unspecified.
+
+
+See page \pageref{syntax_defn_cond} for a syntax definition of \texttt{cond}.
+
+
+\begin{alltt}
+(let ([x 0])
+  (cond
+    [(\textless{} x 0) (list 'minus (abs x))]
+    [(\textgreater{} x 0) (list 'plus x)]
+    [else (list 'zero x)])) \(\Rightarrow\) (zero 0)
+
+(define select
+  (lambda (x)
+    (cond
+      [(not (symbol? x))]
+      [(assq x '((a . 1) (b . 2) (c . 3))) =\textgreater{} cdr]
+      [else 0])))
+
+(select 3) \(\Rightarrow\) \#{}t
+(select 'b) \(\Rightarrow\) 2
+(select 'e) \(\Rightarrow\) 0
+\end{alltt}
+
+\begin{description}
+
+\label{control_s16}\item[syntax] \texttt{else}
+
+
+
+\item[syntax] \texttt{=\textgreater{}}
+
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs exceptions)}, \texttt{(rnrs)}
+\end{description}
+
+
+These identifiers are auxiliary keywords for \texttt{cond}.
+Both also serve as auxiliary keywords for \texttt{guard}, and
+\texttt{else} also serves as an auxiliary keyword for \texttt{case}.
+It is a syntax violation to reference these identifiers except in
+contexts where they are recognized as auxiliary keywords.
+
+
+\begin{description}
+
+\label{control_s17}\item[syntax] \texttt{(when \textit{test-expr} \textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...)}
+
+
+
+\item[syntax] \texttt{(unless \textit{test-expr} \textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...)}
+
+
+
+\item[returns] see below
+
+
+\item[libraries] \texttt{(rnrs control)}, \texttt{(rnrs)}
+\end{description}
+
+
+For \texttt{when},
+if \texttt{\textit{test-expr}} evaluates to a true value, the expressions
+\texttt{\textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...} are evaluated in sequence,
+and the values of the last expression are returned.
+If \texttt{\textit{test-expr}} evaluates to false, none of the other expressions
+are evaluated, and the value or values of \texttt{when} are unspecified.
+
+
+For \texttt{unless},
+if \texttt{\textit{test-expr}} evaluates to false, the expressions
+\texttt{\textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...} are evaluated in sequence,
+and the values of the last expression are returned.
+If \texttt{\textit{test-expr}} evaluates to a true value, none of the other
+expressions are evaluated, and the value or values of \texttt{unless} are unspecified.
+
+
+A \texttt{when} or \texttt{unless} expression is usually clearer than
+the corresponding ``one-armed'' \texttt{if} expression.
+
+
+\begin{alltt}
+(let ([x -4] [sign 'plus])
+  (when (\textless{} x 0)
+    (set! x (- 0 x))
+    (set! sign 'minus))
+  (list sign x)) \(\Rightarrow\) (minus 4)
+
+(define check-pair
+  (lambda (x)
+    (unless (pair? x)
+      (syntax-violation 'check-pair "invalid argument" x))
+    x))
+
+(check-pair '(a b c)) \(\Rightarrow\) (a b c)
+\end{alltt}
+
+\texttt{when} may be defined as follows:
+
+\begin{alltt}
+(define-syntax when
+  (syntax-rules ()
+    [(\_{} e0 e1 e2 ...)
+     (if e0 (begin e1 e2 ...))]))
+\end{alltt}
+
+\texttt{unless} may be defined as follows:
+
+\begin{alltt}
+(define-syntax unless
+  (syntax-rules ()
+    [(\_{} e0 e1 e2 ...)
+     (if (not e0) (begin e1 e2 ...))]))
+\end{alltt}
+
+
+or in terms of \texttt{when} as follows:
+
+
+\begin{alltt}
+(define-syntax unless
+  (syntax-rules ()
+    [(\_{} e0 e1 e2 ...)
+     (when (not e0) e1 e2 ...)]))
+\end{alltt}
+
+\begin{description}
+
+\label{control_s18}\item[syntax] \texttt{(case \textit{expr\textsubscript{0}} \textit{clause\textsubscript{1}} \textit{clause\textsubscript{2}} ...)}
+
+
+
+\item[returns] see below
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+Each clause but the last must take the form
+
+
+\texttt{((\textit{key} ...) \textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...)}
+
+where each \texttt{\textit{key}} is a datum distinct from the other keys.
+The last clause may be in the above form or it may be an
+\label{control_s19}\texttt{else} clause of the form
+
+
+\texttt{(else \textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...)}
+\texttt{\textit{expr\textsubscript{0}}} is evaluated and the result is compared
+(using \texttt{eqv?}) against the keys of each clause in order.
+If a clause containing a matching key is found, the
+expressions \texttt{\textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...} are evaluated in sequence
+and the values of the last expression are returned.
+
+If none of the clauses contains a matching key and an \texttt{else} clause
+is present, the expressions \texttt{\textit{expr\textsubscript{1}} \textit{expr\textsubscript{2}} ...} of the
+\texttt{else} clause are evaluated in sequence and the values of the last
+expression are returned.
+
+
+If none of the clauses contains a matching key and no \texttt{else} clause
+is present, the value or values are unspecified.
+
+
+See page \pageref{syntax_defn_case} for a syntax definition of \texttt{case}.
+
+
+\begin{alltt}
+(let ([x 4] [y 5])
+  (case (+ x y)
+    [(1 3 5 7 9) 'odd]
+    [(0 2 4 6 8) 'even]
+    [else 'out-of-range])) \(\Rightarrow\) odd
+\end{alltt}
+
+\section{\label{control_g100}\label{control_h4}Recursion and Iteration\label{control_SECTRECURSION}}
+
+
+\begin{description}
+
+\label{control_s20}\item[syntax] \texttt{(let \textit{name} ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+
+
+\item[returns] values of the final body expression
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+This form of \texttt{let}, called \label{control_s21}\texttt{\textit{named}}
+\texttt{let}, is a general-purpose \label{control_s22}iteration and
+\label{control_s23}recursion construct.
+It is similar to the more common form of \texttt{let}
+(see Section \ref{binding_g92}) in the
+binding of the variables \texttt{\textit{var} ...} to the values of \texttt{\textit{expr} ...} within
+the body \texttt{\textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...}, which is processed and evaluated like
+a \texttt{lambda} body.
+In addition, the variable \texttt{\textit{name}} is bound within the body to
+a procedure that may be called to recur or iterate; the arguments to
+the procedure become the new values of the variables \texttt{\textit{var} ...}.
+
+
+A named \texttt{let} expression of the form
+
+
+\begin{alltt}
+(let \textit{name} ((\textit{var} \textit{expr}) ...)
+  \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)
+\end{alltt}
+
+
+can be rewritten with \texttt{letrec} as follows.
+
+
+\begin{alltt}
+((letrec ((\textit{name} (lambda (\textit{var} ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)))
+   \textit{name})
+ \textit{expr} ...)
+\end{alltt}
+
+
+A syntax definition of \texttt{let} that implements this transformation
+and handles unnamed \texttt{let} as well
+can be found on page \pageref{syntax_defn_let}.
+
+
+
+The procedure \label{control_s24}\texttt{divisors} defined below uses named \texttt{let} to compute the
+nontrivial divisors of a nonnegative integer.
+
+
+\begin{alltt}
+(define divisors
+  (lambda (n)
+    (let f ([i 2])
+      (cond
+        [(\textgreater{}= i n) '()]
+        [(integer? (/ n i)) (cons i (f (+ i 1)))]
+        [else (f (+ i 1))]))))
+
+(divisors 5) \(\Rightarrow\) ()
+(divisors 32) \(\Rightarrow\) (2 4 8 16)
+\end{alltt}
+
+
+The version above is non-tail-recursive when a divisor is found and
+tail-recursive when a divisor is not found.
+The version below is fully tail-recursive.
+It builds up the list in reverse order, but this is easy to remedy,
+if desired, by reversing the list on exit.
+
+
+\begin{alltt}
+(define divisors
+  (lambda (n)
+    (let f ([i 2] [ls '()])
+      (cond
+        [(\textgreater{}= i n) ls]
+        [(integer? (/ n i)) (f (+ i 1) (cons i ls))]
+        [else (f (+ i 1) ls)]))))
+\end{alltt}
+
+\begin{description}
+
+\label{control_s25}\item[syntax] \texttt{(do ((\textit{var} \textit{init} \textit{update}) ...) (\textit{test} \textit{result} ...) \textit{expr} ...)}
+
+
+
+\item[returns] the values of the last \texttt{\textit{result}} expression
+
+
+\item[libraries] \texttt{(rnrs control)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{do} allows a common restricted form of \label{control_s26}iteration
+to be expressed succinctly.
+The variables \texttt{\textit{var} ...} are bound initially to the
+values of \texttt{\textit{init} ...} and are rebound on each subsequent
+iteration to the values of \texttt{\textit{update} ...}.
+The expressions \texttt{\textit{test}}, 
+\texttt{\textit{update} ...},
+\texttt{\textit{expr} ...}, and
+\texttt{\textit{result} ...}
+are all within the scope of the bindings
+established for \texttt{\textit{var} ...}.
+
+On each step, the test expression \texttt{\textit{test}} is evaluated.
+If the value of \texttt{\textit{test}} is true, iteration ceases,
+the expressions \texttt{\textit{result} ...} are evaluated in
+sequence, and the values of the last expression are returned.
+If no result expressions are present, the value or values of the \texttt{do}
+expression are unspecified.
+
+
+If the value of \texttt{\textit{test}} is false, the expressions \texttt{\textit{expr} ...}
+are evaluated in sequence, the expressions \texttt{\textit{update} ...} are
+evaluated, new bindings for \texttt{\textit{var} ...} to the values of
+\texttt{\textit{update} ...} are created, and iteration continues.
+
+
+The expressions \texttt{\textit{expr} ...} are evaluated only for effect
+and are often omitted entirely.
+Any \texttt{\textit{update}} expression may be omitted, in which case the effect is
+the same as if the \texttt{\textit{update}} were simply the corresponding
+\texttt{\textit{var}}.
+
+
+Although looping constructs in most languages require that the loop
+iterands be updated via assignment, \texttt{do} requires the loop
+iterands \texttt{\textit{var} ...} to be updated via rebinding.
+In fact, no side effects are involved in the evaluation of a
+\texttt{do} expression unless they are performed explicitly by its
+subexpressions.
+
+
+See page \pageref{syntax_defn_do} for a syntax definition of \texttt{do}.
+
+
+The definitions of \label{control_s27}\texttt{factorial} and \label{control_s28}\texttt{fibonacci} below are
+straightforward translations of the tail-recursive named-\texttt{let} versions
+given in Section \ref{further_g55}.
+
+
+\begin{alltt}
+(define factorial
+  (lambda (n)
+    (do ([i n (- i 1)] [a 1 (* a i)])
+        ((zero? i) a))))
+
+(factorial 10) \(\Rightarrow\) 3628800
+
+(define fibonacci
+  (lambda (n)
+    (if (= n 0)
+        0
+        (do ([i n (- i 1)] [a1 1 (+ a1 a2)] [a2 0 a1])
+            ((= i 1) a1)))))
+
+(fibonacci 6) \(\Rightarrow\) 8
+\end{alltt}
+
+
+The definition of \label{control_s29}\texttt{divisors} below is
+similar to the tail-recursive definition of \texttt{divisors} given
+with the description of named \texttt{let} above.
+
+
+\begin{alltt}
+(define divisors
+  (lambda (n)
+    (do ([i 2 (+ i 1)]
+         [ls '()
+             (if (integer? (/ n i))
+                 (cons i ls)
+                 ls)])
+        ((\textgreater{}= i n) ls))))
+\end{alltt}
+
+
+The definition of \texttt{scale-vector!} below, which scales each
+element of a vector \textit{v} by a constant \textit{k}, demonstrates a nonempty
+\texttt{do} body.
+
+
+\begin{alltt}
+(define scale-vector!
+  (lambda (v k)
+    (let ([n (vector-length v)])
+      (do ([i 0 (+ i 1)])
+          ((= i n))
+        (vector-set! v i (* (vector-ref v i) k))))))
+
+(define vec (vector 1 2 3 4 5))
+(scale-vector! vec 2)
+vec \(\Rightarrow\) \#{}(2 4 6 8 10)
+\end{alltt}
+
+\section{\label{control_g101}\label{control_h5}Mapping and Folding}
+
+
+
+When a program must recur or iterate over the elements of a list, a mapping
+or folding operator is often more convenient.
+These operators abstract away from null checks and explicit recursion by
+applying a procedure to the elements of the list one by one.
+A few mapping operators are also available for vectors and strings.
+
+
+\begin{description}
+
+\label{control_s30}\item[procedure] \texttt{(map \textit{procedure} \textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...)}
+
+
+
+\item[returns] list of results
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+\label{control_s31}\label{control_s32}\texttt{map} applies \texttt{\textit{procedure}} to corresponding
+elements of the lists \texttt{\textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...} and returns a
+list of the resulting values.
+The lists \texttt{\textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...} must be of the same length.
+\texttt{\textit{procedure}} should accept as many arguments as there are lists, should
+return a single value, and should not mutate the \texttt{\textit{list}} arguments.
+
+
+\begin{alltt}
+(map abs '(1 -2 3 -4 5 -6)) \(\Rightarrow\) (1 2 3 4 5 6)
+
+(map (lambda (x y) (* x y))
+     '(1 2 3 4)
+     '(8 7 6 5)) \(\Rightarrow\) (8 14 18 20)
+\end{alltt}
+
+
+While the order in which the applications themselves occur is not
+specified, the order of the values in the output list is the same
+as that of the corresponding values in the input lists.
+
+\texttt{map} might be defined as follows.
+
+\begin{alltt}
+(define map
+  (lambda (f ls . more)
+    (if (null? more)
+        (let map1 ([ls ls])
+          (if (null? ls)
+              '()
+              (cons (f (car ls))
+                    (map1 (cdr ls)))))
+        (let map-more ([ls ls] [more more])
+          (if (null? ls)
+              '()
+              (cons
+                (apply f (car ls) (map car more))
+                (map-more (cdr ls) (map cdr more))))))))
+\end{alltt}
+
+
+No error checking is done by this version of \texttt{map}; \texttt{f} is assumed to
+be a procedure and the other arguments are assumed to be proper lists
+of the same length.
+An interesting feature of this definition is that \texttt{map} uses itself
+to pull out the cars and cdrs of the list of input lists; this works
+because of the special treatment of the single-list case.
+
+
+\begin{description}
+
+\label{control_s33}\label{control_desc_for_each}
+\item[procedure] \texttt{(for-each \textit{procedure} \textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...)}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+\label{control_s34}\label{control_s35}\texttt{for-each} is similar to \texttt{map} except that
+\texttt{for-each} does
+not create and return a list of the resulting values, and \texttt{for-each}
+guarantees to perform the applications in sequence over the elements from
+left to right.
+\texttt{\textit{procedure}} should accept as many arguments as there are lists
+and should not mutate the \texttt{\textit{list}} arguments.
+\texttt{for-each} may be defined without error checks as follows.
+
+
+\begin{alltt}
+(define for-each
+  (lambda (f ls . more)
+    (do ([ls ls (cdr ls)] [more more (map cdr more)])
+        ((null? ls))
+      (apply f (car ls) (map car more)))))
+
+(let ([same-count 0])
+  (for-each
+    (lambda (x y)
+      (when (= x y)
+        (set! same-count (+ same-count 1))))
+    '(1 2 3 4 5 6)
+    '(2 3 3 4 7 6))
+  same-count) \(\Rightarrow\) 3
+\end{alltt}
+
+\begin{description}
+
+\label{control_s36}\item[procedure] \texttt{(exists \textit{procedure} \textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...)}
+
+
+
+\item[returns] see below
+
+
+\item[libraries] \texttt{(rnrs lists)}, \texttt{(rnrs)}
+\end{description}
+
+
+The lists \texttt{\textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...} must be of the same length.
+\texttt{\textit{procedure}} should accept as many arguments as there are lists and should
+not mutate the \texttt{\textit{list}} arguments.
+If the lists are empty, \texttt{exists} returns \texttt{\#{}f}.
+Otherwise, \texttt{exists} applies \texttt{\textit{procedure}} to corresponding elements
+of the lists \texttt{\textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...} in sequence until either the
+lists each have only one element or \texttt{\textit{procedure}} returns a true value \texttt{\textit{t}}.
+In the former case, \texttt{exists} tail-calls \texttt{\textit{procedure}}, applying it to the
+remaining element of each list.
+In the latter case, \texttt{exists} returns \texttt{\textit{t}}.
+
+
+\begin{alltt}
+(exists symbol? '(1.0 \#{}\textbackslash{}a "hi" '())) \(\Rightarrow\) \#{}f
+
+(exists member
+        '(a b c)
+        '((c b) (b a) (a c))) \(\Rightarrow\) (b a)
+
+(exists (lambda (x y z) (= (+ x y) z))
+        '(1 2 3 4)
+        '(1.2 2.3 3.4 4.5)
+        '(2.3 4.4 6.4 8.6)) \(\Rightarrow\) \#{}t
+\end{alltt}
+
+\texttt{exists} may be defined (somewhat inefficiently and without error
+checks) as follows:
+
+\begin{alltt}
+(define exists
+  (lambda (f ls . more)
+    (and (not (null? ls))
+      (let exists ([x (car ls)] [ls (cdr ls)] [more more])
+        (if (null? ls)
+            (apply f x (map car more))
+            (or (apply f x (map car more))
+                (exists (car ls) (cdr ls) (map cdr more))))))))
+\end{alltt}
+
+\begin{description}
+
+\label{control_s37}\item[procedure] \texttt{(for-all \textit{procedure} \textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...)}
+
+
+
+\item[returns] see below
+
+
+\item[libraries] \texttt{(rnrs lists)}, \texttt{(rnrs)}
+\end{description}
+
+
+The lists \texttt{\textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...} must be of the same length.
+\texttt{\textit{procedure}} should accept as many arguments as there are lists and should
+not mutate the \texttt{\textit{list}} arguments.
+If the lists are empty, \texttt{for-all} returns \texttt{\#{}t}.
+Otherwise, \texttt{for-all} applies \texttt{\textit{procedure}} to corresponding elements
+of the lists \texttt{\textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...} in sequence until either the
+lists each have only one element left or \texttt{\textit{procedure}} returns \texttt{\#{}f}.
+In the former case, \texttt{for-all} tail-calls \texttt{\textit{procedure}}, applying it to the
+remaining element of each list.
+In the latter case, \texttt{for-all} returns \texttt{\#{}f}.
+
+
+\begin{alltt}
+(for-all symbol? '(a b c d)) \(\Rightarrow\) \#{}t
+
+(for-all =
+         '(1 2 3 4)
+         '(1.0 2.0 3.0 4.0)) \(\Rightarrow\) \#{}t
+
+(for-all (lambda (x y z) (= (+ x y) z))
+         '(1 2 3 4)
+         '(1.2 2.3 3.4 4.5)
+         '(2.2 4.3 6.5 8.5)) \(\Rightarrow\) \#{}f
+\end{alltt}
+
+\texttt{for-all} may be defined (somewhat inefficiently and without error
+checks) as follows:
+
+\begin{alltt}
+(define for-all
+  (lambda (f ls . more)
+    (or (null? ls)
+      (let for-all ([x (car ls)] [ls (cdr ls)] [more more])
+        (if (null? ls)
+            (apply f x (map car more))
+            (and (apply f x (map car more))
+                 (for-all (car ls) (cdr ls) (map cdr more))))))))
+\end{alltt}
+
+\begin{description}
+
+\label{control_s38}\item[procedure] \texttt{(fold-left \textit{procedure} \textit{obj} \textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...)}
+
+
+
+\item[returns] see below
+
+
+\item[libraries] \texttt{(rnrs lists)}, \texttt{(rnrs)}
+\end{description}
+
+
+\label{control_s39}\label{control_s40}The \texttt{\textit{list}} arguments should all have the same length.
+\texttt{\textit{procedure}} should accept one more argument than the number of \texttt{\textit{list}}
+arguments and return a single value.
+It should not mutate the \texttt{\textit{list}} arguments.
+
+\texttt{fold-left} returns \texttt{\textit{obj}} if the \texttt{\textit{list}} arguments are empty.
+If they are not empty, \texttt{fold-left} applies \texttt{\textit{procedure}} to
+\texttt{\textit{obj}} and the cars of \texttt{\textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...},
+then recurs with
+the value returned by \texttt{\textit{procedure}} in place of \texttt{\textit{obj}} and the cdr of
+each \texttt{\textit{list}} in place of the \texttt{\textit{list}}.
+
+\begin{alltt}
+(fold-left cons '() '(1 2 3 4)) \(\Rightarrow\) ((((() . 1) . 2) . 3) . 4)
+
+(fold-left
+  (lambda (a x) (+ a (* x x)))
+  0 '(1 2 3 4 5)) \(\Rightarrow\) 55
+
+(fold-left
+  (lambda (a . args) (append args a))
+  '(question)
+  '(that not to)
+  '(is to be)
+  '(the be: or)) \(\Rightarrow\) (to be or not to be: that is the question)
+\end{alltt}
+
+\begin{description}
+
+\label{control_s41}\item[procedure] \texttt{(fold-right \textit{procedure} \textit{obj} \textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...)}
+
+
+
+\item[returns] see below
+
+
+\item[libraries] \texttt{(rnrs lists)}, \texttt{(rnrs)}
+\end{description}
+
+
+\label{control_s42}\label{control_s43}The \texttt{\textit{list}} arguments should all have the same length.
+\texttt{\textit{procedure}} should accept one more argument than the number of \texttt{\textit{list}}
+arguments and return a single value.
+It should not mutate the \texttt{\textit{list}} arguments.
+
+\texttt{fold-right} returns \texttt{\textit{obj}} if the \texttt{\textit{list}} arguments are empty.
+If they are not empty, \texttt{fold-right} recurs with the cdr of each
+\texttt{\textit{list}} replacing the \texttt{\textit{list}}, then applies
+\texttt{\textit{procedure}} to the cars of \texttt{\textit{list\textsubscript{1}} \textit{list\textsubscript{2}} ...} and
+the result returned by the recursion.
+
+\begin{alltt}
+(fold-right cons '() '(1 2 3 4)) \(\Rightarrow\) (1 2 3 4)
+
+(fold-right
+  (lambda (x a) (+ a (* x x)))
+  0 '(1 2 3 4 5)) \(\Rightarrow\) 55
+
+(fold-right
+  (lambda (x y a) (cons* x y a))   \(\Rightarrow\) (parting is such sweet sorrow
+  '((with apologies))                gotta go see ya tomorrow
+  '(parting such sorrow go ya)       (with apologies))
+  '(is sweet gotta see tomorrow))
+\end{alltt}
+
+\begin{description}
+
+\label{control_s44}\item[procedure] \texttt{(vector-map \textit{procedure} \textit{vector\textsubscript{1}} \textit{vector\textsubscript{1}} ...)}
+
+
+
+\item[returns] vector of results
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+\label{control_s45}\label{control_s46}\texttt{vector-map} applies \texttt{\textit{procedure}} to corresponding
+elements of \texttt{\textit{vector\textsubscript{1}} \textit{vector\textsubscript{2}} ...} and returns a
+vector of the resulting values.
+The vectors \texttt{\textit{vector\textsubscript{1}} \textit{vector\textsubscript{2}} ...} must be of the same length, and
+\texttt{\textit{procedure}} should accept as many arguments as there are vectors and
+return a single value.
+
+
+\begin{alltt}
+(vector-map abs '\#{}(1 -2 3 -4 5 -6)) \(\Rightarrow\) \#{}(1 2 3 4 5 6)
+(vector-map (lambda (x y) (* x y))
+  '\#{}(1 2 3 4)
+  '\#{}(8 7 6 5)) \(\Rightarrow\) \#{}(8 14 18 20)
+\end{alltt}
+
+
+While the order in which the applications themselves occur is not
+specified, the order of the values in the output vector is the same
+as that of the corresponding values in the input vectors.
+
+\begin{description}
+
+\label{control_s47}\item[procedure] \texttt{(vector-for-each \textit{procedure} \textit{vector\textsubscript{1}} \textit{vector\textsubscript{2}} ...)}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+\label{control_s48}\label{control_s49}\texttt{vector-for-each} is similar to \texttt{vector-map} except that
+\texttt{vector-for-each} does
+not create and return a vector of the resulting values, and \texttt{vector-for-each}
+guarantees to perform the applications in sequence over the elements from
+left to right.
+
+
+\begin{alltt}
+(let ([same-count 0])
+  (vector-for-each
+    (lambda (x y)
+      (when (= x y)
+        (set! same-count (+ same-count 1))))
+    '\#{}(1 2 3 4 5 6)
+    '\#{}(2 3 3 4 7 6))
+  same-count) \(\Rightarrow\) 3
+\end{alltt}
+
+\begin{description}
+
+\label{control_s50}\item[procedure] \texttt{(string-for-each \textit{procedure} \textit{string\textsubscript{1}} \textit{string\textsubscript{2}} ...)}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+\label{control_s51}\label{control_s52}\texttt{string-for-each} is similar to
+\texttt{for-each} and \texttt{vector-for-each}
+except that the inputs are strings rather than lists or vectors.
+
+
+\begin{alltt}
+(let ([ls '()])
+  (string-for-each
+    (lambda r (set! ls (cons r ls)))
+    "abcd"
+    "===="
+    "1234")
+  (map list-\textgreater{}string (reverse ls))) \(\Rightarrow\) ("a=1" "b=2" "c=3" "d=4")
+\end{alltt}
+
+\section{\label{control_g102}\label{control_h6}Continuations\label{control_SECTCONTINUATIONS}}
+
+
+
+Continuations in Scheme are procedures that represent the remainder
+of a computation from a given point in the computation.
+They may be obtained with \texttt{call-with-current-continuation}, which
+can be abbreviated to \label{control_s53}\texttt{call/cc}.
+
+\begin{description}
+
+\label{control_s54}\item[procedure] \texttt{(call/cc \textit{procedure})}
+
+
+
+\item[procedure] \texttt{(call-with-current-continuation \textit{procedure})}
+
+
+
+\item[returns] see below
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+These procedures are the same.
+The shorter name is often used for the obvious reason that it requires
+fewer keystrokes to type.
+
+\texttt{call/cc} obtains its continuation and passes it to \texttt{\textit{procedure}},
+which should accept one argument.
+The continuation itself is represented by a procedure.
+Each time this procedure is applied to zero or more values, it returns the values to the
+continuation of the \texttt{call/cc} application.
+That is, when the continuation procedure is called, it returns its arguments
+as the values of the application of \texttt{call/cc}.
+
+If \texttt{\textit{procedure}} returns normally when passed the continuation procedure,
+the values returned by \texttt{call/cc} are the values returned by \texttt{\textit{procedure}}.
+
+
+Continuations allow the implementation of \label{control_s55}nonlocal exits,
+backtracking [\hyperref[bibliography_g232]{14},\hyperref[bibliography_g247]{29}],
+coroutines [\hyperref[bibliography_g234]{16}], and
+multitasking [\hyperref[bibliography_g228]{10},\hyperref[bibliography_g250]{32}].
+
+
+The example below illustrates the use of a continuation to perform
+a nonlocal exit from a loop.
+
+
+\begin{alltt}
+(define member
+  (lambda (x ls)
+    (call/cc
+      (lambda (break)
+        (do ([ls ls (cdr ls)])
+            ((null? ls) \#{}f)
+          (when (equal? x (car ls))
+            (break ls)))))))
+
+(member 'd '(a b c)) \(\Rightarrow\) \#{}f
+(member 'b '(a b c)) \(\Rightarrow\) (b c)
+\end{alltt}
+
+
+Additional examples are given in Sections \ref{further_g63}
+and \ref{examples_g208}.
+
+
+The current continuation is typically represented internally as a stack
+of procedure activation records, and obtaining the continuation
+involves encapsulating the stack within a procedural object.
+Since an encapsulated stack has indefinite extent, some mechanism must
+be used to preserve the stack contents indefinitely.
+This can be done with surprising ease and efficiency and with no impact
+on programs that do not use continuations [\hyperref[bibliography_g235]{17}].
+
+\begin{description}
+
+\label{control_s56}\label{control_desc_dynamic_wind}
+\item[procedure] \texttt{(dynamic-wind \textit{in} \textit{body} \textit{out})}
+
+
+
+\item[returns] values resulting from the application of \texttt{\textit{body}}
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+\label{control_s57}\texttt{dynamic-wind} offers ``protection'' from continuation
+invocation.
+It is useful for performing tasks that must be performed whenever control
+enters or leaves \texttt{\textit{body}}, either normally or by continuation application.
+
+
+The three arguments \texttt{\textit{in}}, \texttt{\textit{body}}, and \texttt{\textit{out}} must be procedures
+and should accept zero arguments, i.e., they should be \label{control_s58}\texttt{\textit{thunks}}.
+Before applying \texttt{\textit{body}}, and each time \texttt{\textit{body}} is entered subsequently
+by the application of a continuation created within \texttt{\textit{body}}, the \texttt{\textit{in}}
+thunk is applied.
+Upon normal exit from \texttt{\textit{body}} and each time \texttt{\textit{body}} is exited by
+the application of a continuation created outside \texttt{\textit{body}}, the \texttt{\textit{out}}
+thunk is applied.
+
+
+Thus, it is guaranteed that \texttt{\textit{in}} is invoked at least once.
+In addition, if \texttt{\textit{body}} ever returns, \texttt{\textit{out}} is invoked at least
+once.
+
+
+The following example demonstrates the use of \texttt{dynamic-wind} to be sure
+that an input port is closed after processing, regardless of whether the
+processing completes normally.
+
+
+\begin{alltt}
+(let ([p (open-input-file "input-file")])
+  (dynamic-wind
+    (lambda () \#{}f)
+    (lambda () (process p))
+    (lambda () (close-port p))))
+\end{alltt}
+
+
+\label{control_s59}Common Lisp provides a similar
+facility (\texttt{unwind-protect}) for protection from \label{control_s60}nonlocal exits.
+This is often sufficient.
+\texttt{unwind-protect} provides only the equivalent to \texttt{\textit{out}}, however,
+since Common Lisp does not support fully general continuations.
+Here is how \texttt{unwind-protect} might be specified with \texttt{dynamic-wind}.
+
+
+\begin{alltt}
+(define-syntax unwind-protect
+  (syntax-rules ()
+    [(\_{} body cleanup ...)
+     (dynamic-wind
+       (lambda () \#{}f)
+       (lambda () body)
+       (lambda () cleanup ...))]))
+
+((call/cc
+   (let ([x 'a])
+     (lambda (k)
+       (unwind-protect
+         (k (lambda () x))
+         (set! x 'b)))))) \(\Rightarrow\) b
+\end{alltt}
+
+
+Some Scheme implementations support a controlled form of assignment
+known as \label{control_s61}\textit{fluid
+binding}, in which a variable takes on a
+temporary value during a given computation and reverts to the old value
+after the computation has completed.
+The syntactic form \texttt{fluid-let} defined below in terms of \texttt{dynamic-wind}
+permits the fluid binding of a single variable \texttt{x} to the value of
+an expression \texttt{e} within a the body \texttt{b1 b2 ...}.
+
+
+\begin{alltt}
+(define-syntax fluid-let
+  (syntax-rules ()
+    [(\_{} ((x e)) b1 b2 ...)
+     (let ([y e])
+       (let ([swap (lambda () (let ([t x]) (set! x y) (set! y t)))])
+         (dynamic-wind swap (lambda () b1 b2 ...) swap)))]))
+\end{alltt}
+
+
+Implementations that support \texttt{fluid-let} typically extend it to
+allow an indefinite number of \texttt{(x e)} pairs, as with \texttt{let}.
+
+
+If no continuations are invoked within the body of a \texttt{fluid-let},
+the behavior is the same as if the variable were simply assigned
+the new value on entry and assigned the old value on return.
+
+
+\begin{alltt}
+(let ([x 3])
+  (+ (fluid-let ([x 5])
+       x)
+     x)) \(\Rightarrow\) 8
+\end{alltt}
+
+
+A fluid-bound variable also reverts to the old value if a continuation
+created outside of the \texttt{fluid-let} is invoked.
+
+
+\begin{alltt}
+(let ([x 'a])
+  (let ([f (lambda () x)])
+    (cons (call/cc
+            (lambda (k)
+              (fluid-let ([x 'b])
+                (k (f)))))
+          (f)))) \(\Rightarrow\) (b . a)
+\end{alltt}
+
+
+If control has left a \texttt{fluid-let} body, either normally
+or by the invocation of a continuation, and control reenters the
+body by the invocation of a continuation, the temporary value of
+the fluid-bound variable is reinstated.
+Furthermore, any changes to the temporary value are maintained
+and reflected upon reentry.
+
+
+\begin{alltt}
+(define reenter \#{}f)
+(define x 0)
+(fluid-let ([x 1])
+  (call/cc (lambda (k) (set! reenter k)))
+  (set! x (+ x 1))
+  x) \(\Rightarrow\) 2
+x \(\Rightarrow\) 0
+(reenter '*) \(\Rightarrow\) 3
+(reenter '*) \(\Rightarrow\) 4
+x \(\Rightarrow\) 0
+\end{alltt}
+
+
+A library showing how \texttt{dynamic-wind} might be implemented
+were it not already built in is given below.
+In addition to defining \texttt{dynamic-wind}, the code defines
+a version of
+\label{control_s62}\texttt{call/cc}
+that does its part to support \texttt{dynamic-wind}.
+
+
+\begin{alltt}
+(library (dynamic-wind)
+  (export dynamic-wind call/cc
+    (rename (call/cc call-with-current-continuation)))
+  (import (rename (except (rnrs) dynamic-wind) (call/cc rnrs:call/cc)))
+
+  (define winders '())
+
+  (define common-tail
+    (lambda (x y)
+      (let ([lx (length x)] [ly (length y)])
+        (do ([x (if (\textgreater{} lx ly) (list-tail x (- lx ly)) x) (cdr x)]
+             [y (if (\textgreater{} ly lx) (list-tail y (- ly lx)) y) (cdr y)])
+            ((eq? x y) x)))))
+
+  (define do-wind
+    (lambda (new)
+      (let ([tail (common-tail new winders)])
+        (let f ([ls winders])
+          (if (not (eq? ls tail))
+              (begin
+                (set! winders (cdr ls))
+                ((cdar ls))
+                (f (cdr ls)))))
+        (let f ([ls new])
+          (if (not (eq? ls tail))
+              (begin
+                (f (cdr ls))
+                ((caar ls))
+                (set! winders ls)))))))
+\end{alltt}
+
+
+\begin{alltt}
+  (define call/cc
+    (lambda (f)
+      (rnrs:call/cc
+        (lambda (k)
+          (f (let ([save winders])
+               (lambda (x)
+                 (unless (eq? save winders) (do-wind save))
+                 (k x))))))))
+
+  (define dynamic-wind
+    (lambda (in body out)
+      (in)
+      (set! winders (cons (cons in out) winders))
+      (let-values ([ans* (body)])
+        (set! winders (cdr winders))
+        (out)
+        (apply values ans*)))))
+\end{alltt}
+
+
+Together, \texttt{dynamic-wind} and \texttt{call/cc} manage a list
+of \label{control_s63}\textit{winders}.
+A winder is a pair of \textit{in} and \textit{out} thunks established
+by a call to \texttt{dynamic-wind}.
+Whenever \texttt{dynamic-wind} is invoked, the \textit{in} thunk is
+invoked, a new winder containing the \textit{in} and \textit{out} thunks
+is placed on the winders list, the \textit{body} thunk is invoked,
+the winder is removed from the winders list, and the \textit{out}
+thunk is invoked.
+This ordering ensures that the winder is on the winders list only
+when control has passed through \textit{in} and not yet entered
+\textit{out}.
+Whenever a continuation is obtained, the winders list is saved, and
+whenever the continuation is invoked, the saved winders list is
+reinstated.
+During reinstatement, the \textit{out} thunk of each winder on the
+current winders list that is not also on the saved winders list is
+invoked, followed by the \textit{in} thunk of each winder on the saved
+winders list that is not also on the current winders list.
+The winders list is updated incrementally, again to ensure that
+a winder is on the current winders list only if control has passed
+through its \textit{in} thunk and not entered its \textit{out} thunk.
+
+
+The test \texttt{(not (eq? save winders))} performed in \texttt{call/cc}
+is not strictly necessary but makes invoking a continuation
+less costly whenever the saved winders list is the same as the
+current winders list.
+
+
+\section{\label{control_g103}\label{control_h7}Delayed Evaluation\label{control_SECTDELAYED}}
+
+
+
+The syntactic form \texttt{delay} and the procedure \texttt{force} may be used in
+combination to implement \label{control_s64}\textit{lazy evaluation}.
+An expression subject to lazy evaluation is not evaluated until its value is
+required and, once evaluated, is never reevaluated.
+
+
+\begin{description}
+
+\label{control_s65}\item[syntax] \texttt{(delay \textit{expr})}
+
+
+
+\item[returns] a promise
+
+
+\item[procedure] \texttt{(force \textit{promise})}
+
+
+
+\item[returns] result of forcing \texttt{\textit{promise}}
+
+
+\item[libraries] \texttt{(rnrs r5rs)}
+\end{description}
+
+
+The first time a promise created by \texttt{delay} is \textit{forced} (with
+\texttt{force}), it evaluates \texttt{\textit{expr}}, ``remembering'' the resulting
+value.
+Thereafter, each time the promise is forced, it returns the remembered
+value instead of reevaluating \texttt{\textit{expr}}.
+
+\texttt{delay} and \texttt{force} are typically used only in the absence of side
+effects, e.g., assignments, so that the order of evaluation is unimportant.
+
+The benefit of using \texttt{delay} and \texttt{force} is that some
+amount of computation might be avoided altogether if it is delayed until
+absolutely required.
+Delayed evaluation may be used to construct conceptually infinite
+lists, or \label{control_s66}\textit{streams}.
+The example below shows how a stream abstraction may be built with
+\texttt{delay} and \texttt{force}.
+A stream is a promise that, when forced, returns a pair whose cdr
+is a stream.
+
+
+\begin{alltt}
+(define stream-car
+  (lambda (s)
+    (car (force s))))
+
+(define stream-cdr
+  (lambda (s)
+    (cdr (force s))))
+
+(define counters
+  (let next ([n 1])
+    (delay (cons n (next (+ n 1))))))
+
+(stream-car counters) \(\Rightarrow\) 1
+
+(stream-car (stream-cdr counters)) \(\Rightarrow\) 2
+
+(define stream-add
+  (lambda (s1 s2)
+    (delay (cons
+             (+ (stream-car s1) (stream-car s2))
+             (stream-add (stream-cdr s1) (stream-cdr s2))))))
+
+(define even-counters
+  (stream-add counters counters))
+
+(stream-car even-counters) \(\Rightarrow\) 2
+
+(stream-car (stream-cdr even-counters)) \(\Rightarrow\) 4
+\end{alltt}
+
+\texttt{delay} may be defined by
+
+\begin{alltt}
+(define-syntax delay
+  (syntax-rules ()
+    [(\_{} expr) (make-promise (lambda () expr))]))
+\end{alltt}
+
+
+where \label{control_s67}\texttt{make-promise} might be defined
+as follows.
+
+
+\begin{alltt}
+(define make-promise
+  (lambda (p)
+    (let ([val \#{}f] [set? \#{}f])
+      (lambda ()
+        (unless set?
+          (let ([x (p)])
+            (unless set?
+              (set! val x)
+              (set! set? \#{}t))))
+        val))))
+\end{alltt}
+
+
+With this definition of \texttt{delay}, \texttt{force} simply invokes the promise
+to force evaluation or to retrieve the saved value.
+
+
+\begin{alltt}
+(define force
+  (lambda (promise)
+    (promise)))
+\end{alltt}
+
+
+The second test of the variable \texttt{set?} in \texttt{make-promise} is necessary
+in the event that, as a result of applying \texttt{\textit{p}}, the
+promise is recursively forced.
+Since a promise must always return the same value, the
+result of the first application of \texttt{\textit{p}} to complete is
+returned.
+
+
+Whether \texttt{delay} and \texttt{force} handle multiple return values
+is unspecified; the implementation given above does not, but the following
+version does, with the help of \texttt{call-with-values} and \texttt{apply}.
+
+
+\begin{alltt}
+(define make-promise
+  (lambda (p)
+    (let ([vals \#{}f] [set? \#{}f])
+      (lambda ()
+        (unless set?
+          (call-with-values p
+            (lambda x
+              (unless set?
+                (set! vals x)
+                (set! set? \#{}t)))))
+        (apply values vals)))))
+
+(define p (delay (values 1 2 3)))
+(force p) \(\Rightarrow\) 1
+           2
+           3
+(call-with-values (lambda () (force p)) +) \(\Rightarrow\) 6
+\end{alltt}
+
+
+Neither implementation is quite right, since \texttt{force} must raise
+an exception with condition type \texttt{\&{}assertion} if its argument is
+not a promise.
+Since distinguishing procedures created by \texttt{make-promise} from
+other procedures is impossible, \texttt{force} cannot do so reliably.
+The following reimplementation of \texttt{make-promise} and \texttt{force}
+represents promises as records of the type \texttt{promise} to allow
+\texttt{force} to make the required check.
+
+
+\begin{alltt}
+(define-record-type promise
+  (fields (immutable p) (mutable vals) (mutable set?))
+  (protocol (lambda (new) (lambda (p) (new p \#{}f \#{}f)))))
+
+(define force
+  (lambda (promise)
+    (unless (promise? promise)
+      (assertion-violation 'promise "invalid argument" promise))
+    (unless (promise-set? promise)
+      (call-with-values (promise-p promise)
+        (lambda x
+          (unless (promise-set? promise)
+            (promise-vals-set! promise x)
+            (promise-set?-set! promise \#{}t)))))
+    (apply values (promise-vals promise))))
+\end{alltt}
+
+\section{\label{control_g104}\label{control_h8}Multiple Values\label{control_SECTMRVS}}
+
+
+
+While all Scheme primitives and most user-defined procedures return
+exactly one value, some programming problems are best solved by
+returning zero values, more than one value, or even a variable number of
+values.
+For example, a procedure that partitions a list of values into two
+sublists needs to return two values.
+While it is possible for the producer of multiple values to package
+them into a data structure and for the consumer to extract them,
+it is often cleaner to use the built-in multiple-values interface.
+This interface consists of two procedures:
+\label{control_s68}\texttt{values}
+and
+\label{control_s69}\texttt{call-with-values}.
+The former produces multiple values and the latter 
+links procedures that produce multiple-value values with
+procedures that consume them.
+
+
+\begin{description}
+
+\label{control_s70}\item[procedure] \texttt{(values \textit{obj} ...)}
+
+
+
+\item[returns] \texttt{\textit{obj} ...}
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+The procedure \texttt{values} accepts any number of arguments and
+simply passes (returns) the arguments to its continuation.
+
+
+\begin{alltt}
+(values) \(\Rightarrow\)
+
+(values 1) \(\Rightarrow\) 1
+
+(values 1 2 3) \(\Rightarrow\) 1
+                2
+                3
+
+(define head\&{}tail
+  (lambda (ls)
+    (values (car ls) (cdr ls))))
+
+(head\&{}tail '(a b c)) \(\Rightarrow\) a
+                      (b c)
+\end{alltt}
+
+\begin{description}
+
+\label{control_s71}\item[procedure] \texttt{(call-with-values \textit{producer} \textit{consumer})}
+
+
+
+\item[returns] see below
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{producer}} and \texttt{\textit{consumer}} must be procedures.
+\texttt{call-with-values} applies \texttt{\textit{consumer}} to the values
+returned by invoking \texttt{\textit{producer}} without arguments.
+
+\begin{alltt}
+(call-with-values
+  (lambda () (values 'bond 'james))
+  (lambda (x y) (cons y x))) \(\Rightarrow\) (james . bond)
+
+(call-with-values values list) \(\Rightarrow\) '()
+\end{alltt}
+
+
+In the second example, \texttt{values} itself serves as the producer.
+It receives no arguments and thus returns no values.
+\texttt{list} is thus applied to no arguments and so returns the
+empty list.
+
+
+The procedure \label{control_s72}\texttt{dxdy} defined below computes
+the change in \texttt{\textit{x}} and \texttt{\textit{y}} coordinates for a pair of points whose
+coordinates are represented by \texttt{(\textit{x} . \textit{y})} pairs.
+
+
+\begin{alltt}
+(define dxdy
+  (lambda (p1 p2)
+    (values (- (car p2) (car p1))
+            (- (cdr p2) (cdr p1)))))
+
+(dxdy '(0 . 0) '(0 . 5)) \(\Rightarrow\) 0
+                          5
+\end{alltt}
+
+\texttt{dxdy} can be used to compute the length and slope of
+a segment represented by two
+endpoints.\label{control_s73}\label{control_s74}
+
+\begin{alltt}
+(define segment-length
+  (lambda (p1 p2)
+    (call-with-values
+      (lambda () (dxdy p1 p2))
+      (lambda (dx dy) (sqrt (+ (* dx dx) (* dy dy)))))))
+
+(define segment-slope
+  (lambda (p1 p2)
+    (call-with-values
+      (lambda () (dxdy p1 p2))
+      (lambda (dx dy) (/ dy dx)))))
+
+(segment-length '(1 . 4) '(4 . 8)) \(\Rightarrow\) 5
+(segment-slope '(1 . 4) '(4 . 8)) \(\Rightarrow\) 4/3
+\end{alltt}
+
+
+We can of course combine these to form one procedure that returns
+two values.\label{control_s75}
+
+
+\begin{alltt}
+(define describe-segment
+  (lambda (p1 p2)
+    (call-with-values
+      (lambda () (dxdy p1 p2))
+      (lambda (dx dy)
+        (values
+          (sqrt (+ (* dx dx) (* dy dy)))
+          (/ dy dx))))))
+
+(describe-segment '(1 . 4) '(4 . 8)) \(\Rightarrow\) 5
+                                     \(\Rightarrow\) 4/3
+\end{alltt}
+
+
+The example below employs multiple values to divide a
+list nondestructively into two sublists of alternating
+elements.
+
+
+\begin{alltt}
+(define split
+  (lambda (ls)
+    (if (or (null? ls) (null? (cdr ls)))
+        (values ls '())
+        (call-with-values
+          (lambda () (split (cddr ls)))
+          (lambda (odds evens)
+            (values (cons (car ls) odds)
+                    (cons (cadr ls) evens)))))))
+
+(split '(a b c d e f)) \(\Rightarrow\) (a c e)
+                        (b d f)
+\end{alltt}
+
+
+At each level of recursion, the procedure \label{control_s76}\texttt{split} returns two
+values:  a list of the odd-numbered elements from the argument list and
+a list of the even-numbered elements.
+
+
+
+The continuation of a call to \texttt{values} need not be one established
+by a call to \texttt{call-with-values}, nor must only \texttt{values} be used to return
+to a continuation established by \texttt{call-with-values}.
+In particular, \texttt{(values \textit{e})} and \texttt{\textit{e}} are equivalent expressions.
+For example:
+
+
+\begin{alltt}
+(+ (values 2) 4) \(\Rightarrow\) 6
+
+(if (values \#{}t) 1 2) \(\Rightarrow\) 1
+
+(call-with-values
+  (lambda () 4)
+  (lambda (x) x)) \(\Rightarrow\) 4
+\end{alltt}
+
+
+Similarly, \texttt{values} may be used to pass any number of values to
+a continuation that ignores the values, as in the following.
+
+
+\texttt{(begin (values 1 2 3) 4) \(\Rightarrow\) 4}
+
+Because a continuation may accept zero or more than one value,
+continuations obtained via
+\label{control_s77}\texttt{call/cc} may
+accept zero or more than one argument.
+
+
+\begin{alltt}
+(call-with-values
+  (lambda ()
+    (call/cc (lambda (k) (k 2 3))))
+  (lambda (x y) (list x y))) \(\Rightarrow\) (2 3)
+\end{alltt}
+
+
+The behavior is unspecified when a
+continuation expecting exactly one value receives zero values or more
+than one value.
+For example, the behavior of each of the following expressions is
+unspecified.
+Some implementations raise an exception, while others silently
+suppress additional values or supply defaults for missing values.
+
+
+\begin{alltt}
+(if (values 1 2) 'x 'y)
+
+(+ (values) 5)
+\end{alltt}
+
+
+Programs that wish to force extra values to be ignored in particular
+contexts can do so easily by calling \texttt{call-with-values} explicitly.
+A syntactic form, which we might call \texttt{first}, can be defined to
+abstract the discarding of more than one value when only one is
+desired.
+
+
+\begin{alltt}
+(define-syntax first
+  (syntax-rules ()
+    [(\_{} expr)
+     (call-with-values
+       (lambda () expr)
+       (lambda (x . y) x))]))
+
+(if (first (values \#{}t \#{}f)) 'a 'b) \(\Rightarrow\) a
+\end{alltt}
+
+
+Since implementations are required to raise an exception with condition
+type \texttt{\&{}assertion} if a procedure does not accept the number of
+arguments passed to it, each of the following raises an exception.
+
+
+\begin{alltt}
+(call-with-values
+  (lambda () (values 2 3 4))
+  (lambda (x y) x))
+
+(call-with-values
+  (lambda () (call/cc (lambda (k) (k 0))))
+  (lambda (x y) x))
+\end{alltt}
+
+
+Since \texttt{\textit{producer}} is most often a \texttt{lambda} expression, it
+is often convenient to use a syntactic extension that suppresses
+the lambda expression in the interest of readability.
+
+
+\begin{alltt}
+(define-syntax with-values
+  (syntax-rules ()
+    [(\_{} expr consumer)
+     (call-with-values (lambda () expr) consumer)]))
+
+(with-values (values 1 2) list) \(\Rightarrow\) (1 2)
+(with-values (split '(1 2 3 4))
+  (lambda (odds evens)
+    evens)) \(\Rightarrow\) (2 4)
+\end{alltt}
+
+
+If the \texttt{\textit{consumer}} is also a \texttt{lambda} expression, the
+multiple-value variants of \texttt{let} and \texttt{let*} described
+in Section \ref{binding_g93} are usually even more
+convenient.\label{control_s78}\label{control_s79}
+
+
+\begin{alltt}
+(let-values ([(odds evens) (split '(1 2 3 4))])
+  evens) \(\Rightarrow\) (2 4)
+
+(let-values ([ls (values 'a 'b 'c)])
+  ls) \(\Rightarrow\) (a b c)
+\end{alltt}
+
+
+Many standard syntactic forms and procedures  pass along multiple values.
+Most of these are ``automatic,'' in the sense that nothing special
+must be done by the implementation to make this happen.
+The usual expansion of \texttt{let} into a direct
+\texttt{lambda} call automatically propagates multiple
+values produced by the body of the \texttt{let}.
+Other operators must be coded specially to pass along multiple
+values.
+The \texttt{call-with-port} procedure (page \pageref{io_g127}),
+for example, calls its procedure argument, then closes the port argument
+before returning the procedure's values, so it must save the values
+temporarily.
+This is easily accomplished via \texttt{let-values},
+\texttt{apply}, and \texttt{values}:
+
+
+\begin{alltt}
+(define call-with-port\label{control_defn_call_with_port}
+  (lambda (port proc)
+    (let-values ([val* (proc port)])
+      (close-port port)
+      (apply values val*))))
+\end{alltt}
+
+
+If this seems like too much overhead when a single value is returned,
+the code can use \texttt{call-with-values} and \texttt{case-lambda} to
+handle the single-value case more efficiently:
+
+
+\begin{alltt}
+(define call-with-port
+  (lambda (port proc)
+    (call-with-values (lambda () (proc port))
+      (case-lambda
+        [(val) (close-port port) val]
+        [val* (close-port port) (apply values val*)]))))
+\end{alltt}
+
+
+The definitions of \texttt{values} and \texttt{call-with-values} (and
+concomitant redefinition of \texttt{call/cc}) in the library below
+demonstrate that the multiple-return-values interface could be implemented
+in Scheme if it were not already built in.
+No error checking can be done, however, for the case in which more than one
+value is returned to a single-value context, such as the test part
+of an \texttt{if} expression.
+
+
+\begin{alltt}
+(library (mrvs)
+  (export call-with-values values call/cc
+    (rename (call/cc call-with-current-continuation)))
+  (import
+    (rename
+      (except (rnrs) values call-with-values)
+      (call/cc rnrs:call/cc)))
+
+  (define magic (cons 'multiple 'values))
+
+  (define magic?
+    (lambda (x)
+      (and (pair? x) (eq? (car x) magic))))
+\end{alltt}
+
+
+\begin{alltt}
+  (define call/cc
+    (lambda (p)
+      (rnrs:call/cc
+        (lambda (k)
+          (p (lambda args
+               (k (apply values args))))))))
+
+  (define values
+    (lambda args
+      (if (and (not (null? args)) (null? (cdr args)))
+          (car args)
+          (cons magic args))))
+
+  (define call-with-values
+    (lambda (producer consumer)
+      (let ([x (producer)])
+        (if (magic? x)
+            (apply consumer (cdr x))
+            (consumer x))))))
+\end{alltt}
+
+
+Multiple values can be implemented more
+efficiently [\hyperref[bibliography_g220]{2}], but this
+code serves to illustrate the meanings of the operators
+and may be used to provide multiple values in older, nonstandard
+implementations that do not support them.
+
+
+
+\section{\label{control_g105}\label{control_h9}Eval\label{control_SECTEVAL}}
+
+
+
+Scheme's \texttt{eval} procedure allows programmers to write
+programs that construct and evaluate other programs.
+This ability to do run-time \textit{meta programming} should not be
+overused but is handy when needed.
+
+\begin{description}
+
+\label{control_s80}\item[procedure] \texttt{(eval \textit{obj} \textit{environment})}
+
+
+
+\item[returns] values of the Scheme expression represented by \texttt{\textit{obj}} in \texttt{\textit{environment}}
+
+
+\item[libraries] \texttt{(rnrs eval)}
+\end{description}
+
+
+If \texttt{\textit{obj}} does not represent a syntactically valid expression, \texttt{eval}
+raises an exception with condition type \texttt{\&{}syntax}.
+The environments returned by \texttt{environment},
+\texttt{scheme-report-environment}, and \texttt{null-environment} are
+immutable.
+Thus, \texttt{eval} also raises an exception with condition type
+\texttt{\&{}syntax} if an assignment to any of the variables in the
+environment appears within the expression.
+
+
+\begin{alltt}
+(define cons 'not-cons)
+(eval '(let ([x 3]) (cons x 4)) (environment '(rnrs))) \(\Rightarrow\) (3 . 4)
+
+(define lambda 'not-lambda)
+(eval '(lambda (x) x) (environment '(rnrs))) \(\Rightarrow\) \#{}\textless{}procedure\textgreater{}
+
+(eval '(cons 3 4) (environment)) \(\Rightarrow\) \textit{exception}
+\end{alltt}
+
+\begin{description}
+
+\label{control_s81}\item[procedure] \texttt{(environment \textit{import-spec} ...)}
+
+
+
+\item[returns] an environment
+
+
+\item[libraries] \texttt{(rnrs eval)}
+\end{description}
+
+\texttt{environment} returns an environment formed from the combined
+bindings of the given import specifiers.
+Each \texttt{\textit{import-spec}} must be an s-expression representing a valid
+import specifier (see Chapter \ref{libraries_g142}).
+
+\begin{alltt}
+(define env (environment '(rnrs) '(prefix (rnrs lists) \${})))
+(eval '(\${}cons* 3 4 (* 5 8)) env) \(\Rightarrow\) (3 4 . 40)
+\end{alltt}
+
+\begin{description}
+
+\label{control_s82}\item[procedure] \texttt{(null-environment \textit{version})}
+
+
+
+\item[procedure] \texttt{(scheme-report-environment \textit{version})}
+
+
+
+\item[returns] an R5RS compatibility environment
+
+
+\item[libraries] \texttt{(rnrs r5rs)}
+\end{description}
+
+\texttt{\textit{version}} must be the exact integer \texttt{5}.
+\texttt{null-environment} returns an environment containing
+bindings for the keywords whose meanings are defined by the
+Revised\textsuperscript{5} Report on Scheme, along with bindings for the
+auxiliary keywords \texttt{else}, \texttt{=\textgreater{}}, \texttt{...},
+and \texttt{\_{}}.
+\texttt{scheme-report-environment} returns an environment containing
+the same keyword bindings as the environment
+returned by \texttt{null-environment} along with bindings for
+the variables whose meanings are defined by the Revised\textsuperscript{5} Report on
+Scheme, except those not defined by the Revised\textsuperscript{6} Report:
+\texttt{load}, \texttt{interaction-environment},
+\texttt{transcript-on}, \texttt{transcript-off}, and
+\texttt{char-ready?}.
+
+The bindings for each of the identifiers in the environments returned
+by these procedures are those of the corresponding Revised\textsuperscript{6} Report
+library, so this does not provide full backward compatibility, even if the
+excepted identifier bindings are not used.
+
+

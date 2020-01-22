@@ -1,0 +1,1236 @@
+\chapter{Records\label{records_CHPTRECORDS}}
+\label{records_g138}
+\label{records_h0}
+\begin{figure}[H]
+\centering
+\setlength{\fboxrule}{3pt}
+\fbox{
+\includegraphics[width=0.9\textwidth]{canned/ch9.png}
+\begin{rotate}{90}
+\copyright~2009 Jean-Pierre H\'{e}bert
+\end{rotate}}
+\end{figure}
+\clearpage
+
+
+
+
+
+\label{records_s0}\label{records_s1}\label{records_s2}This chapter describes the means by which the programmer may define
+new data types, or \textit{records types}, each distinct from all other
+types.
+A record type determines the number and names of the fields each instance
+of the type has.
+Records are defined via the \texttt{define-record-type} form or
+the \texttt{make-record-type-descriptor} procedure.
+
+
+\section{\label{records_g139}\label{records_h1}Defining Records\label{records_SECTRECORDDEFINITION}}
+
+
+
+A \texttt{define-record-type} form defines a record type and, along with it,
+a constructor procedure for
+records of the type, a type predicate that returns true only for
+records of the type, an access procedure for each field, and an
+assignment procedure for each mutable field.  For example, the
+definition
+
+
+\texttt{(define-record-type point (fields x y))}
+
+creates a \texttt{point} record type with two fields, \texttt{x}
+and \texttt{y}, and defines the following procedures:
+
+
+{\footnotesize
+\begin{tabular}[H]{ll}
+
+\texttt{(make-point \textit{x} \textit{y})}  &  constructor \\
+
+\texttt{(point? \textit{obj})}  &  predicate \\
+
+\texttt{(point-x \textit{p})}  &  accessor for field \texttt{x} \\
+
+\texttt{(point-y \textit{p})}  &  accessor for field \texttt{y}
+ \\
+\end{tabular}
+}
+
+
+
+With this definition in place, we can use these procedures to create
+and manipulate records of the \texttt{point} type, as illustrated below.
+
+
+\begin{alltt}
+(define p (make-point 36 -17))
+(point? p) \(\Rightarrow\) \#{}t
+(point? '(cons 36 -17)) \(\Rightarrow\) \#{}f
+(point-x p) \(\Rightarrow\) 36
+(point-y p) \(\Rightarrow\) -17
+\end{alltt}
+
+
+Fields are immutable by default, but may be declared mutable.
+In the alternate definition of \texttt{point} below, the \texttt{x}
+field is mutable while \texttt{y} remains immutable.
+
+
+\texttt{(define-record-type point (fields (mutable x) y))}
+
+In this case, \texttt{define-record-type} defines a mutator for
+the \texttt{x} field in addition to the other products shown
+above.
+
+
+{\footnotesize
+\begin{tabular}[H]{ll}
+
+\texttt{(point-x-set! \textit{p} \textit{x})}  &  mutator for field \texttt{x}
+ \\
+\end{tabular}
+}
+
+
+
+The mutator can be used to change the contents of the \texttt{x} field.
+
+
+\begin{alltt}
+(define p (make-point 36 -17))
+(point-x-set! p (- (point-x p) 12))
+(point-x p) \(\Rightarrow\) 24
+\end{alltt}
+
+
+A field may be declared immutable explicitly for clarity; the definition of
+\texttt{point} below is equivalent to the second definition 
+above.
+
+
+\texttt{(define-record-type point (fields (mutable x) (immutable y)))}
+
+The names of the procedures defined by \texttt{define-record-type} follow
+the regular naming convention illustrated by the examples above, by
+default, but the programmer can override the defaults if desired.
+With the following definition of \texttt{point}, the constructor is
+\texttt{mkpoint}, the predicate is \texttt{ispoint?}, and the accessors
+for \texttt{x} and \texttt{y} are \texttt{x-val} and \texttt{y-val}.
+The mutator for \texttt{x} is \texttt{set-x-val!}.
+
+
+\begin{alltt}
+(define-record-type (point mkpoint ispoint?)
+  (fields (mutable x x-val set-x-val!)
+          (immutable y y-val)))
+\end{alltt}
+
+
+By default, a record definition creates a new type each time it is
+evaluated, as illustrated by the example below.
+
+
+\begin{alltt}
+(define (f p)
+  (define-record-type point (fields x y))
+  (if (eq? p 'make) (make-point 3 4) (point? p)))
+(f (f 'make)) \(\Rightarrow\) \#{}f
+\end{alltt}
+
+
+The first (inner) call to \texttt{f} returns a point \texttt{\textit{p}}, which is
+passed to \texttt{f} in the second (outer) call, which applies
+\texttt{point?} to \texttt{\textit{p}}.
+This \texttt{point?} is looking for points of the type created
+by the second call, while \texttt{\textit{p}} is a point of the type created by
+the first call.
+So \texttt{point?} returns \texttt{\#{}f}.
+
+
+\label{records_s3}\label{records_s4}\label{records_s5}This default \textit{generative} behavior may be overridden by including a
+\texttt{nongenerative} clause in the record definition.
+
+
+\begin{alltt}
+(define (f p)
+  (define-record-type point (fields x y) (nongenerative))
+  (if (eq? p 'make) (make-point 3 4) (point? p)))
+(define p (f 'make))
+(f p) \(\Rightarrow\) \#{}t
+\end{alltt}
+
+
+Record types created in this manner are still distinct from record
+types created by a definition appearing in a different part of the
+program, even if the definitions are syntactically identical:
+
+
+\begin{alltt}
+(define (f)
+  (define-record-type point (fields x y) (nongenerative))
+  (make-point 3 4))
+(define (g p)
+  (define-record-type point (fields x y) (nongenerative))
+  (point? p))
+(g (f)) \(\Rightarrow\) \#{}f
+\end{alltt}
+
+
+\label{records_s6}\label{records_page_record_uid}Even this can be overridden by including a uid (unique id) in
+the \texttt{nongenerative} clause:
+
+
+\begin{alltt}
+(define (f)
+  (define-record-type point (fields x y)
+    (nongenerative really-the-same-point))
+  (make-point 3 4))
+(define (g p)
+  (define-record-type point (fields x y)
+    (nongenerative really-the-same-point))
+  (point? p))
+(g (f)) \(\Rightarrow\) \#{}t
+\end{alltt}
+
+
+The uid may be any identifier, but programmers are encouraged to select
+uids from the RFC 4122 UUID namespace [\hyperref[bibliography_g238]{20}], possibly with the
+record-type name as a prefix.
+
+
+\label{records_s7}\label{records_s8}\label{records_s9}\label{records_s10}\label{records_page_parent_type}A record type may be defined as a subtype of an existing ``parent'' type
+with a \texttt{parent} clause that declares the name of the existing
+record type.
+If a parent is specified, the new ``child'' record type inherits the
+parent record's fields, and each instance of the child type is considered
+to be an instance of the parent type, so that accessors and mutators for
+the parent type may be used on instances of the child type.
+
+
+\begin{alltt}
+(define-record-type point (fields x y))
+(define-record-type cpoint (parent point) (fields color))
+\end{alltt}
+
+
+The child type has all of the fields of the parent type, plus the additional
+fields declared in the child's definition.
+This is reflected in the constructor for \texttt{cpoint}, which now
+takes three arguments, with the parent arguments followed by the
+child argument.
+
+
+\texttt{(define cp (make-cpoint 3 4 'red))}
+
+A record of the child type is considered a record of the parent type, but
+a record of the parent type is not a record of the new type.
+
+
+\begin{alltt}
+(point? (make-cpoint 3 4 'red)) \(\Rightarrow\) \#{}t
+(cpoint? (make-point 3 4)) \(\Rightarrow\) \#{}f
+\end{alltt}
+
+
+Only one new accessor is created for \texttt{cpoint}, the one for the
+new field \texttt{color}.
+The existing accessors and mutators for the parent type may be used to
+access and modify the parent fields of the child type.
+
+
+\begin{alltt}
+(define cp (make-cpoint 3 4 'red))
+(point-x cp) \(\Rightarrow\) 3
+(point-y cp) \(\Rightarrow\) 4
+(cpoint-color cp) \(\Rightarrow\) red
+\end{alltt}
+
+
+\label{records_s11}\label{records_page_protocols}As the examples given so far illustrate,
+the default constructor defined by \texttt{define-record-type}
+accepts as many arguments as the record has fields, including parent
+fields, and parent's parent fields, and so on.
+The programmer may override the default and specify the arguments to the
+constructor for the new type and how it determines the initial values of
+the constructed record's fields, via the \texttt{protocol} clause.
+The following definition creates a \texttt{point} record with three
+fields: \texttt{x}, \texttt{y}, and \texttt{d}, where \texttt{d}
+represents the displacement from the origin.
+The constructor still takes only two arguments, the \texttt{x} and
+\texttt{y} values, and initializes \texttt{d} to the square root
+of the sum of the squares of \texttt{x} and \texttt{y}.
+
+
+\begin{alltt}
+(define-record-type point
+  (fields x y d)
+  (protocol
+    (lambda (new)
+      (lambda (x y)
+        (new x y (sqrt (+ (* x x) (* y y))))))))
+
+(define p (make-point 3 4))
+(point-x p) \(\Rightarrow\) 3
+(point-y p) \(\Rightarrow\) 4
+(point-d p) \(\Rightarrow\) 5
+\end{alltt}
+
+
+The procedure value of the expression within the \texttt{protocol} clause
+receives as an argument a primitive
+constructor \texttt{\textit{new}} and returns a final constructor \texttt{\textit{c}}.
+There are essentially no limits on what \texttt{\textit{c}} is allowed to do, but if
+it returns, it should return the result of calling \texttt{\textit{new}}.
+Before it does so, it may modify the new record instance (if the record type
+has mutable fields), register it with some external handler,
+print messages, etc.
+In this case, \texttt{\textit{c}} accepts two arguments, \texttt{\textit{x}} and \texttt{\textit{y}}, and
+applies \texttt{\textit{new}} to \texttt{\textit{x}}, \texttt{\textit{y}}, and the result of computing the
+origin displacement based on \texttt{\textit{x}} and \texttt{\textit{y}}.
+
+
+If a parent record is specified, the construction protocol becomes
+more involved.
+The following definition of \texttt{cpoint} assumes that \texttt{point}
+has been defined as shown just above.
+
+
+\begin{alltt}
+(define-record-type cpoint
+  (parent point)
+  (fields color)
+  (protocol
+    (lambda (pargs-\textgreater{}new)
+      (lambda (c x y)
+        ((pargs-\textgreater{}new x y) c)))))
+
+(define cp (make-cpoint 'red 3 4))
+(point-x cp) \(\Rightarrow\) 3
+(point-y cp) \(\Rightarrow\) 4
+(point-d cp) \(\Rightarrow\) 5
+(cpoint-color cp) \(\Rightarrow\) red
+\end{alltt}
+
+
+Because a parent clause is present, the procedure value of the expression
+within the \texttt{protocol} clause receives a procedure \texttt{\textit{pargs}-\textgreater{}\textit{new}}
+that, when applied to parent arguments, returns a \texttt{\textit{new}} procedure.
+The \texttt{\textit{new}} procedure, when passed the values of the child fields,
+returns the result of applying the parent protocol to an appropriate
+\texttt{\textit{new}} procedure of its own.
+In this case, \texttt{\textit{pargs}-\textgreater{}\textit{new}} is passed the values of the child
+constructor's second and third arguments (the \texttt{\textit{x}} and \texttt{\textit{y}} values)
+and the resulting \texttt{\textit{new}} procedure is passed the value of the child
+constructor's first argument (the color).
+Thus, the protocol supplied in this example effectively reverses the
+normal order of arguments in which the parent arguments come before the
+child arguments, while arranging to pass along the arguments needed by the
+parent protocol.
+
+
+\label{records_s12}The default protocol is equivalent to
+
+
+\texttt{(lambda (new) new)}
+
+for record types with no parents, while for record types with parents,
+the default protocol is equivalent to the following
+
+
+\begin{alltt}
+(lambda (pargs-\textgreater{}new)
+  (lambda (\textit{x\textsubscript{1}} ... \textit{x\textsubscript{n}} \textit{y\textsubscript{1}} ... \textit{y\textsubscript{m}})
+    ((pargs-\textgreater{}new \textit{x\textsubscript{1}} ... \textit{x\textsubscript{n}}) \textit{y\textsubscript{1}} ... \textit{y\textsubscript{m}})))
+\end{alltt}
+
+
+where \texttt{\textit{n}} is the number of parent (including grandparent, etc.) fields
+and \texttt{\textit{m}} is the number of child fields.
+
+
+Use of the \texttt{protocol} clause insulates the child record definition
+from some changes to the parent record type.
+The parent definition may be modified to add or remove fields, or even
+add, remove, or change a parent, yet the child protocol and constructor
+need not change as long as the parent protocol does not change.
+
+
+Additional details and options for \texttt{define-record-type} are given in
+its formal description below.
+
+
+\begin{description}
+
+\label{records_s13}\item[syntax] \texttt{(define-record-type \textit{record-name} \textit{clause} ...)}
+
+
+
+\item[syntax] \texttt{(define-record-type (\textit{record-name} \textit{constructor} \textit{pred}) \textit{clause} ...)}
+
+
+
+\item[libraries] \texttt{(rnrs records syntactic)}, \texttt{(rnrs)}
+\end{description}
+
+
+A \texttt{define-record-type} form, or \textit{record definition}, is a definition
+and may appear anywhere other definitions may appear.
+It defines a record
+type identified by \texttt{\textit{record-name}}, plus a predicate, constructor, accessors,
+and mutators for the record type.
+If the record definition takes the first form above, the names of the constructor
+and predicate are derived from \texttt{\textit{record-name}}: \texttt{make-\textit{record-name}}
+for the constructor and \texttt{\textit{record-name}?} for the predicate.
+If the record definition takes the second form above, the name of the constructor
+is \texttt{\textit{constructor}} and the name of the predicate is \texttt{\textit{pred}}.
+All names defined by a record definition are scoped where the record definition
+appears.
+
+
+The clauses \texttt{\textit{clause} ...} of the record definition determine
+the fields of the record type and the names of their accessors
+and mutators; its parent type, if any; its construction protocol; whether
+it is nongenerative and, if so, whether its uid is specified; whether
+it is sealed; and whether it is opaque.
+The syntax and impact of each clause is described below.
+
+
+None of the clauses is required; thus, the simplest record definition is
+
+
+\texttt{(define-record-type \textit{record-name})}
+
+which defines a new, generative, non-sealed, non-opaque record type with no parent
+and no fields, plus a constructor of no arguments and a predicate.
+
+
+At most one of each kind of clause may be present in the set of clauses, and
+if a \texttt{parent} clause is present, a \texttt{parent-rtd} clause must not
+be present.
+The clauses that appear may appear in any order.
+
+
+
+\textbf{Fields clause.}  A \texttt{(fields \textit{field-spec} ...)} clause
+declares the fields of the record type.
+Each \texttt{\textit{field-spec}} must take one of the following forms:
+
+
+\begin{alltt}
+\textit{field-name}
+(immmutable \textit{field-name})
+(mutable \textit{field-name})
+(immmutable \textit{field-name} \textit{accessor-name})
+(mutable \textit{field-name} \textit{accessor-name} \textit{mutator-name})
+\end{alltt}
+
+
+where \texttt{\textit{field-name}}, \texttt{\textit{accessor-name}}, and \texttt{\textit{mutator-name}} are identifiers.
+The first form, \texttt{\textit{field-name}}, is equivalent to \texttt{(immutable \textit{field-name})}.
+The value of a field declared immutable may not be changed, and no mutator is
+created for it.
+With the first three forms, the name of the accessor is
+\texttt{\textit{rname}-\textit{fname}}, where \texttt{\textit{rname}} is the record
+name and \texttt{\textit{fname}} is the field name.
+With the third form, the name of the accessor is
+\texttt{\textit{rname}-\textit{fname}-set!}.
+The fourth and fifth forms explicitly declare the accessor and mutator names.
+
+
+If no \texttt{fields} clause is present or the list \texttt{\textit{field-spec} ...}
+is empty, the record type has no fields (other than parent fields, if any).
+
+
+
+\textbf{Parent clause.}  A \texttt{(parent \textit{parent-name})} clause declares the parent record type;
+\texttt{\textit{parent-name}} must be the name of a non-sealed record type previously
+defined via \texttt{define-record-type}.
+Instances of a record type are also considered instances of its parent record
+type and have all the fields of its parent record type in addition to those
+declared via the \texttt{fields} clause.
+
+
+\textbf{Nongenerative clause.}  A \texttt{nongenerative} clause may take one of two forms:
+
+
+\begin{alltt}
+(nongenerative)
+(nongenerative \textit{uid})
+\end{alltt}
+
+
+where \texttt{\textit{uid}} is a symbol.
+The first form is equivalent to the second, with a uid generated by the
+implementation at macro-expansion time.
+When a \texttt{define-record-type} form with a nongenerative clause is
+evaluated, a new type is created if and only if the uid is not the uid
+of an existing record type.
+
+
+If it is the uid of an existing record type, the parent, field-names,
+sealed property, and opaque property must match as follows.
+
+\begin{itemize}
+\item 
+If a parent is specified, the existing record type must have the same
+parent rtd (by \texttt{eqv?}).
+If a parent is not specified, the existing record type must not have
+a parent.
+
+\item 
+The same number of fields must be provided, with the same names and in
+the same order, and the mutability of each field must be the same.
+
+\item 
+If a \texttt{(sealed \#{}t)} clause is present, the existing record type
+must be sealed.
+Otherwise, the existing record type must not be sealed.
+
+\item 
+If an \texttt{(opaque \#{}t)} clause is present, the existing record type
+must be opaque.
+Otherwise, the existing record type must be opaque if and only if
+an opaque parent type is specified.
+
+\end{itemize}
+
+
+If these constraints are met, no new record type is created, and the
+other products of the record-type definition (constructor, predicate,
+accessors, and mutators) operate on records of the existing type.
+If these constraints are not met, the implementation may treat it as a
+syntax violation, or it may raise a run-time exception with condition type
+\texttt{\&{}assertion}.
+
+
+With the first form of \texttt{nongenerative} clause, the generated
+uid can be the uid of an existing record type only if the
+same definition is executed multiple times, e.g., if it appears in
+the body of a procedure that is invoked multiple times.
+
+
+If \texttt{\textit{uid}} is not the uid of an existing record type, or if no
+\texttt{nongenerative} clause is present, a new record type is created.
+
+
+\textbf{Protocol clause.}  A \texttt{(protocol \textit{expression})} determines the protocol that
+the generated constructor uses to construct instances of the record
+type.
+It must evaluate to a procedure, and this procedure should be an
+appropriate protocol for the record type, as described on
+page \pageref{records_page_protocols}.
+
+
+\textbf{Sealed clause.}  \label{records_s14}\label{records_page_sealed}A \texttt{sealed} clause of the form \texttt{(sealed \#{}t)} declares that the
+record type is \textit{sealed}.
+This means that it cannot be extended, i.e., cannot be used as the
+parent for another record definition or \texttt{make-record-type-descriptor}
+call.
+If no \texttt{sealed} clause is present or if one of the form
+\texttt{(sealed \#{}f)} is present, the record type is not sealed.
+
+
+\textbf{Opaque clause.}  \label{records_s15}\label{records_page_opaque}An \texttt{opaque} clause of the form \texttt{(opaque \#{}t)} declares that the
+record type is \textit{opaque}.
+Instances of an opaque record type are not considered records by the
+\texttt{record?} predicate or, more importantly, the rtd-extraction
+procedure \texttt{record-rtd}, which are both described in
+Section \ref{records_g141}.
+Thus, it is not possible for code that does not have access to the
+\texttt{record-name}, accessors, or mutators to access or modify any
+of the fields of an opaque record type.
+A record type is also opaque if its parent is opaque.
+If no \texttt{opaque} clause is present or if one of the form
+\texttt{(opaque \#{}f)} is present, and the parent, if any, is not
+opaque, the record type is not opaque.
+
+
+\textbf{Parent-rtd clause.}  A \texttt{(parent-rtd \textit{parent-rtd} \textit{parent-rcd})} clause is an alternative
+to the \texttt{parent} clause for specifying the parent record type, along
+with a parent record constructor descriptor.
+It is primarily useful when the parent rtd and rcd were obtained via calls to
+\texttt{make-record-type-descriptor} and \texttt{make-record-constructor-descriptor}.
+
+\texttt{\textit{parent-rtd}} must evaluate to an rtd or \texttt{\#{}f}.
+If \texttt{\textit{parent-rtd}} evaluates to \texttt{\#{}f}, \texttt{\textit{parent-rcd}} must
+also evaluate to \texttt{\#{}f}.
+Otherwise, \texttt{\textit{parent-rcd}} must evaluate to an rcd or \texttt{\#{}f}.
+If \texttt{\textit{parent-rcd}} evaluates to an rcd, it must encapsulate an rtd
+equivalent (by \texttt{eqv?}) to the value of \texttt{\textit{parent-rtd}}.
+If the value of \texttt{\textit{parent-rcd}} is \texttt{\#{}f}, it is treated as an rcd
+for the value of \texttt{\textit{parent-rtd}} with a default protocol.
+
+The \texttt{define-record-type} form is designed in such a way that it is
+normally possible for a compiler to determine the shapes of the record
+types it defines, including the offsets for all fields.
+This guarantee does not hold, however, when the \texttt{parent-rtd} clause
+is used, since the parent rtd might not be determinable until run time.
+Thus, the \texttt{parent} clause is preferred over the \texttt{parent-rtd}
+clause whenever the \texttt{parent} clause suffices.
+
+
+\begin{description}
+
+\label{records_s16}\item[syntax] \texttt{fields}
+
+
+
+\item[syntax] \texttt{mutable}
+
+
+
+\item[syntax] \texttt{immutable}
+
+
+
+\item[syntax] \texttt{parent}
+
+
+
+\item[syntax] \texttt{protocol}
+
+
+
+\item[syntax] \texttt{sealed}
+
+
+
+\item[syntax] \texttt{opaque}
+
+
+
+\item[syntax] \texttt{nongenerative}
+
+
+
+\item[syntax] \texttt{parent-rtd}
+
+
+
+\item[libraries] \texttt{(rnrs records syntactic)}, \texttt{(rnrs)}
+\end{description}
+
+
+These identifiers are auxiliary keywords for \texttt{define-record-type}.
+It is a syntax violation to reference these identifiers except in
+contexts where they are recognized as auxiliary keywords.
+
+
+
+\section{\label{records_g140}\label{records_h2}Procedural Interface\label{records_SECTRECORDPROCEDURAL}}
+
+
+
+\label{records_s17}\label{records_s18}\label{records_s19}The procedural (\texttt{make-record-type-descriptor}) interface may also be
+used to create new record types.
+The procedural interface is more flexible than the syntactic interface,
+but this flexibility can lead to less readable and efficient programs, so
+programmers should use the syntactic interface whenever it suffices.
+
+
+\begin{description}
+
+\label{records_s20}\item[procedure] \texttt{(make-record-type-descriptor \textit{name} \textit{parent} \textit{uid} \textit{s?} \textit{o?} \textit{fields})}
+
+
+
+\item[returns] a record-type descriptor (rtd) for a new or existing record type
+
+
+\item[libraries] \texttt{(rnrs records procedural)}, \texttt{(rnrs)}
+\end{description}
+
+
+\label{records_s21}\label{records_s22}\texttt{\textit{name}} must be a symbol, \texttt{\textit{parent}} must be \texttt{\#{}f} or the
+rtd of a non-sealed record type, \texttt{\textit{uid}} must be \texttt{\#{}f} or
+a symbol, and \texttt{\textit{fields}} must be a vector, each element of which
+is a two-element list of the form \texttt{(mutable \textit{field-name})}
+or \texttt{(immutable \textit{field-name})}.
+The field names \texttt{\textit{field-name} ...} must be symbols and need
+not be distinct from each other.
+
+
+If \texttt{\textit{uid}} is \texttt{\#{}f} or is not the uid of an existing record
+type, this procedure creates a new record type and returns a record-type
+descriptor (rtd) for the new type. 
+The type has the parent type (page \pageref{records_page_parent_type}) described by
+\texttt{\textit{parent}}, if nonfalse; the uid specified by \texttt{\textit{uid}}, if nonfalse;
+and the fields specified by \texttt{\textit{fields}}.
+It is sealed (page \pageref{records_page_sealed}) if \texttt{\textit{s?}} is nonfalse.
+It is opaque (page \pageref{records_page_opaque}) if \texttt{\textit{opaque}} is nonfalse or
+the parent (if specified) is opaque.
+The name of the new record type is \texttt{\textit{name}} and the names of the fields are
+\texttt{\textit{field-name} ...}.
+
+
+If \texttt{\textit{uid}} is nonfalse and is the uid (page \pageref{records_page_record_uid})
+of an existing record type, the \texttt{\textit{parent}}, \texttt{\textit{fields}}, \texttt{\textit{s?}},
+and \texttt{\textit{o?}} arguments must match the corresponding characteristics
+of the existing record type.
+That is, \texttt{\textit{parent}} must be the same (by \texttt{eqv?}); the number
+of fields must be the same; the fields must
+have the same names, be in the same order, and have the same mutability;
+\texttt{\textit{s?}} must be false if and only
+if the existing record type is sealed; and, if a parent is not specified
+or is not opaque, \texttt{\textit{o?}} must be false if and only if the existing
+record type is opaque.
+If this is the case, \texttt{make-record-type-descriptor}
+returns the rtd for the existing record type.
+Otherwise, an exception with condition type \texttt{\&{}assertion} is raised.
+
+
+Using the rtd returned by \texttt{make-record-type-descriptor}, programs
+can generate constructors,
+type predicates, field accessors, and field mutators dynamically.
+The following code demonstrates how the procedural interface might
+be used to create a \texttt{point} record type and associated
+definitions similar to those of the second \texttt{point} record
+definition in Section \ref{records_g139}, with a mutable
+\texttt{x} field and an immutable \texttt{y} field.
+
+
+\begin{alltt}
+(define point-rtd (make-record-type-descriptor 'point \#{}f \#{}f \#{}f \#{}f
+                '\#{}((mutable x) (immutable y))))
+(define point-rcd (make-record-constructor-descriptor point-rtd
+                    \#{}f \#{}f))
+(define make-point (record-constructor point-rcd))
+(define point? (record-predicate point-rtd))
+(define point-x (record-accessor point-rtd 0))
+(define point-y (record-accessor point-rtd 1))
+(define point-x-set! (record-mutator point-rtd 0))
+\end{alltt}
+
+
+See the additional examples given at the end of this section.
+
+
+\begin{description}
+
+\label{records_s23}\item[procedure] \texttt{(record-type-descriptor? \textit{obj})}
+
+
+
+\item[returns] \texttt{\#{}f} if \texttt{\textit{obj}} is a record-type descriptor, otherwise \texttt{\#{}f}
+
+
+\item[libraries] \texttt{(rnrs records procedural)}, \texttt{(rnrs)}
+\end{description}
+
+
+See the examples given at the end of this section.
+
+
+\begin{description}
+
+\label{records_s24}\item[procedure] \texttt{(make-record-constructor-descriptor \textit{rtd} \textit{parent-rcd} \textit{protocol})}
+
+
+
+\item[returns] a record-constructor descriptor (rcd)
+
+
+\item[libraries] \texttt{(rnrs records procedural)}, \texttt{(rnrs)}
+\end{description}
+
+
+\label{records_s25}\label{records_s26}\label{records_s27}An rtd alone is sufficient to create predicates, accessors, and mutators.
+To create a constructor, however, it is first necessary to create a record-constructor
+descriptor (rcd) for the record type.
+An rcd encapsulates three pieces of information: the rtd of the record type
+for which the rcd has been created, the parent rcd (if any), and the
+protocol.
+
+
+The \texttt{\textit{parent-rcd}} argument must be an rcd or \texttt{\#{}f}.
+If it is an rcd, \texttt{\textit{rtd}} must have a parent rtd, and the parent rtd must be
+the same as the rtd encapsulated within \texttt{\textit{parent-rcd}}.
+If \texttt{\textit{parent-rcd}} is false, either \texttt{\textit{rtd}} has no parent or an rcd with a default
+protocol is assumed for the parent.
+
+
+The \texttt{\textit{protocol}} argument must be a procedure or \texttt{\#{}f}.
+If it is \texttt{\#{}f}, a default protocol is assumed.
+Protocols are discussed on page \pageref{records_page_protocols}.
+
+
+See the examples given at the end of this section.
+
+
+\begin{description}
+
+\label{records_s28}\item[syntax] \texttt{(record-type-descriptor \textit{record-name})}
+
+
+
+\item[returns] the rtd for the record type identified by \texttt{record-name}
+
+
+\item[syntax] \texttt{(record-constructor-descriptor \textit{record-name})}
+
+
+
+\item[returns] the rcd for the record type identified by \texttt{record-name}
+
+
+\item[libraries] \texttt{(rnrs records syntactic)}, \texttt{(rnrs)}
+\end{description}
+
+
+Each record definition creates, behind the scenes, an rtd and rcd for the
+defined record type.
+These procedures allow the rtd and rcd to be obtained and used like any
+other rtd or rcd.
+\texttt{\textit{record-name}} must be the name of a record previously defined via
+\texttt{define-record-type}.
+
+
+\begin{description}
+
+\label{records_s29}\item[procedure] \texttt{(record-constructor \textit{rcd})}
+
+
+
+\item[returns] a record constructor for the record type encapsulated within \texttt{\textit{rcd}}
+
+
+\item[libraries] \texttt{(rnrs records procedural)}, \texttt{(rnrs)}
+\end{description}
+
+
+The behavior of the record constructor is determined by the protocol
+and parent rcd (if any) also encapsulated within \texttt{\textit{rcd}}.
+
+
+See the examples given at the end of this section.
+
+
+\begin{description}
+
+\label{records_s30}\item[procedure] \texttt{(record-predicate \textit{rtd})}
+
+
+
+\item[returns] a predicate for \texttt{\textit{rtd}}
+
+
+\item[libraries] \texttt{(rnrs records procedural)}, \texttt{(rnrs)}
+\end{description}
+
+
+This procedure returns a predicate that accepts one argument and returns
+\texttt{\#{}t} if the argument is an instance of the record-type described by
+\texttt{\textit{rtd}}, \texttt{\#{}f} otherwise.
+
+
+See the examples given at the end of this section.
+
+
+\begin{description}
+
+\label{records_s31}\item[procedure] \texttt{(record-accessor \textit{rtd} \textit{idx})}
+
+
+
+\item[returns] an accessor for the field of \texttt{\textit{rtd}} specified by \texttt{\textit{idx}}
+
+
+\item[libraries] \texttt{(rnrs records procedural)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{idx}} must be a nonnegative integer less than the number of fields of
+\texttt{\textit{rtd}}, not counting parent fields.
+An \texttt{\textit{idx}} value of 0 specifies the first field given in the
+\texttt{define-record-type} form or \texttt{make-record-type-descriptor}
+call that created the record type, 1 specifies the second, and so on.
+
+A child rtd cannot be used directly to create accessors for parent fields.
+To create an accessor for a parent field, the record-type descriptor of
+the parent must be used instead.
+
+
+See the examples given at the end of this section.
+
+
+\begin{description}
+
+\label{records_s32}\item[procedure] \texttt{(record-mutator \textit{rtd} \textit{idx})}
+
+
+
+\item[returns] a mutator for the field of \texttt{\textit{rtd}} specified by \texttt{\textit{idx}}
+
+
+\item[libraries] \texttt{(rnrs records procedural)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{idx}} must be a nonnegative integer less than the number of fields of
+\texttt{\textit{rtd}}, not counting parent fields.
+An \texttt{\textit{idx}} value of 0 specifies the first field given in the
+\texttt{define-record-type} form or \texttt{make-record-type-descriptor}
+call that created the record type, 1 specifies the second, and so on.
+The indicated field must be mutable; otherwise, an exception with condition
+type \texttt{\&{}assertion} is raised.
+
+A child rtd cannot be used directly to create mutators for parent fields.
+To create a mutator for a parent field, the record-type descriptor of
+the parent must be used instead.
+
+
+
+The following example illustrates the creation of parent and child record
+types, predicates, accessors, mutators, and constructors using the procedures
+described in this section.
+
+
+\begin{alltt}
+(define rtd/parent
+  (make-record-type-descriptor 'parent \#{}f \#{}f \#{}f \#{}f
+    '\#{}((mutable x))))
+
+(record-type-descriptor? rtd/parent) \(\Rightarrow\) \#{}t
+(define parent? (record-predicate rtd/parent))
+(define parent-x (record-accessor rtd/parent 0))
+(define set-parent-x! (record-mutator rtd/parent 0))
+
+(define rtd/child
+  (make-record-type-descriptor 'child rtd/parent \#{}f \#{}f \#{}f
+    '\#{}((mutable x) (immutable y))))
+
+(define child? (record-predicate rtd/child))
+(define child-x (record-accessor rtd/child 0))
+(define set-child-x! (record-mutator rtd/child 0))
+(define child-y (record-accessor rtd/child 1))
+
+(record-mutator rtd/child 1) \(\Rightarrow\) \textit{exception: immutable field}
+
+(define rcd/parent
+  (make-record-constructor-descriptor rtd/parent \#{}f
+    (lambda (new) (lambda (x) (new (* x x))))))
+
+(record-type-descriptor? rcd/parent) \(\Rightarrow\) \#{}f
+
+(define make-parent (record-constructor rcd/parent))
+
+(define p (make-parent 10))
+(parent? p) \(\Rightarrow\) \#{}t
+(parent-x p) \(\Rightarrow\) 100
+(set-parent-x! p 150)
+(parent-x p) \(\Rightarrow\) 150
+
+(define rcd/child
+  (make-record-constructor-descriptor rtd/child rcd/parent
+    (lambda (pargs-\textgreater{}new)
+      (lambda (x y)
+        ((pargs-\textgreater{}new x) (+ x 5) y)))))
+
+(define make-child (record-constructor rcd/child))
+(define c (make-child 10 'cc))
+(parent? c) \(\Rightarrow\) \#{}t
+(child? c) \(\Rightarrow\) \#{}t
+(child? p) \(\Rightarrow\) \#{}f
+
+(parent-x c) \(\Rightarrow\) 100
+(child-x c) \(\Rightarrow\) 15
+(child-y c) \(\Rightarrow\) cc
+
+(child-x p) \(\Rightarrow\) \textit{exception: invalid argument type}
+\end{alltt}
+
+\section{\label{records_g141}\label{records_h3}Inspection\label{records_SECTRECORDINSPECTION}}
+
+
+
+This section describes various procedures for asking questions about
+or extracting information from record-type descriptors (rtds).
+It also describes the \texttt{record-rtd} procedure, with which the
+rtd of a non-opaque record instance may be extracted, allowing the record
+type of the instance to be inspected and, via record accessors and
+mutators generated from the rtd, the record itself to be inspected
+or modified.
+This is a powerful feature that permits the coding of portable record
+printers and inspectors.
+
+
+\label{records_s33}The record-type descriptor cannot be extracted from an instance of an
+opaque record type; this is the feature that distinguishes opaque
+from non-opaque record types.
+
+
+\begin{description}
+
+\label{records_s34}\item[procedure] \texttt{(record-type-name \textit{rtd})}
+
+
+
+\item[returns] the name associated with \texttt{\textit{rtd}}
+
+
+\item[libraries] \texttt{(rnrs records inspection)}, \texttt{(rnrs)}
+\end{description}
+
+
+\begin{alltt}
+(define record-\textgreater{}name
+  (lambda (x)
+    (and (record? x) (record-type-name (record-rtd x)))))
+
+(define-record-type dim (fields w l h))
+(record-\textgreater{}name (make-dim 10 15 6)) \(\Rightarrow\) dim
+
+(define-record-type dim (fields w l h) (opaque \#{}t))
+(record-\textgreater{}name (make-dim 10 15 6)) \(\Rightarrow\) \#{}f
+\end{alltt}
+
+\begin{description}
+
+\label{records_s35}\item[procedure] \texttt{(record-type-parent \textit{rtd})}
+
+
+
+\item[returns] the parent of \texttt{\textit{rtd}}, or \texttt{\#{}f} if it has no parent
+
+
+\item[libraries] \texttt{(rnrs records inspection)}, \texttt{(rnrs)}
+\end{description}
+
+
+\begin{alltt}
+(define-record-type point (fields x y))
+(define-record-type cpoint (parent point) (fields color))
+(record-type-parent (record-type-descriptor point)) \(\Rightarrow\) \#{}f
+(record-type-parent (record-type-descriptor cpoint)) \(\Rightarrow\) \#{}\textless{}rtd\textgreater{}
+\end{alltt}
+
+\begin{description}
+
+\label{records_s36}\item[procedure] \texttt{(record-type-uid \textit{rtd})}
+
+
+
+\item[returns] the uid of \texttt{\textit{rtd}}, or \texttt{\#{}f} if it has no uid
+
+
+\item[libraries] \texttt{(rnrs records inspection)}, \texttt{(rnrs)}
+\end{description}
+
+
+Whether a record type created without a programmer-supplied uid
+actually has one anyway is left up to the implementation, so this
+procedure is never guaranteed to return \texttt{\#{}f}.
+
+
+\begin{alltt}
+(define-record-type point (fields x y))
+(define-record-type cpoint
+  (parent point)
+  (fields color)
+  (nongenerative e40cc926-8cf4-4559-a47c-cac636630314))
+(record-type-uid (record-type-descriptor point)) \(\Rightarrow\) \textit{unspecified}
+(record-type-uid (record-type-descriptor cpoint)) \(\Rightarrow\)
+                             e40cc926-8cf4-4559-a47c-cac636630314
+\end{alltt}
+
+\begin{description}
+
+\label{records_s37}\item[procedure] \texttt{(record-type-generative? \textit{rtd})}
+
+
+
+\item[returns] \texttt{\#{}t} if the record type described by \texttt{\textit{rtd}} is generative, \texttt{\#{}f} otherwise
+
+
+\item[procedure] \texttt{(record-type-sealed? \textit{rtd})}
+
+
+
+\item[returns] \texttt{\#{}t} if the record type described by \texttt{\textit{rtd}} is sealed, \texttt{\#{}f} otherwise
+
+
+\item[procedure] \texttt{(record-type-opaque? \textit{rtd})}
+
+
+
+\item[returns] \texttt{\#{}t} if the record type described by \texttt{\textit{rtd}} is opaque, \texttt{\#{}f} otherwise
+
+
+\item[libraries] \texttt{(rnrs records inspection)}, \texttt{(rnrs)}
+\end{description}
+
+
+\begin{alltt}
+(define-record-type table
+  (fields keys vals)
+  (opaque \#{}t))
+(define rtd (record-type-descriptor table))
+(record-type-generative? rtd) \(\Rightarrow\) \#{}t
+(record-type-sealed? rtd) \(\Rightarrow\) \#{}f
+(record-type-opaque? rtd) \(\Rightarrow\) \#{}t
+
+(define-record-type cache-table
+  (parent table)
+  (fields key val)
+  (nongenerative))
+(define rtd (record-type-descriptor cache-table))
+(record-type-generative? rtd) \(\Rightarrow\) \#{}f
+(record-type-sealed? rtd) \(\Rightarrow\) \#{}f
+(record-type-opaque? rtd) \(\Rightarrow\) \#{}t
+\end{alltt}
+
+\begin{description}
+
+\label{records_s38}\item[procedure] \texttt{(record-type-field-names \textit{rtd})}
+
+
+
+\item[returns] a vector containing the names of the fields of the type described by \texttt{\textit{rtd}}
+
+
+\item[libraries] \texttt{(rnrs records inspection)}, \texttt{(rnrs)}
+\end{description}
+
+
+The vector returned by this procedure is immutable: the effect on \texttt{\textit{rtd}}
+of modifying it is unspecified.
+The vector does not include parent field names.
+The order of the names in the vector is the same as the order in which the
+fields were specified in the \texttt{define-record-type} form or
+\texttt{make-record-type-descriptor} call that created the record type.
+
+
+\begin{alltt}
+(define-record-type point (fields x y))
+(define-record-type cpoint (parent point) (fields color))
+(record-type-field-names
+  (record-type-descriptor point)) \(\Rightarrow\) \#{}(x y)
+(record-type-field-names
+  (record-type-descriptor cpoint)) \(\Rightarrow\) \#{}(color)
+\end{alltt}
+
+\begin{description}
+
+\label{records_s39}\item[procedure] \texttt{(record-field-mutable? \textit{rtd} \textit{idx})}
+
+
+
+\item[returns] \texttt{\#{}t if the specified field of \textit{rtd}} is mutable, \texttt{\#{}f} otherwise
+
+
+\item[libraries] \texttt{(rnrs records inspection)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{idx}} must be a nonnegative integer less than the number of fields of
+\texttt{\textit{rtd}}, not counting parent fields.
+An \texttt{\textit{idx}} value of 0 specifies the first field given in the
+\texttt{define-record-type} form or \texttt{make-record-type-descriptor}
+call that created the record type, 1 specifies the second, and so on.
+
+\begin{alltt}
+(define-record-type point (fields (mutable x) (mutable y)))
+(define-record-type cpoint (parent point) (fields color))
+
+(record-field-mutable? (record-type-descriptor point) 0) \(\Rightarrow\) \#{}t
+(record-field-mutable? (record-type-descriptor cpoint) 0) \(\Rightarrow\) \#{}f
+\end{alltt}
+
+\begin{description}
+
+\label{records_s40}\item[procedure] \texttt{(record? \textit{obj})}
+
+
+
+\item[returns] \texttt{\#{}t} if \texttt{\textit{obj}} is a non-opaque record instance, \texttt{\#{}f} otherwise
+
+
+\item[libraries] \texttt{(rnrs records inspection)}, \texttt{(rnrs)}
+\end{description}
+
+
+When passed an instance of an opaque record type, \texttt{record?} returns
+\texttt{\#{}f}.
+While an instance of an opaque record type is, in essence, a record,
+the point of opacity is to hide all representation information from the
+parts of a program that should not have access to the information,
+and this includes whether an object is a record.
+Furthermore, the primary purpose of this predicate is to allow programs to
+check whether it is possible to obtain from the argument an rtd via the
+\texttt{record-rtd} procedure described below.
+
+
+\begin{alltt}
+(define-record-type statement (fields str))
+(define q (make-statement "He's dead, Jim"))
+(statement? q) \(\Rightarrow\) \#{}t
+(record? q) \(\Rightarrow\) \#{}t
+
+(define-record-type opaque-statement (fields str) (opaque \#{}t))
+(define q (make-opaque-statement "He's moved on, Jim"))
+(opaque-statement? q) \(\Rightarrow\) \#{}t
+(record? q) \(\Rightarrow\) \#{}f
+\end{alltt}
+
+\begin{description}
+
+\label{records_s41}\item[procedure] \texttt{(record-rtd \textit{record})}
+
+
+
+\item[returns] the record-type descriptor (rtd) of \texttt{\textit{record}}
+
+
+\item[libraries] \texttt{(rnrs records inspection)}, \texttt{(rnrs)}
+\end{description}
+
+
+The argument must be an instance of a non-opaque record type.
+In combination with some of the other procedures described in this
+section and Section \ref{records_g140},
+\texttt{record-rtd} allows the inspection or mutation
+of record instances, even if the type of the instance is unknown
+to the inspector.
+This capability is illustrated by the procedure \texttt{print-fields}
+below, which accepts a record argument and writes the name and value of
+each field of the record.
+
+
+\begin{alltt}
+(define print-fields
+  (lambda (r)
+    (unless (record? r)
+      (assertion-violation 'print-fields "not a record" r))
+    (let loop ([rtd (record-rtd r)])
+      (let ([prtd (record-type-parent rtd)])
+        (when prtd (loop prtd)))
+      (let* ([v (record-type-field-names rtd)]
+             [n (vector-length v)])
+        (do ([i 0 (+ i 1)])
+            ((= i n))
+          (write (vector-ref v i))
+          (display "=")
+          (write ((record-accessor rtd i) r))
+          (newline))))))
+\end{alltt}
+
+
+With the familiar definitions of \texttt{point} and \texttt{cpoint}:
+
+
+\begin{alltt}
+(define-record-type point (fields x y))
+(define-record-type cpoint (parent point) (fields color))
+\end{alltt}
+
+
+the expression \texttt{(print-fields (make-cpoint -3 7 'blue))} displays
+the following three lines.
+
+
+\begin{alltt}
+x=-3
+y=7
+color=blue
+\end{alltt}
+
+
+

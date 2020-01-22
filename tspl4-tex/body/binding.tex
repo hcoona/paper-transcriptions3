@@ -1,0 +1,894 @@
+\chapter{Procedures and Variable Bindings\label{binding_CHPTBINDING}}
+\label{binding_g88}
+\label{binding_h0}
+\begin{figure}[H]
+\centering
+\setlength{\fboxrule}{3pt}
+\fbox{
+\includegraphics[width=0.9\textwidth]{canned/ch4.png}
+\begin{rotate}{90}
+\copyright~2009 Jean-Pierre H\'{e}bert
+\end{rotate}}
+\end{figure}
+\clearpage
+
+
+
+
+
+\label{binding_s0}\label{binding_s1}Procedures and variable
+bindings are the fundamental building blocks of Scheme programs.
+This chapter describes the small set of syntactic forms whose
+primary purpose is to create procedures and manipulate variable
+bindings.
+It begins with the two most fundamental building blocks of Scheme
+programs: variable references and \texttt{lambda} expressions,
+and continues with descriptions of
+the variable binding and assignment forms such as \texttt{define},
+\texttt{letrec}, \texttt{let-values}, and \texttt{set!}.
+
+
+Various other forms that bind or assign variables for which the binding or
+assignment is not the primary purpose (such as named \texttt{let}) are found
+in Chapter \ref{control_g96}.
+
+
+\section{\label{binding_g89}\label{binding_h1}Variable References\label{binding_SECTVARREF}}
+
+
+\begin{description}
+
+\label{binding_s2}\item[syntax] \texttt{\textit{variable}}
+
+
+
+\item[returns] the value of \texttt{\textit{variable}}
+\end{description}
+
+
+Any identifier appearing as an expression in a program is a variable
+if a visible variable binding for the identifier exists, e.g., the
+identifier appears within the scope of a binding created by \texttt{define},
+\texttt{lambda}, \texttt{let}, or some other variable-binding construct.
+
+
+\begin{alltt}
+list \(\Rightarrow\) \#{}\textless{}procedure\textgreater{}
+(define x 'a)
+(list x x) \(\Rightarrow\) (a a)
+(let ([x 'b])
+  (list x x)) \(\Rightarrow\) (b b)
+(let ([let 'let]) let) \(\Rightarrow\) let
+\end{alltt}
+
+
+It is a syntax violation for an identifier reference to appear within a
+\texttt{library} form or top-level program if it is not bound as a variable,
+keyword, record name, or other entity.
+Since the scope of the definitions in a \texttt{library}, top-level
+program, \texttt{lambda}, or other local body is the entire body, it
+is not necessary for the definition of a variable to appear before
+its first reference appears, as long as the reference is not actually
+evaluated until the definition has been completed.
+So, for example, the reference to \texttt{g} within the definition of
+\texttt{f} below
+
+
+\begin{alltt}
+(define f
+  (lambda (x)
+    (g x)))
+(define g
+  (lambda (x)
+    (+ x x)))
+\end{alltt}
+
+
+is okay, but the reference to \texttt{g} in the definition of
+\texttt{q} below is not.
+
+
+\begin{alltt}
+(define q (g 3))
+(define g
+  (lambda (x)
+    (+ x x)))
+\end{alltt}
+
+\section{\label{binding_g90}\label{binding_h2}Lambda\label{binding_SECTLAMBDA}}
+
+
+\begin{description}
+
+\label{binding_s3}\item[syntax] \texttt{(lambda \textit{formals} \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+
+
+\item[returns] a procedure
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+The \texttt{lambda} syntactic form is used to create \label{binding_s4}procedures.
+Any operation that creates a procedure or establishes local variable
+bindings is ultimately defined in terms of \texttt{lambda} or
+\texttt{case-lambda}.
+
+
+The variables in \texttt{\textit{formals}} are the \label{binding_s5}formal parameters of the
+procedure, and the sequence of subforms
+\texttt{\textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...} is its body.
+
+
+\label{binding_s6}The body may begin with a sequence of
+definitions, in which case the bindings created by the definitions are
+local to the body.
+If definitions are present, the keyword bindings are used and discarded
+while expanding the body, and the body is expanded into a
+\texttt{letrec*} expression formed from the variable definitions and the
+remaining expressions, as described on page \pageref{syntax_body_expansion}.
+The remainder of this description of \texttt{lambda} assumes that this
+transformation has taken place, if necessary, so that the body is a
+sequence of expressions without definitions.
+
+
+When the procedure is created, the bindings of all variables occurring
+free within the body, excluding the formal parameters, are retained with
+the procedure.
+Subsequently, whenever the procedure is applied to a sequence of
+\label{binding_s7}actual parameters, the formal parameters are bound to the actual
+parameters, the retained bindings are restored, and the body is
+evaluated.
+
+
+Upon application, the \label{binding_s8}formal parameters defined by \texttt{\textit{formals}} are
+bound to the actual parameters as follows.
+
+\begin{itemize}
+\item 
+If \texttt{\textit{formals}} is a proper list of variables, e.g., \texttt{(x y z)}, each
+variable is bound to the corresponding actual parameter.
+An exception with condition type \texttt{\&{}assertion} is raised
+if too few or too many actual parameters are supplied.
+
+\item 
+If \texttt{\textit{formals}} is a single variable (not in a list), e.g., \texttt{z}, it
+is bound to a list of the actual parameters.
+
+\item 
+If \texttt{\textit{formals}} is an improper list of variables terminated by a
+variable, e.g., \texttt{(x y . z)}, each variable but the last is bound
+to the corresponding actual parameter.
+The last variable is bound to a list of the remaining actual parameters.
+An exception with condition type \texttt{\&{}assertion} is raised
+if too few actual parameters are supplied.
+
+\end{itemize}
+
+
+When the body is evaluated, the expressions in the body are evaluated in sequence,
+and the procedure returns the values of the last expression.
+
+
+Procedures do not have a printed representation in the usual sense.
+Scheme systems print procedures in different ways; this book uses the
+notation \texttt{\#{}\textless{}procedure\textgreater{}}.
+
+
+\begin{alltt}
+(lambda (x) (+ x 3)) \(\Rightarrow\) \#{}\textless{}procedure\textgreater{}
+((lambda (x) (+ x 3)) 7) \(\Rightarrow\) 10
+((lambda (x y) (* x (+ x y))) 7 13) \(\Rightarrow\) 140
+((lambda (f x) (f x x)) + 11) \(\Rightarrow\) 22
+((lambda () (+ 3 4))) \(\Rightarrow\) 7
+
+((lambda (x . y) (list x y))
+ 28 37) \(\Rightarrow\) (28 (37))
+((lambda (x . y) (list x y))
+ 28 37 47 28) \(\Rightarrow\) (28 (37 47 28))
+((lambda (x y . z) (list x y z))
+ 1 2 3 4) \(\Rightarrow\) (1 2 (3 4))
+((lambda x x) 7 13) \(\Rightarrow\) (7 13)
+\end{alltt}
+
+\section{\label{binding_g91}\label{binding_h3}Case-Lambda\label{binding_SECTOPTARGS}}
+
+
+
+A Scheme \label{binding_s9}\texttt{lambda} expression always
+produces a procedure with a fixed number of arguments or with an
+indefinite number of arguments greater than or equal to a certain
+number.
+In particular,
+
+
+\texttt{(lambda (\textit{var\textsubscript{1}} ... \textit{var\textsubscript{n}}) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+accepts exactly \texttt{\textit{n}} arguments,
+
+
+\texttt{(lambda \textit{r} \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+accepts zero or more arguments, and
+
+
+\texttt{(lambda (\textit{var\textsubscript{1}} ... \textit{var\textsubscript{n}} . \textit{r}) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+accepts \texttt{\textit{n}} or more arguments.
+
+\texttt{lambda} cannot directly produce, however, a procedure that accepts,
+say, either two or three arguments.
+In particular, procedures that accept \label{binding_s10}optional arguments are not
+supported directly by \texttt{lambda}.
+The latter form of \texttt{lambda} shown above can be used, in conjunction
+with length checks and compositions of \texttt{car} and \texttt{cdr}, to implement
+procedures with optional arguments, though at the cost of clarity and
+efficiency.
+
+The \label{binding_s11}\texttt{case-lambda} syntactic form directly supports
+procedures with optional arguments as well as procedures with
+fixed or indefinite numbers of arguments.
+\texttt{case-lambda} is based on
+the \label{binding_s12}\texttt{lambda*} syntactic form introduced
+in the article "A New Approach to Procedures with Variable
+Arity" [\hyperref[bibliography_g229]{11}].
+
+\begin{description}
+
+\label{binding_s13}\item[syntax] \texttt{(case-lambda \textit{clause} ...)}
+
+
+
+\item[returns] a procedure
+
+
+\item[libraries] \texttt{(rnrs control)}, \texttt{(rnrs)}
+\end{description}
+
+
+A \texttt{case-lambda} expression consists of a set of clauses, each
+resembling a \texttt{lambda} expression.
+Each \texttt{\textit{clause}} has the form below.
+
+
+\texttt{[\textit{formals} \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...]}
+
+The formal parameters of a clause are defined by \texttt{\textit{formals}} in the
+same manner as for a \texttt{lambda} expression.
+The number of arguments accepted by the procedure value of a
+\texttt{case-lambda} expression is
+determined by the numbers of arguments accepted by the individual
+clauses.
+
+
+When a procedure created with \texttt{case-lambda} is invoked, the clauses
+are considered in order.
+The first clause that accepts the given number of actual parameters is
+selected, the formal parameters defined by its \texttt{\textit{formals}} are
+bound to the corresponding actual parameters, and the body is
+evaluated as described for \texttt{lambda} above.
+If \texttt{\textit{formals}} in a clause is a proper list of identifiers, then
+the clause accepts exactly as many actual parameters as there are
+formal parameters (identifiers) in \texttt{\textit{formals}}.
+As with a \texttt{lambda} \texttt{\textit{formals}}, a \texttt{case-lambda} clause
+\texttt{\textit{formals}}
+may be a single identifier, in which case the clause accepts any
+number of arguments, or an improper list of identifiers terminated
+by an identifier, in which
+case the clause accepts any number of arguments greater than or
+equal to the number of formal parameters excluding the terminating
+identifier.
+If no clause accepts the number of actual parameters supplied, an
+exception with condition type \texttt{\&{}assertion} is raised.
+
+
+The following definition for \label{binding_s14}\texttt{make-list} uses \texttt{case-lambda} to
+support an optional fill parameter.
+
+
+\begin{alltt}
+(define make-list
+  (case-lambda
+    [(n) (make-list n \#{}f)]
+    [(n x)
+     (do ([n n (- n 1)] [ls '() (cons x ls)])
+         ((zero? n) ls))]))
+\end{alltt}
+
+
+The \label{binding_s15}\texttt{substring} procedure may be extended with \texttt{case-lambda} to
+accept either no \texttt{\textit{end}} index, in which case it defaults to the
+end of the string, or no \texttt{\textit{start}} and \texttt{\textit{end}} indices, in which
+case \texttt{substring} is equivalent to \texttt{string-copy}:
+
+
+\begin{alltt}
+(define substring1
+  (case-lambda
+    [(s) (substring1 s 0 (string-length s))]
+    [(s start) (substring1 s start (string-length s))]
+    [(s start end) (substring s start end)]))
+\end{alltt}
+
+
+It is also possible to default the \texttt{\textit{start}} index rather than
+the \texttt{\textit{end}} index when only one index is supplied:
+
+
+\begin{alltt}
+(define substring2
+  (case-lambda
+    [(s) (substring2 s 0 (string-length s))]
+    [(s end) (substring2 s 0 end)]
+    [(s start end) (substring s start end)]))
+\end{alltt}
+
+
+It is even possible to require that both or neither of the \texttt{\textit{start}}
+and \texttt{\textit{end}} indices be supplied, simply by leaving out the middle
+clause:
+
+
+\begin{alltt}
+(define substring3
+  (case-lambda
+    [(s) (substring3 s 0 (string-length s))]
+    [(s start end) (substring s start end)]))
+\end{alltt}
+
+\section{\label{binding_g92}\label{binding_h4}Local Binding\label{binding_SECTLOCALBINDING}}
+
+
+\begin{description}
+
+\label{binding_s16}\item[syntax] \texttt{(let ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+
+
+\item[returns] the values of the final body expression
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{let} establishes \label{binding_s17}local variable bindings.
+Each variable \texttt{\textit{var}} is bound to the value of the corresponding
+expression \texttt{\textit{expr}}.
+The body of the \texttt{let}, in which the variables are bound, is
+the sequence of subforms \texttt{\textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...} and is
+processed and evaluated like a \texttt{lambda} body.
+
+The forms \texttt{let}, \texttt{let*}, \texttt{letrec}, and \texttt{letrec*}
+(the others are described after \texttt{let}) are similar but serve
+slightly different purposes.
+With \texttt{let}, in contrast with \texttt{let*}, \texttt{letrec}, and \texttt{letrec*},
+the expressions \texttt{\textit{expr} ...} are all outside the scope of
+the variables \texttt{\textit{var} ...}.
+Also, in contrast with \texttt{let*} and \texttt{letrec*}, no ordering is implied for the
+evaluation of the expressions \texttt{\textit{expr} ...}.
+They may be evaluated from left to right, from right to left, or
+in any other order at the discretion of the implementation.
+Use \texttt{let} whenever the values are independent of the variables
+and the order of evaluation is unimportant.
+
+
+\begin{alltt}
+(let ([x (* 3.0 3.0)] [y (* 4.0 4.0)])
+  (sqrt (+ x y))) \(\Rightarrow\) 5.0
+
+(let ([x 'a] [y '(b c)])
+  (cons x y)) \(\Rightarrow\) (a b c)
+
+(let ([x 0] [y 1])
+  (let ([x y] [y x])
+    (list x y))) \(\Rightarrow\) (1 0)
+\end{alltt}
+
+
+The following definition of \texttt{let} shows the
+typical derivation of \texttt{let} from \texttt{lambda}.
+
+
+\begin{alltt}
+(define-syntax let
+  (syntax-rules ()
+    [(\_{} ((x e) ...) b1 b2 ...)
+     ((lambda (x ...) b1 b2 ...) e ...)]))
+\end{alltt}
+
+
+Another form of \texttt{let}, \textit{named} \texttt{let}, is described in
+Section \ref{control_g100}, and a definition of the full
+\texttt{let} can be found on page \pageref{syntax_defn_let}.
+
+
+\begin{description}
+
+\label{binding_s18}\item[syntax] \texttt{(let* ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+
+
+\item[returns] the values of the final body expression
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{let*} is similar to \texttt{let} except that the
+expressions \texttt{\textit{expr} ...} are evaluated in sequence
+from left to right, and
+each of these expressions is within the scope of the variables to the
+left.
+Use \texttt{let*} when there is a linear dependency among the values or
+when the order of evaluation is important.
+
+\begin{alltt}
+(let* ([x (* 5.0 5.0)]
+       [y (- x (* 4.0 4.0))])
+  (sqrt y)) \(\Rightarrow\) 3.0
+
+(let ([x 0] [y 1])
+  (let* ([x y] [y x])
+    (list x y))) \(\Rightarrow\) (1 1)
+\end{alltt}
+
+
+Any \texttt{let*} expression may be converted to a set of
+\label{binding_s19}nested \texttt{let} expressions.
+The following definition of \texttt{let*} demonstrates
+the typical transformation.
+
+
+\begin{alltt}
+(define-syntax let*\label{binding_defn_let*}
+  (syntax-rules ()
+    [(\_{} () e1 e2 ...)
+     (let () e1 e2 ...)]
+    [(\_{} ((x1 v1) (x2 v2) ...) e1 e2 ...)
+     (let ((x1 v1))
+       (let* ((x2 v2) ...) e1 e2 ...))]))
+\end{alltt}
+
+\begin{description}
+
+\label{binding_s20}\item[syntax] \texttt{(letrec ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+
+
+\item[returns] the values of the final body expression
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{letrec} is similar to \texttt{let} and \texttt{let*}, except
+that all of the expressions \texttt{\textit{expr} ...}
+are within the scope of all of the variables \texttt{\textit{var} ...}.
+\texttt{letrec} allows the definition of
+\label{binding_s21}mutually recursive procedures.
+
+\begin{alltt}
+(letrec ([sum (lambda (x)
+                (if (zero? x)
+                    0
+                    (+ x (sum (- x 1)))))])
+  (sum 5)) \(\Rightarrow\) 15
+\end{alltt}
+
+
+The order of evaluation of the expressions
+\texttt{\textit{expr} ...} is unspecified, so a program must not
+evaluate a reference
+to any of the variables bound by the \texttt{letrec} expression before
+all of the values have been computed.
+(Occurrence of a variable within a \texttt{lambda} expression does
+not count as a reference, unless the resulting procedure is applied
+before all of the values have been computed.)
+If this restriction is violated, an exception with condition type
+\texttt{\&{}assertion} is raised.
+
+
+An \texttt{\textit{expr}} should not return more than once.
+That is, it should not return both normally and via the invocation of a
+continuation obtained during its evaluation, and it should not return
+twice via two invocations of such a continuation.
+Implementations are not required to detect a violation of this restriction,
+but if they do, an exception with condition type \texttt{\&{}assertion} is
+raised.
+
+
+Choose \texttt{letrec} over \texttt{let} or \texttt{let*} when there is a
+circular dependency among the variables and their values and
+when the order of evaluation is unimportant.
+Choose \texttt{letrec*} over \texttt{letrec} when there is a circular
+dependency and the bindings need to be evaluated from left to right.
+
+
+A \texttt{letrec} expression of the form
+
+
+\texttt{(letrec ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+may be expressed in terms of \texttt{let} and \texttt{set!} as
+
+
+\begin{alltt}
+(let ((\textit{var} \#{}f) ...)
+  (let ((\textit{temp} \textit{expr}) ...)
+    (set! \textit{var} \textit{temp}) ...
+    (let () \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)))
+\end{alltt}
+
+
+where \texttt{\textit{temp} ...} are fresh variables, i.e., ones
+that do not already appear in the \texttt{letrec} expression,
+one for each \texttt{(\textit{var} \textit{expr})} pair.
+The outer \texttt{let} expression establishes the variable bindings.
+The initial value given each variable is unimportant, so any value
+suffices in place of \texttt{\#{}f}.
+The bindings are established first so that \texttt{\textit{expr} ...}
+may contain
+occurrences of the variables, i.e., so that the expressions are computed
+within the scope of the variables.
+The middle \texttt{let} evaluates the values and binds them to the temporary
+variables, and the \texttt{set!} expressions assign each variable
+to the corresponding value.
+The inner \texttt{let} is present in case the body contains internal
+definitions.
+
+
+A definition of \texttt{letrec} that uses this transformation is shown
+on page \pageref{syntax_defn_letrec}.
+
+
+This transformation does not enforce the restriction that
+the \texttt{\textit{expr}} expressions must not evaluate any references of or
+assignments to the variables.
+More elaborate transformations that enforce this restriction and
+actually produce more efficient code are
+possible [\hyperref[bibliography_g249]{31}].
+
+\begin{description}
+
+\label{binding_s22}\label{binding_desc_letrec*}
+\item[syntax] \texttt{(letrec* ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+
+
+\item[returns] the values of the final body expression
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{letrec*} is similar to \texttt{letrec}, except that
+\texttt{letrec*} evaluates \texttt{\textit{expr} ...} in sequence from left to right.
+While programs must still not evaluate a reference to any \texttt{\textit{var}}
+before the corresponding \texttt{\textit{expr}} has been evaluated, references to
+\texttt{\textit{var}} may be evaluated any time thereafter, including during
+the evaluation of the \texttt{\textit{expr}} of any subsequent binding.
+
+A \texttt{letrec*} expression of the form
+
+
+\texttt{(letrec* ((\textit{var} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+may be expressed in terms of \texttt{let} and \texttt{set!} as
+
+
+\begin{alltt}
+(let ((\textit{var} \#{}f) ...)
+  (set! \textit{var} \textit{expr}) ...
+  (let () \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...))
+\end{alltt}
+
+
+The outer \texttt{let} expression creates the bindings, each assignment
+evaluates an expression and immediately sets the corresponding variable
+to its value, in sequence, and the inner let evaluates the body.
+\texttt{let} is used in the latter case rather than \texttt{begin}
+since the body may include internal definitions as well as expressions.
+
+
+\begin{alltt}
+(letrec* ([sum (lambda (x)
+                 (if (zero? x)
+                     0
+                     (+ x (sum (- x 1)))))]
+          [f (lambda () (cons n n-sum))]
+          [n 15]
+          [n-sum (sum n)])
+  (f)) \(\Rightarrow\) (15 . 120)
+
+(letrec* ([f (lambda () (lambda () g))]
+          [g (f)])
+  (eq? (g) g)) \(\Rightarrow\) \#{}t
+
+(letrec* ([g (f)]
+          [f (lambda () (lambda () g))])
+  (eq? (g) g)) \(\Rightarrow\) \textit{exception: attempt to reference undefined variable f}
+\end{alltt}
+
+\section{\label{binding_g93}\label{binding_h5}Multiple Values\label{binding_SECTLETVALUES}}
+
+
+\begin{description}
+
+\label{binding_s23}\label{binding_desc_let_values}
+\item[syntax] \texttt{(let-values ((\textit{formals} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+
+
+\item[syntax] \texttt{(let*-values ((\textit{formals} \textit{expr}) ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+
+
+\item[returns] the values of the final body expression
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{let-values} is a convenient way to receive multiple
+values and bind them to variables.
+It is structured like \texttt{let} but permits an arbitrary
+formals list (like \texttt{lambda}) on each left-hand
+side.
+\texttt{let*-values} is similar but performs the bindings in
+left-to-right order, as with \texttt{let*}.
+An exception with condition type \texttt{\&{}assertion} is raised
+if the number of values returned by an \texttt{\textit{expr}} is not appropriate
+for the corresponding \texttt{\textit{formals}}, as described in the entry
+for \texttt{lambda} above.
+A definition of \texttt{let-values} is given on page \pageref{syntax_fullletvalues}.
+
+\begin{alltt}
+(let-values ([(a b) (values 1 2)] [c (values 1 2 3)])
+  (list a b c)) \(\Rightarrow\) (1 2 (1 2 3))
+
+(let*-values ([(a b) (values 1 2)] [(a b) (values b a)])
+  (list a b)) \(\Rightarrow\) (2 1)
+\end{alltt}
+
+\section{\label{binding_g94}\label{binding_h6}Variable Definitions\label{binding_SECTDEFINITIONS}}
+
+
+\begin{description}
+
+\label{binding_s24}\item[syntax] \texttt{(define \textit{var} \textit{expr})}
+
+
+
+\item[syntax] \texttt{(define \textit{var})}
+
+
+
+\item[syntax] \texttt{(define (\textit{var\textsubscript{0}} \textit{var\textsubscript{1}} ...) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+
+
+\item[syntax] \texttt{(define (\textit{var\textsubscript{0}} . \textit{var\textsubscript{r}}) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+
+
+\item[syntax] \texttt{(define (\textit{var\textsubscript{0}} \textit{var\textsubscript{1}} \textit{var\textsubscript{2}} ... . \textit{var\textsubscript{r}}) \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...)}
+
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+In the first form, \texttt{define} creates a new binding of \texttt{\textit{var}} to
+the value of \texttt{\textit{expr}}.
+The \texttt{\textit{expr}} should not return more than once.
+That is, it should not return both normally and via the invocation of a
+continuation obtained during its evaluation, and it should not return
+twice via two invocations of such a continuation.
+Implementations are not required to detect a violation of this restriction,
+but if they do, an exception with condition type \texttt{\&{}assertion} is
+raised.
+
+
+The second form is equivalent to \texttt{(define \textit{var} \textit{unspecified})},
+where \texttt{\textit{unspecified}} is some unspecified value.
+\label{binding_s25}The remaining are shorthand forms for
+binding variables to
+procedures; they are identical to the following definition in terms of
+\texttt{lambda}.
+
+
+\begin{alltt}
+(define \textit{var}
+  (lambda \textit{formals}
+    \textit{body\textsubscript{1}} \textit{body\textsubscript{2}} ...))
+\end{alltt}
+
+
+where \texttt{\textit{formals}} is \texttt{(\textit{var\textsubscript{1}} ...)}, \texttt{\textit{var\textsubscript{r}}},
+or \texttt{(\textit{var\textsubscript{1}} \textit{var\textsubscript{2}} ... . \textit{var\textsubscript{r}})} for the third,
+fourth, and fifth \texttt{define} formats.
+
+
+Definitions may appear at the front of a \texttt{library} body, anywhere
+among the forms of a top-level-program body, and at the front of a
+\texttt{lambda} or \texttt{case-lambda} body or the body of any form
+derived from \texttt{lambda}, e.g., \texttt{let}, or \texttt{letrec*}.
+Any body that begins with a sequence of definitions is transformed
+during macro expansion into a \texttt{letrec*} expression as described
+on page \pageref{syntax_body_expansion}.
+
+
+Syntax definitions may appear along with variable definitions wherever
+variable definitions may appear; see Chapter \ref{syntax_g133}.
+
+
+\begin{alltt}
+(define x 3)
+x \(\Rightarrow\) 3
+
+(define f
+  (lambda (x y)
+    (* (+ x y) 2)))
+(f 5 4) \(\Rightarrow\) 18
+
+(define (sum-of-squares x y)
+  (+ (* x x) (* y y)))
+(sum-of-squares 3 4) \(\Rightarrow\) 25
+
+(define f
+  (lambda (x)
+    (+ x 1)))
+(let ([x 2])
+  (define f
+    (lambda (y)
+      (+ y x)))
+  (f 3)) \(\Rightarrow\) 5
+(f 3) \(\Rightarrow\) 4
+\end{alltt}
+
+
+A set of definitions may be grouped by enclosing them in a
+\label{binding_s26}\texttt{begin} form.
+Definitions grouped in this manner may appear wherever ordinary
+variable and syntax definitions may appear.
+They are treated as if written separately, i.e., without the
+enclosing \texttt{begin} form.
+\label{binding_multi_define_syntax}This feature allows syntactic extensions to
+expand into groups of definitions.
+
+
+\begin{alltt}
+(define-syntax multi-define-syntax
+  (syntax-rules ()
+    [(\_{} (var expr) ...)
+     (begin
+       (define-syntax var expr)
+       ...)]))
+(let ()
+  (define plus
+    (lambda (x y)
+        (if (zero? x)
+            y
+            (plus (sub1 x) (add1 y)))))
+  (multi-define-syntax
+    (add1 (syntax-rules () [(\_{} e) (+ e 1)]))
+    (sub1 (syntax-rules () [(\_{} e) (- e 1)])))
+  (plus 7 8)) \(\Rightarrow\) 15
+\end{alltt}
+
+
+\label{binding_s27}Many implementations support an interactive ``top level'' in which variable
+and other definitions may be entered interactively or loaded from files.
+The behavior of these top-level definitions is outside the scope of the
+Revised\textsuperscript{6} Report, but as long as top-level variables are defined before
+any references or assignments to them are evaluated, the behavior is
+consistent across most implementations.
+So, for example, the reference to \texttt{g} in the top-level definition
+of \texttt{f} below is okay if \texttt{\textit{g}} is not already defined, and \texttt{g}
+is assumed to name a variable to be defined at some later point.
+
+
+\begin{alltt}
+(define f
+  (lambda (x)
+    (g x)))
+\end{alltt}
+
+
+If this is then followed by a definition of \texttt{g} before \texttt{f} is
+evaluated, the assumption that \texttt{g} would be defined as a variable is
+proven correct, and a call to \texttt{f} works as expected.
+
+
+\begin{alltt}
+(define g
+  (lambda (x)
+    (+ x x)))
+(f 3) \(\Rightarrow\) 6
+\end{alltt}
+
+
+If \texttt{g} were defined instead as the keyword for a syntactic extension,
+the assumption that \texttt{g} would be bound as a variable is
+proven false, and if \texttt{f} is not redefined before it is invoked,
+the implementation is likely to raise an exception.
+
+
+
+\section{\label{binding_g95}\label{binding_h7}Assignment\label{binding_SECTASSIGNMENTS}}
+
+
+\begin{description}
+
+\label{binding_s28}\item[syntax] \texttt{(set! \textit{var} \textit{expr})}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs base)}, \texttt{(rnrs)}
+\end{description}
+
+
+\label{binding_s29}\texttt{set!} does not establish a new binding for
+\texttt{\textit{var}} but rather alters the value of an existing binding.
+\label{binding_s30}It first evaluates \texttt{\textit{expr}}, then assigns
+\texttt{\textit{var}} to the value of \texttt{\textit{expr}}.
+Any subsequent reference to \texttt{\textit{var}} within the scope of the altered
+binding evaluates to the new value.
+
+
+Assignments are not employed as frequently in Scheme as in most other
+languages, but they are useful for implementing state changes.\label{binding_s31}
+
+
+\begin{alltt}
+(define flip-flop
+  (let ([state \#{}f])
+    (lambda ()
+      (set! state (not state))
+      state)))
+
+(flip-flop) \(\Rightarrow\) \#{}t
+(flip-flop) \(\Rightarrow\) \#{}f
+(flip-flop) \(\Rightarrow\) \#{}t
+\end{alltt}
+
+
+Assignments are also useful for caching values.
+The example below uses a technique called \textit{memoization},
+in which a procedure records the values associated with old
+input values so it need not recompute them, to implement a fast
+version of the otherwise exponential doubly recursive definition
+of the \label{binding_s32}Fibonacci function (see
+page \pageref{further_fibonacci}).\label{binding_s33}
+
+
+\begin{alltt}
+(define memoize
+  (lambda (proc)
+    (let ([cache '()])
+      (lambda (x)
+        (cond
+          [(assq x cache) =\textgreater{} cdr]
+          [else
+           (let ([ans (proc x)])
+             (set! cache (cons (cons x ans) cache))
+             ans)])))))
+
+(define fibonacci
+  (memoize
+    (lambda (n)
+      (if (\textless{} n 2)
+          1
+          (+ (fibonacci (- n 1)) (fibonacci (- n 2)))))))
+
+(fibonacci 100) \(\Rightarrow\) 573147844013817084101
+\end{alltt}
+
+
+

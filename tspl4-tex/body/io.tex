@@ -1,0 +1,2546 @@
+\chapter{Input and Output\label{io_CHPTIO}}
+\label{io_g121}
+\label{io_h0}
+\begin{figure}[H]
+\centering
+\setlength{\fboxrule}{3pt}
+\fbox{
+\includegraphics[width=0.9\textwidth]{canned/ch7.png}
+\begin{rotate}{90}
+\copyright~2009 Jean-Pierre H\'{e}bert
+\end{rotate}}
+\end{figure}
+\clearpage
+
+
+
+
+
+\label{io_s0}\label{io_s1}\label{io_s2}All input and output operations are performed through \textit{ports}.
+A port is a pointer into a (possibly infinite) stream of data
+(often a \label{io_s3}file), an opening through which programs may draw bytes
+or characters from the stream or place bytes or characters into the stream.
+A port may be an input port, an output port, or both simultaneously.
+
+
+Ports are first-class objects, like any other object in Scheme.
+Like procedures, ports do not have a printed representation the way strings
+and numbers do.
+There are initially three ports: the current input port,
+current output port, and current error port, which are textual ports
+connected to the process's standard input, standard output, and
+standard error streams.
+Several ways to open new ports are provided.
+
+
+An input port often points to a finite stream, e.g., an input
+file stored on disk.
+If one of the input operations, e.g., \texttt{get-u8}, \texttt{get-char}, or
+\texttt{get-datum}, is asked to
+read from a port that has reached the end of a finite stream, it returns
+a special \label{io_s4}\textit{eof} (end of file) \textit{object}.
+The predicate \label{io_s5}\texttt{eof-object?} may be used
+to determine if the value returned from the input operation is the eof
+object.
+
+
+\label{io_s6}\label{io_s7}\label{io_s8}Ports are either \textit{binary} or \textit{textual}.
+A binary port allows a program to read or write 8-bit unsigned bytes, or
+``octets,'' from or to the underlying stream.
+A textual port allows a program to read or write characters.
+
+
+\label{io_s9}\label{io_s10}\label{io_s11}\label{io_s12}\label{io_s13}In many cases, the underlying stream is organized as a sequence of bytes,
+but these bytes should be treated as encodings for characters.
+In this case, a textual port may be created with a \textit{transcoder} to
+decode bytes to characters (for input) or encode characters to bytes (for
+output).
+A transcoder encapsulates a \textit{codec} that determines how characters
+are represented as bytes.
+Three standard codecs are provided: a \textit{latin-1} codec, a Unicode
+\textit{utf-8} codec, and a Unicode \textit{utf-16} codec.
+For the \textit{latin-1} encoding, each character is represented by exactly
+one byte.
+For \textit{utf-8}, each character is represented by from one
+to four bytes, and for \textit{utf-16}, each character is represented by
+two or four bytes.
+
+
+\label{io_s14}A transcoder also encapsulates an \textit{eol style} that determines
+whether and how line endings are recognized.
+If the eol style is \texttt{none}, no line endings are recognized.
+The six other standard eol styles are the following:
+
+
+{\footnotesize
+\begin{tabular}[H]{ll}
+
+\texttt{lf}:  &  line-feed character \\
+
+\texttt{cr}:  &  carriage-return character \\
+
+\texttt{nel}:  &  Unicode next-line character \\
+
+\texttt{ls}:  &  Unicode line-separator character \\
+
+\texttt{crlf}:  &  carriage return followed by line feed, and \\
+
+\texttt{crnel}:  &  carriage return followed by next line
+ \\
+\end{tabular}
+}
+
+
+
+The eol style affects input and output operations differently.
+For input, any eol style except \texttt{none} causes each of the
+line-ending characters or two-character sequences to be converted
+into a single line-feed character.
+For output, any eol style except \texttt{none} causes line-feed
+characters to be converted into the specific
+one- or two-character sequence associated with the eol style.
+In the input direction, all eol styles except \texttt{none} are
+equivalent, while in the output direction, the eol styles
+\texttt{none} and \texttt{lf} are equivalent.
+
+
+\label{io_s15}In addition to the codec and eol style, a transcoder encapsulates just one
+other piece of information:  an \textit{error-handling mode} that determines
+what happens if a decoding or encoding error occurs, i.e., if a sequence
+of bytes cannot be converted to a character with the encapsulated codec in the
+input direction or a character cannot be converted to a sequence of bytes
+with the encapsulated codec in the output direction.
+The error-handling mode is \texttt{ignore}, \texttt{raise}, or
+\texttt{replace}.
+If the error-handling mode is \texttt{ignore}, the offending sequence of
+bytes or the character is ignored.
+If the error-handling mode is \texttt{raise}, an exception with condition
+type \texttt{i/o-decoding} or \texttt{i/o-encoding} is raised; in the
+input direction, the port is positioned beyond the sequence of bytes.
+If the error-handling mode is \texttt{replace}, a replacement character
+or character encoding is produced: in the input direction, the replacement
+character is U+FFFD, while in the output direction, the replacement is
+either the encoding of U+FFFD for \texttt{utf-8} and \texttt{utf-16}
+codecs or the encoding of the question-mark character ( ? ) for the
+\texttt{latin-1} codec.
+
+
+\label{io_s16}\label{io_s17}\label{io_s18}A port may be buffered for efficiency, to eliminate the overhead of a call
+into the operating system for each byte or character.
+Three standard buffer modes are supported: \textit{block}, \textit{line},
+and \textit{none}.
+With block buffering, input is drawn from a stream and output is sent to
+the stream in chunks of some implementation-dependent size.
+With line buffering, buffering is performed on a line-by-line basis or on
+some other implementation-dependent basis.
+Line buffering is typically distinguished from block buffering only for
+textual output ports; there are no line divisions in binary ports, and
+input is likely to be drawn from a stream as it becomes available.
+With buffer-mode none, no buffering is performed, so output is sent
+immediately to the stream and input is drawn only as needed.
+
+
+The remainder of this chapter covers operations on transcoders,
+file ports, standard ports, string and bytevector ports, custom ports,
+general port operations, input operations, output operations,
+convenience I/O, filesystem operations, and conversions between
+bytevectors and strings.
+
+
+\section{\label{io_g122}\label{io_h1}Transcoders\label{io_SECTTRANSCODERS}}
+
+
+
+As described above, transcoders encapsulate three values: a codec, an eol
+style, and an error-handling mode.
+This section describes the procedures that create or operate on
+transcoders and the values that transcoders encapsulate.
+
+\begin{description}
+
+\label{io_s19}\item[procedure] \texttt{(make-transcoder \textit{codec})}
+
+
+
+\item[procedure] \texttt{(make-transcoder \textit{codec} \textit{eol-style})}
+
+
+
+\item[procedure] \texttt{(make-transcoder \textit{codec} \textit{eol-style} \textit{error-handling-mode})}
+
+
+
+\item[returns] a transcoder encapsulating \texttt{\textit{codec}}, \texttt{\textit{eol-style}}, and \texttt{\textit{error-handling-mode}}
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{eol-style}} must be a valid eol-style symbol
+(\texttt{lf}, \texttt{cr}, \texttt{nel}, \texttt{ls}, \texttt{crlf},
+\texttt{crnel}, or \texttt{none}); it defaults to the native
+eol-style for the platform.
+\texttt{\textit{error-handling-mode}} must be a valid error-handling-mode
+symbol (\texttt{ignore}, \texttt{raise}, or \texttt{replace})
+and defaults to \texttt{replace}.
+
+\begin{description}
+
+\label{io_s20}\item[procedure] \texttt{(transcoder-codec \textit{transcoder})}
+
+
+
+\item[returns] the codec encapsulated in \texttt{\textit{transcoder}}
+
+
+\item[procedure] \texttt{(transcoder-eol-style \textit{transcoder})}
+
+
+
+\item[returns] the eol-style symbol encapsulated in \texttt{\textit{transcoder}}
+
+
+\item[procedure] \texttt{(transcoder-error-handling-mode \textit{transcoder})}
+
+
+
+\item[returns] the error-handling-mode symbol encapsulated in \texttt{\textit{transcoder}}
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\begin{description}
+
+\label{io_s21}\item[procedure] \texttt{(native-transcoder)}
+
+
+
+\item[returns] the native transcoder
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+The native transcoder is implementation-dependent and may vary
+by platform or locale.
+
+
+\begin{description}
+
+\label{io_s22}\item[procedure] \texttt{(latin-1-codec)}
+
+
+
+\item[returns] a codec for ISO 8859-1 (Latin 1) character encodings
+
+
+\item[procedure] \texttt{(utf-8-codec)}
+
+
+
+\item[returns] a codec for Unicode UTF-8 character encodings
+
+
+\item[procedure] \texttt{(utf-16-codec)}
+
+
+
+\item[returns] a codec for Unicode UTF-16 character encodings
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\begin{description}
+
+\label{io_s23}\item[syntax] \texttt{(eol-style \textit{symbol})}
+
+
+
+\item[returns] \texttt{\textit{symbol}}
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{symbol}} must be one of the symbols \texttt{lf}, \texttt{cr}, \texttt{nel},
+\texttt{ls}, \texttt{crlf}, \texttt{crnel}, or \texttt{none}.
+The expression \texttt{(eol-style \textit{symbol})} is equivalent to the
+expression \texttt{(quote \textit{symbol})} except the former checks at
+expansion time that \texttt{\textit{symbol}} is one of the eol-style symbols.
+The \texttt{eol-style} syntax provides useful documentation as well.
+
+\begin{alltt}
+(eol-style crlf) \(\Rightarrow\) crlf
+(eol-style lfcr) \(\Rightarrow\) \textit{syntax violation}
+\end{alltt}
+
+\begin{description}
+
+\label{io_s24}\item[procedure] \texttt{(native-eol-style)}
+
+
+
+\item[returns] the native eol style
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+The native eol style is implementation-dependent and may vary
+by platform or locale.
+
+
+\begin{description}
+
+\label{io_s25}\item[syntax] \texttt{(error-handling-mode \textit{symbol})}
+
+
+
+\item[returns] \texttt{\textit{symbol}}
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{symbol}} must be one of the symbols \texttt{ignore}, \texttt{raise},
+or \texttt{replace}.
+The expression \texttt{(error-handling-mode \textit{symbol})} is equivalent to the
+expression \texttt{(quote \textit{symbol})} except that the former checks at
+expansion time that \texttt{\textit{symbol}} is one of the error-handling-mode symbols.
+The \texttt{error-handling-mode} syntax provides useful documentation as well.
+
+\begin{alltt}
+(error-handling-mode replace) \(\Rightarrow\) replace
+(error-handling-mode relpace) \(\Rightarrow\) \textit{syntax violation}
+\end{alltt}
+
+\section{\label{io_g123}\label{io_h2}Opening Files\label{io_SECTOPENINGFILES}}
+
+
+
+The procedures in this section are used for opening file ports.
+Procedures for opening other kinds of ports, e.g., string
+ports or custom ports, are described in subsequent sections.
+
+
+Each of the file-open operations accepts a \texttt{\textit{path}} argument
+that names the file to be opened.
+It must be a string or some other implementation-dependent value that
+names a file.
+
+
+Some of the file-open procedures accept optional \texttt{\textit{options}},
+\texttt{\textit{b-mode}}, and \texttt{\textit{?transcoder}} arguments.
+\texttt{\textit{options}} must be an enumeration set over the symbols constituting
+valid file options described in the \texttt{file-options} entry below,
+and it defaults to the value of \texttt{(file-options)}.
+\texttt{\textit{b-mode}} must be a valid buffer mode described in the \texttt{buffer-mode}
+entry below, and it defaults to \texttt{block}.
+\texttt{\textit{?transcoder}} must be a transcoder or \texttt{\#{}f}; if it
+is a transcoder, the open operation returns a transcoded port for
+the underlying binary file, while if it is \texttt{\#{}f} (the
+default), the open operation returns a binary port.
+
+
+Binary ports created by the procedures in this section support
+the \texttt{port-position} and \texttt{set-port-position!} operations.
+Whether textual ports created by the procedures in this section support
+these operations is implementation-dependent.
+
+
+\begin{description}
+
+\label{io_s26}\item[syntax] \texttt{(file-options \textit{symbol} ...)}
+
+
+
+\item[returns] a file-options enumeration set
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+File-options enumeration sets may be passed to file-open operations to
+control aspects of the open operation.
+There are three standard file options: \texttt{no-create}, \texttt{no-fail},
+and \texttt{no-truncate}, which affect only file-open operations that
+create output (including input/output) ports.
+
+
+With the default file options, i.e., the value of \texttt{(file-options)},
+when a program attempts to open a file for output, an exception is raised with
+condition type \texttt{i/o-file-already-exists} if the file already exists,
+and the file is created if it does not already exist.
+If the \texttt{no-fail} option is included, no exception is raised if the
+file already exists; instead, the file is opened and truncated to zero
+length.
+If the \texttt{no-create} option is included, the file is not created if
+it does not exist; instead, an exception is raised with condition type
+\texttt{i/o-file-does-not-exist}.
+The \texttt{no-create} option implies the \texttt{no-fail} option.
+The \texttt{no-truncate} option is relevant only if the \texttt{no-fail}
+option is included or implied, in which case if an existing file is
+opened, it is not truncated, but the port's position is still set to the
+beginning of the file.
+
+
+It is perhaps easier to imagine that the default file options are the
+imaginary option symbols \texttt{create}, \texttt{fail-if-exists}, and
+\texttt{truncate}; \texttt{no-create} removes
+\texttt{create}, \texttt{no-fail} removes \texttt{fail-if-exists}, and
+\texttt{no-truncate} removes \texttt{truncate}.
+
+
+Implementations may support additional file option symbols.
+Chez Scheme, for example, supports options that control whether the file
+is or should be compressed, whether it is locked for exclusive access, and
+what permissions are given to the file if it is created [\hyperref[bibliography_g227]{9}].
+
+
+\begin{description}
+
+\label{io_s27}\item[syntax] \texttt{(buffer-mode \textit{symbol})}
+
+
+
+\item[returns] \texttt{\textit{symbol}}
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{symbol}} must be one of the symbols \texttt{block}, \texttt{line}, or
+\texttt{none}.
+The expression \texttt{(buffer-mode \textit{symbol})} is equivalent to the
+expression \texttt{(quote \textit{symbol})} except that the former checks at
+expansion time that \texttt{\textit{symbol}} is one of the buffer-mode symbols.
+The \texttt{buffer-mode} syntax provides useful documentation as well.
+
+\begin{alltt}
+(buffer-mode block) \(\Rightarrow\) block
+(buffer-mode cushion) \(\Rightarrow\) \textit{syntax violation}
+\end{alltt}
+
+\begin{description}
+
+\label{io_s28}\item[syntax] \texttt{(buffer-mode? \textit{obj})}
+
+
+
+\item[returns] \texttt{\#{}t} if \texttt{\textit{obj}} is a valid buffer mode, \texttt{\#{}f} otherwise
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+\begin{alltt}
+(buffer-mode? 'block) \(\Rightarrow\) \#{}t
+(buffer-mode? 'line) \(\Rightarrow\) \#{}t
+(buffer-mode? 'none) \(\Rightarrow\) \#{}t
+(buffer-mode? 'something-else) \(\Rightarrow\) \#{}f
+\end{alltt}
+
+\begin{description}
+
+\label{io_s29}\item[procedure] \texttt{(open-file-input-port \textit{path})}
+
+
+
+\item[procedure] \texttt{(open-file-input-port \textit{path} \textit{options})}
+
+
+
+\item[procedure] \texttt{(open-file-input-port \textit{path} \textit{options} \textit{b-mode})}
+
+
+
+\item[procedure] \texttt{(open-file-input-port \textit{path} \textit{options} \textit{b-mode} \textit{?transcoder})}
+
+
+
+\item[returns] a new input port for the named file
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{?transcoder}} is present and not \texttt{\#{}f}, it must be a
+transcoder, and this procedure returns a textual input port
+whose transcoder is \texttt{\textit{?transcoder}}.
+Otherwise, this procedure returns a binary input port.
+See the lead-in to this section for a description of the constraints
+on and effects of the other arguments.
+
+
+\begin{description}
+
+\label{io_s30}\item[procedure] \texttt{(open-file-output-port \textit{path})}
+
+
+
+\item[procedure] \texttt{(open-file-output-port \textit{path} \textit{options})}
+
+
+
+\item[procedure] \texttt{(open-file-output-port \textit{path} \textit{options} \textit{b-mode})}
+
+
+
+\item[procedure] \texttt{(open-file-output-port \textit{path} \textit{options} \textit{b-mode} \textit{?transcoder})}
+
+
+
+\item[returns] a new output port for the named file
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{?transcoder}} is present and not \texttt{\#{}f}, it must be a
+transcoder, and this procedure returns a textual output port
+whose transcoder is \texttt{\textit{?transcoder}}.
+Otherwise, this procedure returns a binary output port.
+See the lead-in to this section for a description of the constraints
+on and effects of the other arguments.
+
+
+\begin{description}
+
+\label{io_s31}\item[procedure] \texttt{(open-file-input/output-port \textit{path})}
+
+
+
+\item[procedure] \texttt{(open-file-input/output-port \textit{path} \textit{options})}
+
+
+
+\item[procedure] \texttt{(open-file-input/output-port \textit{path} \textit{options} \textit{b-mode})}
+
+
+
+\item[procedure] \texttt{(open-file-input/output-port \textit{path} \textit{options} \textit{b-mode} \textit{?transcoder})}
+
+
+
+\item[returns] a new input/output port for the named file
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{?transcoder}} is present and not \texttt{\#{}f}, it must be a
+transcoder, and this procedure returns a textual input/output port
+whose transcoder is \texttt{\textit{?transcoder}}.
+Otherwise, this procedure returns a binary input/output port.
+See the lead-in to this section for a description of the constraints
+on and effects of the other arguments.
+
+
+
+\section{\label{io_g124}\label{io_h3}Standard Ports\label{io_SECTSTANDARDPORTS}}
+
+
+
+The procedures described in this section return ports that are attached to
+a process's standard input, standard output, and standard error streams.
+The first set returns ``ready-made'' textual ports with implementation-dependent
+transcoders (if any) and buffer modes.
+The second set creates fresh binary ports and can be used either for binary
+input/output or, with the help of \texttt{transcoded-port}, for textual
+input/output with program-supplied transcoders and buffer modes.
+
+\begin{description}
+
+\label{io_s32}\item[procedure] \texttt{(current-input-port)}
+
+
+
+\item[returns] the current input port
+
+
+\item[procedure] \texttt{(current-output-port)}
+
+
+
+\item[returns] the current output port
+
+
+\item[procedure] \texttt{(current-error-port)}
+
+
+
+\item[returns] the current error port
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+
+The current-input, current-output, and current-error ports return
+pre-built textual ports that are initially associated with a process's
+standard input, standard output, and standard error streams.
+
+
+The values returned by \texttt{current-input-port} and
+\texttt{current-output-port} can be altered temporarily by the
+convenience I/O procedures
+\texttt{with-input-from-file} and \texttt{with-output-to-file}
+(Section \ref{io_g130}).
+
+\begin{description}
+
+\label{io_s33}\item[procedure] \texttt{(standard-input-port)}
+
+
+
+\item[returns] a fresh binary input port connected to the standard input stream
+
+
+\item[procedure] \texttt{(standard-output-port)}
+
+
+
+\item[returns] a fresh binary output port connected to the standard output stream
+
+
+\item[procedure] \texttt{(standard-error-port)}
+
+
+
+\item[returns] a fresh binary output port connected to the standard error stream
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+Because ports may be buffered, confusion can result if operations on
+more than one port attached to one of a process's standard streams are
+interleaved.
+Thus, these procedures are typically appropriate only when a program
+no longer needs to use any existing ports attached to the standard
+streams.
+
+
+
+\section{\label{io_g125}\label{io_h4}String and Bytevector Ports\label{io_SECTSTRINGPORTS}}
+
+
+
+The procedures in this section allow bytevectors and strings to be used
+as input or output streams.
+
+
+Binary ports created by the procedures in this section support
+the \texttt{port-position} and \texttt{set-port-position!} operations.
+Whether textual ports created by the procedures in this section support
+these operations is implementation-dependent.
+
+\begin{description}
+
+\label{io_s34}\item[procedure] \texttt{(open-bytevector-input-port \textit{bytevector})}
+
+
+
+\item[procedure] \texttt{(open-bytevector-input-port \textit{bytevector} \textit{?transcoder})}
+
+
+
+\item[returns] a new input port that draws input from \texttt{\textit{bytevector}}
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{?transcoder}} is present and not \texttt{\#{}f}, it must be a
+transcoder, and this procedure returns a textual input port
+whose transcoder is \texttt{\textit{?transcoder}}.
+Otherwise, this procedure returns a binary input port.
+
+
+The effect of modifying \texttt{\textit{bytevector}} after this procedure is called
+is unspecified.
+
+
+\begin{alltt}
+(let ([ip (open-bytevector-input-port \#{}vu8(1 2))])
+  (let* ([x1 (get-u8 ip)] [x2 (get-u8 ip)] [x3 (get-u8 ip)])
+    (list x1 x2 (eof-object? x3)))) \(\Rightarrow\) (1 2 \#{}t)
+\end{alltt}
+
+
+There is no need to close a bytevector port; it's storage will be reclaimed
+automatically when it is no longer needed, as with any other object, and
+an open bytevector port does not tie up any operating system resources.
+
+
+\begin{description}
+
+\label{io_s35}\item[procedure] \texttt{(open-string-input-port \textit{string})}
+
+
+
+\item[returns] a new textual input port that draws input from \texttt{\textit{string}}
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+The effect of modifying \texttt{\textit{string}} after this procedure is called
+is unspecified.
+The new port may or may not have a transcoder, and if it does, the transcoder
+is implementation-dependent.
+While not required, implementations are encouraged to support \texttt{port-position}
+and \texttt{set-port-position!} for string ports.
+
+
+\texttt{(get-line (open-string-input-port "hi.\textbackslash{}nwhat's up?\textbackslash{}n")) \(\Rightarrow\) "hi."}
+
+There is no need to close a string port; it's storage will be reclaimed
+automatically when it is no longer needed, as with any other object, and
+an open string port does not tie up any operating system resources.
+
+\begin{description}
+
+\label{io_s36}\item[procedure] \texttt{(open-bytevector-output-port)}
+
+
+
+\item[procedure] \texttt{(open-bytevector-output-port \textit{?transcoder})}
+
+
+
+\item[returns] two values, a new output port and an extraction procedure
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{?transcoder}} is present and not \texttt{\#{}f}, it must be a
+transcoder, and the port value is a textual output port
+whose transcoder is \texttt{\textit{?transcoder}}.
+Otherwise, the port value is a binary output port.
+
+
+The extraction procedure is a procedure that, when called without
+arguments, creates a bytevector containing the accumulated bytes in the
+port, clears the port of its accumulated bytes, resets its position to
+zero, and returns the bytevector.
+The accumulated bytes include any bytes written beyond the end of
+the current position, if the position has been set back from its
+maximum extent.
+
+
+\begin{alltt}
+(let-values ([(op g) (open-bytevector-output-port)])
+  (put-u8 op 15)
+  (put-u8 op 73)
+  (put-u8 op 115)
+  (set-port-position! op 2)
+  (let ([bv1 (g)])
+    (put-u8 op 27)
+    (list bv1 (g)))) \(\Rightarrow\) (\#{}vu8(15 73 115) \#{}vu8(27))
+\end{alltt}
+
+
+There is no need to close a bytevector port; it's storage will be reclaimed
+automatically when it is no longer needed, as with any other object, and
+an open bytevector port does not tie up any operating system resources.
+
+
+\begin{description}
+
+\label{io_s37}\item[procedure] \texttt{(open-string-output-port)}
+
+
+
+\item[returns] two values, a new textual output port and an extraction procedure
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+The extraction procedure is a procedure that, when called without
+arguments, creates a string containing the accumulated characters in the
+port, clears the port of its accumulated characters, resets its position to
+zero, and returns the string.
+The accumulated characters include any characters written beyond the end of
+the current position, if the position has been set back from its
+maximum extent.
+While not required, implementations are encouraged to support \texttt{port-position}
+and \texttt{set-port-position!} for string ports.
+
+
+\begin{alltt}
+(let-values ([(op g) (open-string-output-port)])
+  (put-string op "some data")
+  (let ([str1 (g)])
+    (put-string op "new stuff")
+    (list str1 (g)))) \(\Rightarrow\) ("some data" "new stuff")
+\end{alltt}
+
+
+There is no need to close a string port; it's storage will be reclaimed
+automatically when it is no longer needed, as with any other object, and
+an open string port does not tie up any operating system resources.
+
+
+\begin{description}
+
+\label{io_s38}\item[procedure] \texttt{(call-with-bytevector-output-port \textit{procedure})}
+
+
+
+\item[procedure] \texttt{(call-with-bytevector-output-port \textit{procedure} \textit{?transcoder})}
+
+
+
+\item[returns] a bytevector containing the accumulated bytes
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{?transcoder}} is present and not \texttt{\#{}f}, it must be a
+transcoder, and \texttt{\textit{procedure}} is called with a textual bytevector output port
+whose transcoder is \texttt{\textit{?transcoder}}.
+Otherwise, \texttt{\textit{procedure}} is called with a binary bytevector output port.
+If \texttt{\textit{procedure}} returns, a bytevector containing the bytes accumulated in the port
+is created, the accumulated bytes are cleared from the port, the port's position is
+reset to zero, and the bytevector is returned from \texttt{call-with-bytevector-output-port}.
+These actions occur each time \texttt{\textit{procedure}} returns, if it returns
+multiple times due to the invocation of a continuation created while
+\texttt{\textit{procedure}} is active.
+
+
+\begin{alltt}
+(let ([tx (make-transcoder (latin-1-codec) (eol-style lf)
+            (error-handling-mode replace))])
+  (call-with-bytevector-output-port
+    (lambda (p) (put-string p "abc"))
+    tx)) \(\Rightarrow\) \#{}vu8(97 98 99)
+\end{alltt}
+
+\begin{description}
+
+\label{io_s39}\item[procedure] \texttt{(call-with-string-output-port \textit{procedure})}
+
+
+
+\item[returns] a string containing the accumulated characters
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{procedure}} is called with one argument, a string output port.
+If \texttt{\textit{procedure}} returns, a string containing the characters accumulated in the port
+is created, the accumulated characters are cleared from the port, the port's position is
+reset to zero, and the string is returned from \texttt{call-with-string-output-port}.
+These actions occur each time \texttt{\textit{procedure}} returns, if it returns
+multiple times due to the invocation of a continuation created while
+\texttt{\textit{procedure}} is active.
+
+\label{io_s40}\texttt{call-with-string-output-port} can be used along with
+\texttt{put-datum} to define a procedure, \texttt{object-\textgreater{}string}, that
+returns a string containing the printed representation of an object.
+
+
+\begin{alltt}
+(define (object-\textgreater{}string x)
+  (call-with-string-output-port
+    (lambda (p) (put-datum p x))))
+
+(object-\textgreater{}string (cons 'a '(b c))) \(\Rightarrow\) "(a b c)"
+\end{alltt}
+
+\section{\label{io_g126}\label{io_h5}Opening Custom Ports\label{io_SECTCUSTOMPORTS}}
+
+
+\begin{description}
+
+\label{io_s41}\item[procedure] \texttt{(make-custom-binary-input-port \textit{id} \textit{r!} \textit{gp} \textit{sp!} \textit{close})}
+
+
+
+\item[returns] a new custom binary input port
+
+
+\item[procedure] \texttt{(make-custom-binary-output-port \textit{id} \textit{w!} \textit{gp} \textit{sp!} \textit{close})}
+
+
+
+\item[returns] a new custom binary output port
+
+
+\item[procedure] \texttt{(make-custom-binary-input/output-port \textit{id} \textit{r!} \textit{w!} \textit{gp} \textit{sp!} \textit{close})}
+
+
+
+\item[returns] a new custom binary input/output port
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+These procedures allow programs to create ports from arbitrary byte streams.
+\texttt{\textit{id}} must be a string naming the new port; the name is used for informational
+purposes only, and an implementation may choose to include it in the printed
+syntax, if any, of a custom port.
+\texttt{\textit{r!}} and \texttt{\textit{w!}} must be procedures, while \texttt{\textit{gp}}, \texttt{\textit{sp!}}, and
+\texttt{\textit{close}} must each be a procedure or \texttt{\#{}f}.
+These arguments are described below.
+
+\begin{description}
+\item[\texttt{\textit{r!}}]  is called to draw input from the custom port, e.g., to support
+\texttt{get-u8} or \texttt{get-bytevector-n}.
+It is called with three arguments: \texttt{\textit{bytevector}}, \texttt{\textit{start}}, and \texttt{\textit{n}}.
+\texttt{\textit{start}} will be a nonnegative exact integer, \texttt{\textit{n}} will be a
+positive exact integer, and the sum of \texttt{\textit{start}} and \texttt{\textit{n}} will
+not exceed the length of \texttt{\textit{bytevector}}.
+If the byte stream is at end of file, \texttt{\textit{r!}} should return exact 0.
+Otherwise, it should read at least one and at most \texttt{\textit{n}} bytes from
+the stream, store these bytes in consecutive locations of \texttt{\textit{bytevector}}
+starting at \texttt{\textit{start}}, and return as an exact positive integer the
+number of bytes actually read.
+
+\item[\texttt{\textit{w!}}]  is called to send output to the port, e.g., to support
+\texttt{put-u8} or \texttt{put-bytevector}.
+It is called with three arguments: \texttt{\textit{bytevector}}, \texttt{\textit{start}}, and \texttt{\textit{n}}.
+\texttt{\textit{start}} and \texttt{\textit{n}} will be nonnegative exact integers, and the
+sum of \texttt{\textit{start}} and \texttt{\textit{n}} will not exceed the length of
+\texttt{\textit{bytevector}}.
+\texttt{\textit{w!}} should write up to \texttt{\textit{n}} consecutive bytes from
+\texttt{\textit{bytevector}} starting at \texttt{\textit{start}} and return, as an exact nonnegative
+integer, the number of bytes actually written.
+
+\item[\texttt{\textit{gp}}]  is called to query the port's position.
+If it is \texttt{\#{}f}, the port will not support \texttt{port-position}.
+If it is not \texttt{\#{}f}, it will be passed zero arguments and should
+return the current position as a displacement in bytes from the start
+of the byte stream as an exact nonnegative integer.
+
+\item[\texttt{\textit{sp!}}]  is called to set the port's position.
+If it is \texttt{\#{}f}, the port will not support \texttt{set-port-position!}.
+If it is not \texttt{\#{}f}, it will be passed one argument, an exact
+nonnegative integer representing the new position as a displacement in
+bytes from the start of the byte stream, and it should set the position
+to this value.
+
+\item[\texttt{\textit{close}}]  is called to close the byte stream.
+If it is \texttt{\#{}f}, no action will be taken to close the byte stream
+when the new port is closed.
+If it is not \texttt{\#{}f}, it will be passed zero arguments and should
+take whatever actions are necessary to close the byte stream.
+
+\end{description}
+
+
+If the new port is an input/output port and does not provide either a
+\texttt{\textit{gp}} or \texttt{\textit{sp!}} procedure, it may not be possible for the
+implementation to position the port properly if an output operation occurs
+after an input operation, due to input buffering that must be done to
+support \texttt{lookahead-u8} and is often done anyway for efficiency.
+For the same reason, a call to \texttt{port-position} after an input
+operation may not return an accurate position if the \texttt{\textit{sp!}} procedure is
+not provided.
+Thus, programs that create custom binary input/output ports should generally
+provide both \texttt{\textit{gp}} and \texttt{\textit{sp!}} procedures.
+
+
+\begin{description}
+
+\label{io_s42}\item[procedure] \texttt{(make-custom-textual-input-port \textit{id} \textit{r!} \textit{gp} \textit{sp!} \textit{close})}
+
+
+
+\item[returns] a new custom textual input port
+
+
+\item[procedure] \texttt{(make-custom-textual-output-port \textit{id} \textit{w!} \textit{gp} \textit{sp!} \textit{close})}
+
+
+
+\item[returns] a new custom textual output port
+
+
+\item[procedure] \texttt{(make-custom-textual-input/output-port \textit{id} \textit{r!} \textit{w!} \textit{gp} \textit{sp!} \textit{close})}
+
+
+
+\item[returns] a new custom textual input/output port
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+These procedures allow programs to create ports from arbitrary character streams.
+\texttt{\textit{id}} must be a string naming the new port; the name is used for informational
+purposes only, and an implementation may choose to include it in the printed
+syntax, if any, of a custom port.
+\texttt{\textit{r!}} and \texttt{\textit{w!}} must be procedures, while \texttt{\textit{gp}}, \texttt{\textit{sp!}}, and
+\texttt{\textit{close}} must each be a procedure or \texttt{\#{}f}.
+These arguments are described below.
+
+\begin{description}
+\item[\texttt{\textit{r!}}]  is called to draw input from the port, e.g., to support
+\texttt{get-char} or \texttt{get-string-n}.
+It is called with three arguments: \texttt{\textit{string}}, \texttt{\textit{start}}, and \texttt{\textit{n}}.
+\texttt{\textit{start}} will be a nonnegative exact integer, \texttt{\textit{n}} will be a
+positive exact integer, and the sum of \texttt{\textit{start}} and \texttt{\textit{n}} will
+not exceed the length of \texttt{\textit{string}}.
+If the character stream is at end of file, \texttt{\textit{r!}} should return exact 0.
+Otherwise, it should read at least one and at most \texttt{\textit{n}} characters from
+the stream, store these characters in consecutive locations of \texttt{\textit{string}}
+starting at \texttt{\textit{start}}, and return as an exact positive integer the
+number of characters actually read.
+
+\item[\texttt{\textit{w!}}]  is called to send output to the port, e.g., to support
+\texttt{put-char} or \texttt{put-string}.
+It is called with three arguments: \texttt{\textit{string}}, \texttt{\textit{start}}, and \texttt{\textit{n}}.
+\texttt{\textit{start}} and \texttt{\textit{n}} will be nonnegative exact integers, and the
+sum of \texttt{\textit{start}} and \texttt{\textit{n}} will not exceed the length of
+\texttt{\textit{string}}.
+\texttt{\textit{w!}} should write up to \texttt{\textit{n}} consecutive characters from
+\texttt{\textit{string}} starting at \texttt{\textit{start}} and return, as an exact nonnegative
+integer, the number of characters actually written.
+
+\item[\texttt{\textit{gp}}]  is called to query the port's position.
+If it is \texttt{\#{}f}, the port will not support \texttt{port-position}.
+If it is not \texttt{\#{}f}, it will be passed zero arguments and should
+return the current position, which may be an arbitrary value.
+
+\item[\texttt{\textit{sp!}}]  is called to set the port's position.
+If it is \texttt{\#{}f}, the port will not support \texttt{set-port-position!}.
+If it is not \texttt{\#{}f}, it will be passed one argument, \texttt{\textit{pos}}, a value
+representing the new position.
+If \texttt{\textit{pos}} is the result of a previous call to \texttt{\textit{gp}}, \texttt{\textit{sp!}} should
+set the position to \texttt{\textit{pos}}.
+
+\item[\texttt{\textit{close}}]  is called to close the character stream.
+If it is \texttt{\#{}f}, no action will be taken to close the character stream
+when the new port is closed.
+If it is not \texttt{\#{}f}, it will be passed zero arguments and should
+take whatever actions are necessary to close the character stream.
+
+\end{description}
+
+
+If the new port is an input/output port, it may not be possible for the
+implementation to position the port properly if an output operation occurs
+after an input operation, even if the \texttt{\textit{gp}} and \texttt{\textit{sp!}} procedures
+are provided, due to input buffering that must be done to support
+\texttt{lookahead-char} and is often done anyway for efficiency.
+Since the representations of port positions are not specified, it is
+not possible for the implementation to adjust the \texttt{\textit{gp}} return
+value to account for the number of buffered characters.
+For the same reason, a call to \texttt{port-position} after an input
+operation may not return an accurate position, even if the \texttt{\textit{sp!}}
+procedure is provided.
+
+
+It should, however, be possible to perform output reliably after reading
+if the position is reset to the starting position.
+Thus, programs that create custom textual input/output ports should generally
+provide both \texttt{\textit{gp}} and \texttt{\textit{sp!}} procedures, and consumers of these ports
+should obtain the starting position via \texttt{port-position} before any
+input operations and reset the position back to the starting position
+before doing any output operations.
+
+
+
+\section{\label{io_g127}\label{io_h6}Port Operations\label{io_SECTPORTOPERATIONS}}
+
+
+
+This section describes a variety of operations on ports that do
+not directly involve either reading from or writing to a port.
+The input and output operations are described in subsequent
+sections.
+
+\begin{description}
+
+\label{io_s43}\item[procedure] \texttt{(port? \textit{obj})}
+
+
+
+\item[returns] \texttt{\#{}t} if \texttt{\textit{obj}} is a port, \texttt{\#{}f} otherwise
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\begin{description}
+
+\label{io_s44}\item[procedure] \texttt{(input-port? \textit{obj})}
+
+
+
+\item[returns] \texttt{\#{}t} if \texttt{\textit{obj}} is an input or input/output port, \texttt{\#{}f} otherwise
+
+
+\item[procedure] \texttt{(output-port? \textit{obj})}
+
+
+
+\item[returns] \texttt{\#{}t} if \texttt{\textit{obj}} is an output or input/output port, \texttt{\#{}f} otherwise
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+\begin{description}
+
+\label{io_s45}\item[procedure] \texttt{(binary-port? \textit{obj})}
+
+
+
+\item[returns] \texttt{\#{}t} if \texttt{\textit{obj}} is a binary port, \texttt{\#{}f} otherwise
+
+
+\item[procedure] \texttt{(textual-port? \textit{obj})}
+
+
+
+\item[returns] \texttt{\#{}t} if \texttt{\textit{obj}} is a textual port, \texttt{\#{}f} otherwise
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\begin{description}
+
+\label{io_s46}\item[procedure] \texttt{(close-port \textit{port})}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{port}} is not already closed, \texttt{close-port} closes it,
+first flushing any buffered bytes or characters to the underlying stream
+if the port is an output port.
+Once a port has been closed, no more input or output operations may be
+performed on the port.
+Because the operating system may place limits on the number of file ports open
+at one time or restrict access to an open file, it is good practice to
+close any file port that will no longer be used for input or output.
+If the port is an output port, closing the port explicitly also ensures
+that buffered data is written to the underlying stream.
+Some Scheme implementations close file ports automatically after they become
+inaccessible to the program or when the Scheme program exits, but it is
+best to close file ports explicitly whenever possible.
+Closing a port that has already been closed has no effect.
+
+
+\begin{description}
+
+\label{io_s47}\item[procedure] \texttt{(transcoded-port \textit{binary-port} \textit{transcoder})}
+
+
+
+\item[returns] a new textual port with the same byte stream as \texttt{\textit{binary-port}}
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+This procedure returns a new textual port with transcoder \texttt{\textit{transcoder}}
+and the same underlying byte stream as \texttt{\textit{binary-port}}, positioned at
+the current position of \texttt{\textit{binary-port}}.
+
+
+As a side effect of creating the textual port, \texttt{\textit{binary-port}} is closed
+to prevent read or write operations on \texttt{\textit{binary-port}} from interfering
+with read and write operations on the new textual port.
+The underlying byte stream remains open, however, until the textual port
+is closed.
+
+
+\begin{description}
+
+\label{io_s48}\item[procedure] \texttt{(port-transcoder \textit{port})}
+
+
+
+\item[returns] the transcoder associated with \texttt{\textit{port}} if any, \texttt{\#{}f} otherwise
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+This procedure always returns \texttt{\#{}f} for binary ports and may return
+\texttt{\#{}f} for some textual ports.
+
+
+\begin{description}
+
+\label{io_s49}\item[procedure] \texttt{(port-position \textit{port})}
+
+
+
+\item[returns] the port's current position
+
+
+\item[procedure] \texttt{(port-has-port-position? \textit{port})}
+
+
+
+\item[returns] \texttt{\#{}t} if the port supports \texttt{port-position}, \texttt{\#{}f} otherwise
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+A port may allow queries to determine its current position in
+the underlying stream of bytes or characters.
+If so, the procedure \texttt{port-has-port-position?} returns
+\texttt{\#{}t} and \texttt{port-position} returns the current position.
+For binary ports, the position is always an exact nonnegative integer byte
+displacement from the start of the byte stream.
+For textual ports, the representation of a position is unspecified; it
+may not be an exact nonnegative integer and, even if it is, it may not
+represent either a byte or character displacement in the underlying stream.
+The position may be used at some later time to reset the position if the
+port supports \texttt{set-port-position!}.
+If \texttt{port-position} is called on a port that does not support it,
+an exception with condition type \texttt{\&{}assertion} is raised.
+
+
+\begin{description}
+
+\label{io_s50}\item[procedure] \texttt{(set-port-position! \textit{port} \textit{pos})}
+
+
+
+\item[returns] unspecified
+
+
+\item[procedure] \texttt{(port-has-set-port-position!? \textit{port})}
+
+
+
+\item[returns] \texttt{\#{}t} if the port supports \texttt{set-port-position!}, \texttt{\#{}f} otherwise
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+A port may allow its current position to be moved directly to a different
+position in the underlying stream of bytes or characters.
+If so, the procedure \texttt{port-has-set-port-position!?} returns
+\texttt{\#{}t} and \texttt{set-port-position!} changes the current position.
+For binary ports, the position \texttt{\textit{pos}} must be an exact nonnegative integer byte
+displacement from the start of the byte stream.
+For textual ports, the representation of a position is unspecified, as
+described in the entry for \texttt{port-position} above, but \texttt{\textit{pos}} must be
+an appropriate position for the textual port, which is usually guaranteed
+to be the case only if it was obtained from a call to \texttt{port-position}
+on the same port.
+If \texttt{set-port-position!} is called on a port that does not support it,
+an exception with condition type \texttt{\&{}assertion} is raised.
+
+
+If \texttt{\textit{port}} is a binary output port and the position is set
+beyond the current end of the data in the underlying stream, the
+stream is not extended until new data is written at that position.
+If new data is written at that position, the contents of each
+intervening position is unspecified.
+Binary ports created with \texttt{open-file-output-port} and
+\texttt{open-file-input/output-port} can always be extended in this manner
+within the limits of the underlying operating system.
+In other cases, attempts to set the port beyond the current end of data
+in the underlying object may result in an exception with condition
+type \texttt{\&{}i/o-invalid-position}.
+
+
+\begin{description}
+
+\label{io_s51}\label{io_desc_call_with_port}
+\item[procedure] \texttt{(call-with-port \textit{port} \textit{procedure})}
+
+
+
+\item[returns] the values returned by \texttt{\textit{procedure}}
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{call-with-port} calls \texttt{\textit{procedure}} with \texttt{\textit{port}} as the only
+argument.
+If \texttt{\textit{procedure}} returns, \texttt{call-with-port} closes the port and
+returns the values returned by \texttt{\textit{procedure}}.
+\texttt{call-with-port} does not automatically close the
+port if a continuation created outside of \texttt{\textit{procedure}} is invoked, since it
+is possible that another continuation created inside of \texttt{\textit{procedure}} will be
+invoked at a later time, returning control to \texttt{\textit{procedure}}.
+If \texttt{\textit{procedure}} does not return, an implementation is free to close the
+port only if it can prove that the output port is no longer accessible.
+
+The example below copies the contents of infile to outfile, overwriting
+outfile if it exists.
+Unless an error occurs, the ports are closed after the copy has been
+completed.
+
+
+\begin{alltt}
+(call-with-port (open-file-input-port "infile" (file-options)
+                  (buffer-mode block) (native-transcoder))
+  (lambda (ip)
+    (call-with-port (open-file-output-port "outfile"
+                      (file-options no-fail)
+                      (buffer-mode block)
+                      (native-transcoder)) 
+      (lambda (op)
+        (do ([c (get-char ip) (get-char ip)])
+            ((eof-object? c))
+          (put-char op c))))))
+\end{alltt}
+
+
+A definition of \texttt{call-with-port} is given on page \pageref{control_defn_call_with_port}.
+
+\begin{description}
+
+\label{io_s52}\item[procedure] \texttt{(output-port-buffer-mode \textit{port})}
+
+
+
+\item[returns] the symbol representing the buffer mode of \texttt{\textit{port}}
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\section{\label{io_g128}\label{io_h7}Input Operations\label{io_SECTINPUT}}
+
+
+
+Procedures whose primary purpose is to read data from an input port
+are described in this section, along with related procedures for recognizing
+or creating end-of-file (eof) objects.
+
+
+\begin{description}
+
+\label{io_s53}\item[procedure] \texttt{(eof-object? \textit{obj})}
+
+
+
+\item[returns] \texttt{\#{}t} if \texttt{\textit{obj}} is an eof object, \texttt{\#{}f} otherwise
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+
+The end-of-file object is returned by input operations, e.g., \texttt{get-datum},
+when an input port has reached the end of input.
+
+
+\begin{description}
+
+\label{io_s54}\item[procedure] \texttt{(eof-object)}
+
+
+
+\item[returns] the eof object
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+
+\texttt{(eof-object? (eof-object)) \(\Rightarrow\) \#{}t}
+\begin{description}
+\label{io_s55}\item[procedure] \texttt{(get-u8 \textit{binary-input-port})}
+
+
+
+\item[returns] the next byte from \texttt{\textit{binary-input-port}}, or the eof object
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{binary-input-port}} is at end of file, the eof object is returned.
+Otherwise, the next available byte is returned as an unsigned 8-bit
+quantity, i.e., an exact unsigned integer less than or equal to 255,
+and the port's position is advanced one byte.
+
+
+\begin{description}
+
+\label{io_s56}\item[procedure] \texttt{(lookahead-u8 \textit{binary-input-port})}
+
+
+
+\item[returns] the next byte from \texttt{\textit{binary-input-port}}, or the eof object
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{binary-input-port}} is at end of file, the eof object is returned.
+Otherwise, the next available byte is returned as an unsigned 8-bit
+quantity, i.e., an exact unsigned integer less than or equal to 255.
+In contrast to \texttt{get-u8}, \texttt{lookahead-u8} does not consume
+the byte it reads from the port, so if the next operation on the port
+is a call to \texttt{lookahead-u8} or \texttt{get-u8}, the same
+byte is returned.
+
+
+\begin{description}
+
+\label{io_s57}\item[procedure] \texttt{(get-bytevector-n \textit{binary-input-port} \textit{n})}
+
+
+
+\item[returns] a nonempty bytevector containing up to \texttt{\textit{n}} bytes, or the eof object
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{n}} must be an exact nonnegative integer.
+If \texttt{\textit{binary-input-port}} is at end of file, the eof object is returned.
+Otherwise, \texttt{get-bytevector-n} reads (as if with \texttt{get-u8})
+as many bytes, up to \texttt{\textit{n}}, as are available before the port is at end
+of file, and returns a new (nonempty) bytevector containing these bytes.
+The port's position is advanced past the bytes read.
+
+\begin{description}
+
+\label{io_s58}\item[procedure] \texttt{(get-bytevector-n! \textit{binary-input-port} \textit{bytevector} \textit{start} \textit{n})}
+
+
+
+\item[returns] the count of bytes read or the eof object
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{start}} and \texttt{\textit{n}} must be exact nonnegative integers, and the sum of
+\texttt{\textit{start}} and \texttt{\textit{n}} must not exceed the length of \texttt{\textit{bytevector}}.
+
+If \texttt{\textit{binary-input-port}} is at end of file, the eof object is returned.
+Otherwise, \texttt{get-bytevector-n!} reads (as if with \texttt{get-u8})
+as many bytes, up to \texttt{\textit{n}}, as are available before the port is at end
+of file, stores the bytes in consecutive locations of \texttt{\textit{bytevector}}
+starting at \texttt{\textit{start}}, and returns the count of bytes read as an exact
+positive integer.
+The port's position is advanced past the bytes read.
+
+
+\begin{description}
+
+\label{io_s59}\item[procedure] \texttt{(get-bytevector-some \textit{binary-input-port})}
+
+
+
+\item[returns] a nonempty bytevector or the eof object
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{binary-input-port}} is at end of file, the eof object is returned.
+Otherwise, \texttt{get-bytevector-some} reads (as if with \texttt{get-u8})
+at least one byte and possibly more, and returns a bytevector containing
+these bytes.
+The port's position is advanced past the bytes read.
+The maximum number of bytes read by this operation is implementation-dependent.
+
+
+\begin{description}
+
+\label{io_s60}\item[procedure] \texttt{(get-bytevector-all \textit{binary-input-port})}
+
+
+
+\item[returns] a nonempty bytevector or the eof object
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{binary-input-port}} is at end of file, the eof object is returned.
+Otherwise, \texttt{get-bytevector-all} reads (as if with \texttt{get-u8})
+all of the bytes available before the port is at end of file and
+returns a bytevector containing these bytes.
+The port's position is advanced past the bytes read.
+
+
+\begin{description}
+
+\label{io_s61}\item[procedure] \texttt{(get-char \textit{textual-input-port})}
+
+
+
+\item[returns] the next character from \texttt{\textit{textual-input-port}}, or the eof object
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{textual-input-port}} is at end of file, the eof object is returned.
+Otherwise, the next available character is returned
+and the port's position is advanced one character.
+If \texttt{\textit{textual-input-port}} is a transcoded port, the position in the
+underlying byte stream may advance by more than one byte.
+
+
+\begin{description}
+
+\label{io_s62}\item[procedure] \texttt{(lookahead-char \textit{textual-input-port})}
+
+
+
+\item[returns] the next character from \texttt{\textit{textual-input-port}}, or the eof object
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{textual-input-port}} is at end of file, the eof object is returned.
+Otherwise, the next available character is returned.
+In contrast to \texttt{get-char}, \texttt{lookahead-char} does not consume
+the character it reads from the port, so if the next operation on the port
+is a call to \texttt{lookahead-char} or \texttt{get-char}, the same
+character is returned.
+
+\texttt{lookahead-char} is provided for applications requiring one
+character of lookahead.
+The procedure \texttt{get-word} defined below
+returns the next word from a textual input port as a string, where
+a word is defined to be a sequence of alphabetic characters.
+Since \texttt{get-word} does not know until it sees one character
+beyond the word that it has read the entire word, it uses
+\texttt{lookahead-char} to determine the next character and
+\texttt{get-char} to consume the character.
+
+\begin{alltt}
+(define get-word
+  (lambda (p)
+    (list-\textgreater{}string
+      (let f ()
+        (let ([c (lookahead-char p)])
+          (cond
+            [(eof-object? c) '()]
+            [(char-alphabetic? c) (get-char p) (cons c (f))]
+            [else '()]))))))
+\end{alltt}
+
+\begin{description}
+
+\label{io_s63}\item[procedure] \texttt{(get-string-n \textit{textual-input-port} \textit{n})}
+
+
+
+\item[returns] a nonempty string containing up to \texttt{\textit{n}} characters, or the eof object
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{n}} must be an exact nonnegative integer.
+If \texttt{\textit{textual-input-port}} is at end of file, the eof object is returned.
+Otherwise, \texttt{get-string-n} reads (as if with \texttt{get-char})
+as many characters, up to \texttt{\textit{n}}, as are available before the port is at end
+of file, and returns a new (nonempty) string containing these characters.
+The port's position is advanced past the characters read.
+
+\begin{description}
+
+\label{io_s64}\item[procedure] \texttt{(get-string-n! \textit{textual-input-port} \textit{string} \textit{start} \textit{n})}
+
+
+
+\item[returns] the count of characters read or the eof object
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{start}} and \texttt{\textit{n}} must be exact nonnegative integers, and the sum of
+\texttt{\textit{start}} and \texttt{\textit{n}} must not exceed the length of \texttt{\textit{string}}.
+
+If \texttt{\textit{textual-input-port}} is at end of file, the eof object is returned.
+Otherwise, \texttt{get-string-n!} reads (as if with \texttt{get-char})
+as many characters, up to \texttt{\textit{n}}, as are available before the port is at end
+of file, stores the characters in consecutive locations of \texttt{\textit{string}}
+starting at \texttt{\textit{start}}, and returns the count of characters read as an exact
+positive integer.
+The port's position is advanced past the characters read.
+
+\texttt{get-string-n!} may be used to implement \texttt{string-set!} and
+\texttt{string-fill!}, as illustrated below, although this is not its
+primary purpose.
+
+\begin{alltt}
+(define string-set!\label{io_backdoor_string_fill}
+  (lambda (s i c)
+    (let ([sip (open-string-input-port (string c))])
+      (get-string-n! sip s i 1)
+     ; return unspecified values:
+      (if \#{}f \#{}f))))
+
+(define string-fill!
+  (lambda (s c)
+    (let ([n (string-length s)])
+      (let ([sip (open-string-input-port (make-string n c))])
+        (get-string-n! sip s 0 n)
+       ; return unspecified values:
+        (if \#{}f \#{}f)))))
+
+(let ([x (make-string 3)])
+  (string-fill! x \#{}\textbackslash{}-)
+  (string-set! x 2 \#{}\textbackslash{}))
+  (string-set! x 0 \#{}\textbackslash{};)
+  x) \(\Rightarrow\) ";-)"
+\end{alltt}
+
+\begin{description}
+
+\label{io_s65}\item[procedure] \texttt{(get-string-all \textit{textual-input-port})}
+
+
+
+\item[returns] a nonempty string or the eof object
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{textual-input-port}} is at end of file, the eof object is returned.
+Otherwise, \texttt{get-string-all} reads (as if with \texttt{get-char})
+all of the characters available before the port is at end of file and
+returns a string containing these characters.
+The port's position is advanced past the characters read.
+
+
+\begin{description}
+
+\label{io_s66}\item[procedure] \texttt{(get-line \textit{textual-input-port})}
+
+
+
+\item[returns] a string or the eof object
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{textual-input-port}} is at end of file, the eof object is returned.
+Otherwise, \texttt{get-line} reads (as if with \texttt{get-char})
+all of the characters available before the port is at end of file or a
+line-feed character has been read and returns a string containing all but
+the line-feed character of the characters read.
+The port's position is advanced past the characters read.
+
+
+\begin{alltt}
+(let ([sip (open-string-input-port "one\textbackslash{}ntwo\textbackslash{}n")])
+  (let* ([s1 (get-line sip)] [s2 (get-line sip)])
+    (list s1 s2 (port-eof? sip)))) \(\Rightarrow\) ("one" "two" \#{}t)
+
+(let ([sip (open-string-input-port "one\textbackslash{}ntwo")])
+  (let* ([s1 (get-line sip)] [s2 (get-line sip)])
+    (list s1 s2 (port-eof? sip)))) \(\Rightarrow\) ("one" "two" \#{}t)
+\end{alltt}
+
+\begin{description}
+
+\label{io_s67}\item[procedure] \texttt{(get-datum \textit{textual-input-port})}
+
+
+
+\item[returns] a Scheme datum object or the eof object
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+This procedure scans past whitespace and comments to find the start of
+the external representation of a datum.
+If \texttt{\textit{textual-input-port}} reaches end of file before the start of the
+external representation of a datum is found, the eof object is returned.
+
+
+Otherwise, \texttt{get-datum} reads as many characters as necessary,
+and no more, to parse a single datum, and returns a newly allocated
+object whose structure is determined by the external representation.
+The port's position is advanced past the characters read.
+If an end-of-file is reached before the external representation of
+the datum is complete, or an unexpected character is read,
+an exception is raised with condition types \texttt{\&{}lexical} and
+\texttt{i/o-read}.
+
+
+\begin{alltt}
+(let ([sip (open-string-input-port "; a\textbackslash{}n\textbackslash{}n one (two)\textbackslash{}n")])
+  (let* ([x1 (get-datum sip)]
+         [c1 (lookahead-char sip)]
+         [x2 (get-datum sip)])
+    (list x1 c1 x2 (port-eof? sip)))) \(\Rightarrow\) (one \#{}\textbackslash{}space (two) \#{}f)
+\end{alltt}
+
+\begin{description}
+
+\label{io_s68}\item[procedure] \texttt{(port-eof? \textit{input-port})}
+
+
+
+\item[returns] \texttt{\#{}t} if \texttt{\textit{input-port}} is at end-of-file, \texttt{\#{}f} otherwise
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+This procedure is similar to \texttt{lookahead-u8} on a binary input port
+or \texttt{lookahead-char} on a textual input port, except that instead
+of returning the next byte/character or eof object, it returns a boolean
+value to indicate whether the value would be the eof object.
+
+
+
+\section{\label{io_g129}\label{io_h8}Output Operations\label{io_SECTOUTPUT}}
+
+
+
+Procedures whose primary purpose is to send data to an output port
+are described in this section.
+
+\begin{description}
+
+\label{io_s69}\item[procedure] \texttt{(put-u8 \textit{binary-output-port} \textit{octet})}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{octet}} must be an exact nonnegative integer less than or equal to 255.
+This procedure writes \texttt{\textit{octet}} to \texttt{\textit{binary-output-port}}, advancing
+the port's position by one byte.
+
+\begin{description}
+
+\label{io_s70}\item[procedure] \texttt{(put-bytevector \textit{binary-output-port} \textit{bytevector})}
+
+
+
+\item[procedure] \texttt{(put-bytevector \textit{binary-output-port} \textit{bytevector} \textit{start})}
+
+
+
+\item[procedure] \texttt{(put-bytevector \textit{binary-output-port} \textit{bytevector} \textit{start} \textit{n})}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{start}} and \texttt{\textit{n}} must be nonnegative exact integers, and the sum of
+\texttt{\textit{start}} and \texttt{\textit{n}} must not exceed the length of \texttt{\textit{bytevector}}.
+If not supplied, \texttt{\textit{start}} defaults to zero and \texttt{\textit{n}} defaults to
+the difference between the length of \texttt{\textit{bytevector}} and \texttt{\textit{start}}.
+
+This procedure writes the \texttt{\textit{n}} bytes of \texttt{\textit{bytevector}} starting at
+\texttt{\textit{start}} to the port and advances the its position
+past the end of the bytes written.
+
+
+\begin{description}
+
+\label{io_s71}\item[procedure] \texttt{(put-char \textit{textual-output-port} \textit{char})}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+This procedure writes \texttt{\textit{char}} to \texttt{\textit{textual-output-port}}, advancing
+the port's position by one character.
+If \texttt{\textit{textual-output-port}} is a transcoded port, the position in the
+underlying byte stream may advance by more than one byte.
+
+
+\begin{description}
+
+\label{io_s72}\item[procedure] \texttt{(put-string \textit{textual-output-port} \textit{string})}
+
+
+
+\item[procedure] \texttt{(put-string \textit{textual-output-port} \textit{string} \textit{start})}
+
+
+
+\item[procedure] \texttt{(put-string \textit{textual-output-port} \textit{string} \textit{start} \textit{n})}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{start}} and \texttt{\textit{n}} must be nonnegative exact integers, and the sum of
+\texttt{\textit{start}} and \texttt{\textit{n}} must not exceed the length of \texttt{\textit{string}}.
+If not supplied, \texttt{\textit{start}} defaults to zero and \texttt{\textit{n}} defaults to
+the difference between the length of \texttt{\textit{string}} and \texttt{\textit{start}}.
+
+This procedure writes the \texttt{\textit{n}} characters of \texttt{\textit{string}} starting at
+\texttt{\textit{start}} to the port and advances the its position
+past the end of the characters written.
+
+
+\begin{description}
+
+\label{io_s73}\item[procedure] \texttt{(put-datum \textit{textual-output-port} \textit{obj})}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+This procedure writes an external representation of \texttt{\textit{obj}} to
+\texttt{\textit{textual-output-port}}.
+If \texttt{\textit{obj}} does not have an external representation as a datum,
+the behavior is unspecified.
+The precise external representation is implementation-dependent,
+but when \texttt{\textit{obj}} does have an external representation as a datum,
+\texttt{put-datum} should produce a sequence of characters that
+can later be read by \texttt{get-datum} as an object equivalent
+(in the sense of \texttt{equal?}) to \texttt{\textit{obj}}.
+See Section \ref{examples_g176} for an implementation of \texttt{put-datum},
+\texttt{write}, and \texttt{display}.
+
+
+\begin{description}
+
+\label{io_s74}\item[procedure] \texttt{(flush-output-port \textit{output-port})}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+This procedure forces any bytes or characters in the buffer associated
+with \texttt{\textit{output-port}} to be sent immediately to the underlying stream.
+
+
+
+\section{\label{io_g130}\label{io_h9}Convenience I/O\label{io_SECTCONVENIENCE}}
+
+
+
+The procedures in this section are referred to as ``convenience''
+I/O operators because they present a somewhat simplified interface for
+creating and interacting with textual ports.
+They also provide backward compatibility with the Revised\textsuperscript{5} Report,
+which did not support separate binary and textual I/O.
+
+
+The convenience input/output procedures may be called with
+or without an explicit port argument.
+If called without an explicit port argument, the current input or output
+port is used, as appropriate.
+For example, \texttt{(read-char)} and \texttt{(read-char (current-input-port))}
+both return the next character from the current input port.
+
+
+\begin{description}
+
+\label{io_s75}\item[procedure] \texttt{(open-input-file \textit{path})}
+
+
+
+\item[returns] a new input port
+
+
+\item[libraries] \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{path}} must be a string or some other implementation-dependent 
+value that names a file.
+\texttt{open-input-file} creates a new textual input port for the file named by
+\texttt{\textit{path}}, as if by \texttt{open-file-input-port}
+with default options, an implementation-dependent buffer
+mode, and an implementation-dependent transcoder.
+
+The following shows the use of \texttt{open-input-file}, \texttt{read}, and
+\texttt{close-port} in an expression that gathers a list of
+objects from the file named by ``myfile.ss.''
+
+
+\begin{alltt}
+(let ([p (open-input-file "myfile.ss")])
+  (let f ([x (read p)])
+    (if (eof-object? x)
+        (begin
+          (close-port p)
+          '())
+        (cons x (f (read p))))))
+\end{alltt}
+
+\begin{description}
+
+\label{io_s76}\item[procedure] \texttt{(open-output-file \textit{path})}
+
+
+
+\item[returns] a new output port
+
+
+\item[libraries] \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{path}} must be a string or some other implementation-dependent 
+value that names a file.
+\texttt{open-output-file} creates a new output port for the file named by
+\texttt{\textit{path}}, as if by \texttt{open-file-output-port} with default options,
+an implementation-dependent buffer mode, and an implementation-dependent
+transcoder.
+
+The following shows the use of \texttt{open-output-file} 
+to write a list of objects (the value of
+\texttt{list-to-be-printed}), separated by newlines, to the file
+named by ``myfile.ss.''
+
+
+\begin{alltt}
+(let ([p (open-output-file "myfile.ss")])
+  (let f ([ls list-to-be-printed])
+    (if (not (null? ls))
+        (begin
+          (write (car ls) p)
+          (newline p)
+          (f (cdr ls)))))
+  (close-port p))
+\end{alltt}
+
+\begin{description}
+
+\label{io_s77}\item[procedure] \texttt{(call-with-input-file \textit{path} \textit{procedure})}
+
+
+
+\item[returns] the values returned by \texttt{\textit{procedure}}
+
+
+\item[libraries] \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{path}} must be a string or some other implementation-dependent 
+value that names a file.
+\texttt{\textit{procedure}} should accept one argument.
+\texttt{call-with-input-file} creates a new input port for the file named
+by \texttt{\textit{path}}, as if with \texttt{open-input-file}, and passes this port to \texttt{\textit{procedure}}.
+If \texttt{\textit{procedure}} returns, \texttt{call-with-input-file} closes the input port
+and returns the values returned by \texttt{\textit{procedure}}.
+\texttt{call-with-input-file} does not automatically close the input
+port if a continuation created outside of \texttt{\textit{procedure}} is invoked, since it
+is possible that another continuation created inside of \texttt{\textit{procedure}} will be
+invoked at a later time, returning control to \texttt{\textit{procedure}}.
+If \texttt{\textit{procedure}} does not return, an implementation is free to close the
+input port only if it can prove that the input port is no longer accessible.
+As shown in Section \ref{control_g102}, \texttt{dynamic-wind} may be used to
+ensure that the port is closed if a continuation created outside of
+\texttt{\textit{procedure}} is invoked.
+
+The following example shows the use of \texttt{call-with-input-file}
+in an expression that gathers
+a list of objects from the file named by ``myfile.ss.''
+It is functionally equivalent to the example given for
+\texttt{open-input-file} above.
+
+
+\begin{alltt}
+(call-with-input-file "myfile.ss"
+  (lambda (p)
+    (let f ([x (read p)])
+      (if (eof-object? x)
+          '()
+          (cons x (f (read p)))))))
+\end{alltt}
+
+\texttt{call-with-input-file} might be defined without error checking as follows.
+
+\begin{alltt}
+(define call-with-input-file
+  (lambda (filename proc)
+    (let ([p (open-input-file filename)])
+      (let-values ([v* (proc p)])
+        (close-port p)
+        (apply values v*)))))
+\end{alltt}
+
+\begin{description}
+
+\label{io_s78}\item[procedure] \texttt{(call-with-output-file \textit{path} \textit{procedure})}
+
+
+
+\item[returns] the values returned by \texttt{\textit{procedure}}
+
+
+\item[libraries] \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{path}} must be a string or some other implementation-dependent 
+value that names a file.
+\texttt{\textit{procedure}} should accept one argument.
+\texttt{call-with-output-file} creates a new output port for the file named
+by \texttt{\textit{path}}, as if with \texttt{open-output-file}, and passes this port to \texttt{\textit{procedure}}.
+If \texttt{\textit{procedure}} returns, \texttt{call-with-output-file} closes the output port
+and returns the values returned by \texttt{\textit{procedure}}.
+\texttt{call-with-output-file} does not automatically close the output
+port if a continuation created outside of \texttt{\textit{procedure}} is invoked, since it
+is possible that another continuation created inside of \texttt{\textit{procedure}} will be
+invoked at a later time, returning control to \texttt{\textit{procedure}}.
+If \texttt{\textit{procedure}} does not return, an implementation is free to close the
+output port only if it can prove that the output port is no longer accessible.
+As shown in Section \ref{control_g102}, \texttt{dynamic-wind} may be used to
+ensure that the port is closed if a continuation created outside of
+\texttt{\textit{procedure}} is invoked.
+
+The following shows the use of \texttt{call-with-output-file} to
+write a list of objects (the value of  \texttt{list-to-be-printed}),
+separated by newlines, to the file named by ``myfile.ss.''
+It is functionally equivalent to the example given for
+\texttt{open-output-file} above.
+
+
+\begin{alltt}
+(call-with-output-file "myfile.ss"
+  (lambda (p)
+    (let f ([ls list-to-be-printed])
+      (unless (null? ls)
+        (write (car ls) p)
+        (newline p)
+        (f (cdr ls))))))
+\end{alltt}
+
+\texttt{call-with-output-file} might be defined without error checking as follows.
+
+\begin{alltt}
+(define call-with-output-file
+  (lambda (filename proc)
+    (let ([p (open-output-file filename)])
+      (let-values ([v* (proc p)])
+        (close-port p)
+        (apply values v*)))))
+\end{alltt}
+
+\begin{description}
+
+\label{io_s79}\item[procedure] \texttt{(with-input-from-file \textit{path} \textit{thunk})}
+
+
+
+\item[returns] the values returned by \texttt{\textit{thunk}}
+
+
+\item[libraries] \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{path}} must be a string or some other implementation-dependent 
+value that names a file.
+\texttt{\textit{thunk}} must be a procedure and should accept zero arguments.
+\texttt{with-input-from-file} temporarily changes the current input port to be the
+result of opening the file named by \texttt{\textit{path}}, as if with \texttt{open-input-file}, during the
+application of \texttt{\textit{thunk}}.
+If \texttt{\textit{thunk}} returns, the port is closed and the current input port
+is restored to its old value.
+
+The behavior of \texttt{with-input-from-file} is unspecified
+if a continuation created outside
+of \texttt{\textit{thunk}} is invoked before \texttt{\textit{thunk}} returns.
+An implementation may close the port and restore the current input
+port to its old value---but it may not.
+
+
+\begin{description}
+
+\label{io_s80}\item[procedure] \texttt{(with-output-to-file \textit{path} \textit{thunk})}
+
+
+
+\item[returns] the values returned by \texttt{\textit{thunk}}
+
+
+\item[libraries] \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{path}} must be a string or some other implementation-dependent 
+value that names a file.
+\texttt{\textit{thunk}} must be a procedure and should accept zero arguments.
+\texttt{with-output-to-file} temporarily rebinds the current output port to be the
+result of opening the file named by \texttt{\textit{path}}, as if with \texttt{open-output-file},
+during the application of \texttt{\textit{thunk}}.
+If \texttt{\textit{thunk}} returns, the port is closed and the current output port
+is restored to its old value.
+
+The behavior of \texttt{with-output-to-file} is unspecified if a
+continuation created outside of \texttt{\textit{thunk}} is invoked before
+\texttt{\textit{thunk}} returns.
+An implementation may close the port and restore the current output
+port to its old value---but it may not.
+
+
+\begin{description}
+
+\label{io_s81}\item[procedure] \texttt{(read)}
+
+
+
+\item[procedure] \texttt{(read \textit{textual-input-port})}
+
+
+
+\item[returns] a Scheme datum object or the eof object
+
+
+\item[libraries] \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{textual-input-port}} is not supplied, it defaults to the current input port.
+This procedure is otherwise equivalent to \texttt{get-datum}.
+
+
+\begin{description}
+
+\label{io_s82}\item[procedure] \texttt{(read-char)}
+
+
+
+\item[procedure] \texttt{(read-char \textit{textual-input-port})}
+
+
+
+\item[returns] the next character from \texttt{\textit{textual-input-port}}
+
+
+\item[libraries] \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{textual-input-port}} is not supplied, it defaults to the current input port.
+This procedure is otherwise equivalent to \texttt{get-char}.
+
+
+\begin{description}
+
+\label{io_s83}\item[procedure] \texttt{(peek-char)}
+
+
+
+\item[procedure] \texttt{(peek-char \textit{textual-input-port})}
+
+
+
+\item[returns] the next character from \texttt{\textit{textual-input-port}}
+
+
+\item[libraries] \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{textual-input-port}} is not supplied, it defaults to the current input port.
+This procedure is otherwise equivalent to \texttt{lookahead-char}.
+
+
+\begin{description}
+
+\label{io_s84}\item[procedure] \texttt{(write \textit{obj})}
+
+
+
+\item[procedure] \texttt{(write \textit{obj} \textit{textual-output-port})}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{textual-output-port}} is not supplied, it defaults to the current output port.
+This procedure is otherwise equivalent to \texttt{put-datum}, with the
+arguments reversed.
+See Section \ref{examples_g176} for an implementation of \texttt{put-datum},
+\texttt{write}, and \texttt{display}.
+
+\begin{description}
+
+\label{io_s85}\item[procedure] \texttt{(display \textit{obj})}
+
+
+
+\item[procedure] \texttt{(display \textit{obj} \textit{textual-output-port})}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{textual-output-port}} is not supplied, it defaults to the current output port.
+
+\texttt{display} is similar to \texttt{write} or \texttt{put-datum} but prints strings
+and characters found within \texttt{\textit{obj}} directly.
+Strings are printed without quotation marks or escapes for special characters, as if
+by \texttt{put-string}, and characters
+are printed without the \texttt{\#{}\textbackslash{}} notation, as if by \texttt{put-char}.
+With \texttt{display},
+the three-element list \texttt{(a b c)}
+and the two-element list \texttt{("a b" c)} both print as
+\texttt{(a b c)}.
+Because of this, \texttt{display} should not be used to print objects that
+are intended to be read with \texttt{read}.
+\texttt{display} is useful primarily for printing messages, with \texttt{\textit{obj}}
+most often being a string.
+See Section \ref{examples_g176} for an implementation of \texttt{put-datum},
+\texttt{write}, and \texttt{display}.
+\begin{description}
+
+\label{io_s86}\item[procedure] \texttt{(write-char \textit{char})}
+
+
+
+\item[procedure] \texttt{(write-char \textit{char} \textit{textual-output-port})}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{textual-output-port}} is not supplied, it defaults to the current output port.
+This procedure is otherwise equivalent to \texttt{put-char}, with the
+arguments reversed.
+
+
+\begin{description}
+
+\label{io_s87}\item[procedure] \texttt{(newline)}
+
+
+
+\item[procedure] \texttt{(newline \textit{textual-output-port})}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+
+If \texttt{\textit{textual-output-port}} is not supplied, it defaults to the current output port.
+\texttt{newline} sends a line-feed character to the port.
+
+
+\begin{description}
+
+\label{io_s88}\item[procedure] \texttt{(close-input-port \textit{input-port})}
+
+
+
+\item[procedure] \texttt{(close-output-port \textit{output-port})}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs io simple)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{close-input-port} closes an input port, and
+\texttt{close-output-port} closes an output port.
+These procedures are provided for backward compatibility with the Revised\textsuperscript{5}
+Report; they are not actually more convenient to use than \texttt{close-port}.
+
+
+\section{\label{io_g131}\label{io_h10}Filesystem Operations\label{io_SECTFILESYSTEM}}
+
+
+
+Scheme has two standard operations, beyond file input/output, for interacting with the
+filesystem: \texttt{file-exists?} and \texttt{delete-file}.
+Most implementations support additional operations.
+
+
+\begin{description}
+
+\label{io_s89}\item[procedure] \texttt{(file-exists? \textit{path})}
+
+
+
+\item[returns] \texttt{\#{}t} if the file named by \texttt{\textit{path}} exists, \texttt{\#{}f} otherwise
+
+
+\item[libraries] \texttt{(rnrs files)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{path}} must be a string or some other implementation-dependent 
+value that names a file.
+Whether \texttt{file-exists?} follows symbolic links is unspecified.
+
+\begin{description}
+
+\label{io_s90}\item[procedure] \texttt{(delete-file \textit{path})}
+
+
+
+\item[returns] unspecified
+
+
+\item[libraries] \texttt{(rnrs files)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{path}} must be a string or some other implementation-dependent 
+value that names a file.
+\texttt{delete-file} removes the file named by \texttt{\textit{path}} if it exists
+and can be deleted, otherwise it raises an exception with condition
+type \texttt{\&{}i/o-filename}.
+Whether \texttt{delete-file} follows symbolic links is unspecified.
+
+
+\section{\label{io_g132}\label{io_h11}Bytevector/String Conversions\label{io_SECTBSCONVS}}
+
+
+
+The procedures described in this section encode or decode character
+sequences, converting from strings to bytevectors or bytevectors to
+strings.
+They do not necessarily involve input/output, though they might be
+implemented using bytevector input and output ports.
+
+
+The first two procedures, \texttt{bytevector-\textgreater{}string} and
+\texttt{string-\textgreater{}bytevector}, take an explicit transcoder argument that
+determines the character encodings, eol styles, and error-handling modes.
+The others perform specific Unicode conversions with an implicit
+eol-style of \texttt{none} and error-handling mode of \texttt{replace}.
+
+
+\begin{description}
+
+\label{io_s91}\item[procedure] \texttt{(bytevector-\textgreater{}string \textit{bytevector} \textit{transcoder})}
+
+
+
+\item[returns] a string containing the characters encoded in \texttt{\textit{bytevector}}
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+This operation, at least in effect, creates a bytevector input port with
+the specified \texttt{\textit{transcoder}} from which all of the available characters
+are read, as if by \texttt{get-string-all}, and placed into the output
+string.
+
+
+\begin{alltt}
+(let ([tx (make-transcoder (utf-8-codec) (eol-style lf)
+            (error-handling-mode replace))])
+  (bytevector-\textgreater{}string \#{}vu8(97 98 99) tx)) \(\Rightarrow\) "abc"
+\end{alltt}
+
+\begin{description}
+
+\label{io_s92}\item[procedure] \texttt{(string-\textgreater{}bytevector \textit{string} \textit{transcoder})}
+
+
+
+\item[returns] a bytevector containing the encodings of the characters in \texttt{\textit{string}}
+
+
+\item[libraries] \texttt{(rnrs io ports)}, \texttt{(rnrs)}
+\end{description}
+
+
+This operation, at least in effect, creates a bytevector output port with
+the specified \texttt{\textit{transcoder}} to which all of the characters of
+\texttt{\textit{string}} are written, then extracts a bytevector containing the
+accumulated bytes.
+
+
+\begin{alltt}
+(let ([tx (make-transcoder (utf-8-codec) (eol-style none)
+            (error-handling-mode raise))])
+  (string-\textgreater{}bytevector "abc" tx)) \(\Rightarrow\) \#{}vu8(97 98 99)
+\end{alltt}
+
+\begin{description}
+
+\label{io_s93}\item[procedure] \texttt{(string-\textgreater{}utf8 \textit{string})}
+
+
+
+\item[returns] a bytevector containing the UTF-8 encoding of \texttt{\textit{string}}
+
+
+\item[libraries] \texttt{(rnrs bytevectors)}, \texttt{(rnrs)}
+\end{description}
+
+\begin{description}
+
+\label{io_s94}\item[procedure] \texttt{(string-\textgreater{}utf16 \textit{string})}
+
+
+
+\item[procedure] \texttt{(string-\textgreater{}utf16 \textit{string} \textit{endianness})}
+
+
+
+\item[procedure] \texttt{(string-\textgreater{}utf32 \textit{string})}
+
+
+
+\item[procedure] \texttt{(string-\textgreater{}utf32 \textit{string} \textit{endianness})}
+
+
+
+\item[returns] a bytevector containing the specified encoding of \texttt{\textit{string}}
+
+
+\item[libraries] \texttt{(rnrs bytevectors)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{endianness}} must be one of the symbols \texttt{big} or \texttt{little}.
+If \texttt{\textit{endianness}} is not provided or is the symbol \texttt{big},
+\texttt{string-\textgreater{}utf16} returns the UTF-16BE encoding of \texttt{\textit{string}} and
+\texttt{string-\textgreater{}utf32} returns the UTF-32BE encoding of \texttt{\textit{string}}.
+If \texttt{\textit{endianness}} is the symbol \texttt{little}, \texttt{string-\textgreater{}utf16} returns the
+UTF-16LE encoding of \texttt{\textit{string}} and \texttt{string-\textgreater{}utf32} returns the
+UTF-32LE encoding of \texttt{\textit{string}}.
+No byte-order mark is included in the encoding.
+
+\begin{description}
+
+\label{io_s95}\item[procedure] \texttt{(utf8-\textgreater{}string \textit{bytevector})}
+
+
+
+\item[returns] a string containing the UTF-8 decoding of \texttt{\textit{bytevector}}
+
+
+\item[libraries] \texttt{(rnrs bytevectors)}, \texttt{(rnrs)}
+\end{description}
+
+\begin{description}
+
+\label{io_s96}\item[procedure] \texttt{(utf16-\textgreater{}string \textit{bytevector} \textit{endianness})}
+
+
+
+\item[procedure] \texttt{(utf16-\textgreater{}string \textit{bytevector} \textit{endianness} \textit{endianness-mandatory?})}
+
+
+
+\item[procedure] \texttt{(utf32-\textgreater{}string \textit{bytevector} \textit{endianness})}
+
+
+
+\item[procedure] \texttt{(utf32-\textgreater{}string \textit{bytevector} \textit{endianness} \textit{endianness-mandatory?})}
+
+
+
+\item[returns] a string containing the specified decoding of \texttt{\textit{bytevector}}
+
+
+\item[libraries] \texttt{(rnrs bytevectors)}, \texttt{(rnrs)}
+\end{description}
+
+\texttt{\textit{endianness}} must be one of the symbols \texttt{big} or
+\texttt{little}.
+These procedures return a UTF-16 or UTF-32 decoding of \texttt{\textit{bytevector}},
+with the endianness of the representation determined from the endianness
+argument or byte-order mark (BOM).
+If \texttt{\textit{endianness-mandatory?}} is not provided or is \texttt{\#{}f}, the
+endianness is determined by a BOM at the front of \texttt{\textit{bytevector}} or, if
+no BOM is present, by \texttt{\textit{endianness}}.
+If \texttt{\textit{endianness-mandatory?}} is \texttt{\#{}t}, the endianness is
+determined by \texttt{\textit{endianness}}, and, if a BOM appears at the front of
+\texttt{\textit{bytevector}}, it is treated as a regular character encoding.
+
+The UTF-16 BOM is the two-byte sequence \texttt{\#{}xFE}, \texttt{\#{}xFF}
+specifying ``big'' or the two-byte sequence \texttt{\#{}xFF}, \texttt{\#{}xFE}
+specifying ``little.''
+The UTF-32 BOM is the four-byte sequence \texttt{\#{}x00}, \texttt{\#{}x00},
+\texttt{\#{}xFE}, \texttt{\#{}xFF} specifying ``big'' or the four-byte sequence
+\texttt{\#{}xFF}, \texttt{\#{}xFE}, \texttt{\#{}x00}, \texttt{\#{}x00} specifying
+``little.''
+
+

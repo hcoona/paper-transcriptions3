@@ -1,0 +1,982 @@
+\SpecialChapter{Answers to Selected Exercises}
+
+\label{answers_h0}
+
+
+
+
+  
+
+\paragraph{Exercise \hyperref[start_g7]{2.2.1}. }(page \pageref{start_s34})
+
+   
+ 
+ \begin{enumerate}[\it a. ]
+\item \texttt{(+ (* 1.2 (- 2 1/3)) -8.7)} \item \texttt{(/ (+ 2/3 4/9) (- 5/11 4/3))} \item \texttt{(+ 1 (/ 1 (+ 2 (/ 1 (+ 1 1/2)))))} \item \texttt{(* (* (* (* (* (* 1 -2) 3) -4) 5) -6) 7)} or       \texttt{(* 1 -2 3 -4 5 -6 7)} \end{enumerate}
+ 
+
+
+\paragraph{Exercise \hyperref[start_g8]{2.2.2}. }(page \pageref{start_s35})
+
+  See Section \ref{objects_g110}. 
+
+
+\paragraph{Exercise \hyperref[start_g9]{2.2.3}. }(page \pageref{start_s36})
+
+   
+ 
+ \begin{enumerate}[\it a. ]
+\item \texttt{(car . cdr)} \item \texttt{(this (is silly))} \item \texttt{(is this silly?)} \item \texttt{(+ 2 3)} \item \texttt{(+ 2 3)} \item \texttt{+} \item \texttt{(2 3)} \item \texttt{\#{}\textless{}procedure\textgreater{}} \item \texttt{cons} \item \texttt{'cons} \item \texttt{quote} \item \texttt{5} \item \texttt{5} \item \texttt{5} \item \texttt{5} \end{enumerate}
+ 
+
+
+\paragraph{Exercise \hyperref[start_g10]{2.2.4}. }(page \pageref{start_s37})
+
+  
+\begin{alltt}
+ (car (cdr (car '((a b) (c d))))) \(\Rightarrow\) b
+ (car (car (cdr '((a b) (c d))))) \(\Rightarrow\) c
+ (car (cdr (car (cdr '((a b) (c d)))))) \(\Rightarrow\) d
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g11]{2.2.5}. }(page \pageref{start_s38})
+
+  
+\texttt{ '((a . b) ((c) d) ())}
+
+
+\paragraph{Exercise \hyperref[start_g12]{2.2.6}. }(page \pageref{start_s39})
+
+  \begin{figure}[H]
+\centering
+%\includegraphics{math/50.eps}
+\input{math/50.tikz}
+\end{figure}
+ 
+
+
+\paragraph{Exercise \hyperref[start_g13]{2.2.7}. }(page \pageref{start_s40})
+
+  
+\begin{alltt}
+ (car '((a b) (c d))) \(\Rightarrow\) (a b)
+ (car (car '((a b) (c d)))) \(\Rightarrow\) a
+ (cdr (car '((a b) (c d)))) \(\Rightarrow\) (b)
+ (car (cdr (car '((a b) (c d))))) \(\Rightarrow\) b
+ (cdr (cdr (car '((a b) (c d))))) \(\Rightarrow\) ()
+ (cdr '((a b) (c d))) \(\Rightarrow\) ((c d))
+ (car (cdr '((a b) (c d)))) \(\Rightarrow\) (c d)
+ (car (car (cdr '((a b) (c d))))) \(\Rightarrow\) c
+ (cdr (car (cdr '((a b) (c d))))) \(\Rightarrow\) (d)
+ (car (cdr (car (cdr '((a b) (c d)))))) \(\Rightarrow\) d
+ (cdr (cdr (car (cdr '((a b) (c d)))))) \(\Rightarrow\) ()
+ (cdr (cdr '((a b) (c d)))) \(\Rightarrow\) ()
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g14]{2.2.8}. }(page \pageref{start_s41})
+
+  See Section \ref{start_g15}. 
+
+
+\paragraph{Exercise \hyperref[start_g16]{2.3.1}. }(page \pageref{start_s49})
+
+   \begin{enumerate}  \label{answers_g251}\item 
+Evaluate the variables \texttt{list}, \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/}, yielding        the list, addition, subtraction, multiplication, and division procedures.  \label{answers_g252}\item \label{answers_listapply}Apply the list procedure to the addition, subtraction, multiplication, and division procedures,        yielding a list containing these procedures in order.  \label{answers_g253}\item Evaluate the variable \texttt{cdr}, yielding the cdr procedure.  \label{answers_g254}\item \label{answers_cdrapply}Apply the cdr procedure to the list produced in step \hyperref[answers_g252]{2},        yielding a list containing the subtraction, multiplication, and        division procedures.  \label{answers_g255}\item Evaluate the variable \texttt{car}, yielding the car procedure.  \label{answers_g256}\item Apply the car procedure to the list produced in step \hyperref[answers_g254]{4},        yielding the subtraction procedure.  \label{answers_g257}\item Evaluate the constants \texttt{17} and \texttt{5}, yielding        \texttt{17} and \texttt{5}.  \label{answers_g258}\item Apply the subtraction procedure to \texttt{17} and \texttt{5},        yielding \texttt{12}. \end{enumerate}
+ 
+Other orders are possible.  For example, the variable \texttt{car} could have been evaluated before its argument. 
+
+
+
+\paragraph{Exercise \hyperref[start_g18]{2.4.1}. }(page \pageref{start_s57})
+
+   
+ 
+ \begin{enumerate}[\it a. ]
+\item \texttt{(let ([x (* 3 a)]) (+ (- x b) (+ x b)))} \item \texttt{(let ([x (list a b c)]) (cons (car x) (cdr x)))} \end{enumerate}
+ 
+
+
+\paragraph{Exercise \hyperref[start_g19]{2.4.2}. }(page \pageref{start_s58})
+
+  The value is 54. The outer \texttt{let} binds \texttt{x} to 9, while the inner \texttt{let} binds \texttt{x} to 3 (9/3). The inner \texttt{let} evaluates to 6 (3 + 3), and the outer \texttt{let} evaluates to 54 (9 \(\times\) 6). 
+
+
+\paragraph{Exercise \hyperref[start_g20]{2.4.3}. }(page \pageref{start_s59})
+
+   
+ 
+ \begin{enumerate}[\it a. ]
+\item 
+\begin{alltt}
+(let ([x0 'a] [y0 'b])
+   (list (let ([x1 'c]) (cons x1 y0))
+         (let ([y1 'd]) (cons x0 y1))))
+\end{alltt}
+
+\item 
+\begin{alltt}
+(let ([x0 '((a b) c)])
+   (cons (let ([x1 (cdr x0)])
+           (car x1))
+         (let ([x2 (car x0)])
+           (cons (let ([x3 (cdr x2)])
+                   (car x3))
+                 (cons (let ([x4 (car x2)])
+                         x4)
+                       (cdr x2))))))
+\end{alltt}
+
+\end{enumerate}
+ 
+
+
+\paragraph{Exercise \hyperref[start_g22]{2.5.1}. }(page \pageref{start_s72})
+
+   
+ 
+ \begin{enumerate}[\it a. ]
+\item \texttt{a} \item \texttt{(a)} \item \texttt{a} \item \texttt{()} \end{enumerate}
+ 
+
+
+\paragraph{Exercise \hyperref[start_g23]{2.5.2}. }(page \pageref{start_s73})
+
+  See page \pageref{start_defn_list}. 
+
+
+\paragraph{Exercise \hyperref[start_g24]{2.5.3}. }(page \pageref{start_s74})
+
+   
+ 
+ \begin{enumerate}[\it a. ]
+\item no free variables \item \texttt{+} \item \texttt{f} \item \texttt{cons}, \texttt{f}, and \texttt{y} \item \texttt{cons} and \texttt{y} \item \texttt{cons}, \texttt{y}, and \texttt{z} (\texttt{y} also       appears as a bound variable) \end{enumerate}
+ 
+
+
+\paragraph{Exercise \hyperref[start_g26]{2.6.1}. }(page \pageref{start_s91})
+
+  The program would loop indefinitely. 
+
+
+\paragraph{Exercise \hyperref[start_g27]{2.6.2}. }(page \pageref{start_s92})
+
+  
+\begin{alltt}
+ (define compose
+   (lambda (p1 p2)
+     (lambda (x)
+       (p1 (p2 x))))) 
+
+(define cadr (compose car cdr))
+ (define cddr (compose cdr cdr))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g28]{2.6.3}. }(page \pageref{start_s96})
+
+  
+\begin{alltt}
+ (define caar (compose car car))
+ (define cadr (compose car cdr)) 
+
+(define cdar (compose cdr car))
+ (define cddr (compose cdr cdr)) 
+
+(define caaar (compose car caar))
+ (define caadr (compose car cadr))
+ (define cadar (compose car cdar))
+ (define caddr (compose car cddr)) 
+
+(define cdaar (compose cdr caar))
+ (define cdadr (compose cdr cadr))
+ (define cddar (compose cdr cdar))
+ (define cdddr (compose cdr cddr)) 
+
+(define caaaar (compose caar caar))
+ (define caaadr (compose caar cadr))
+ (define caadar (compose caar cdar))
+ (define caaddr (compose caar cddr))
+ (define cadaar (compose cadr caar))
+ (define cadadr (compose cadr cadr))
+ (define caddar (compose cadr cdar))
+ (define cadddr (compose cadr cddr)) 
+
+(define cdaaar (compose cdar caar))
+ (define cdaadr (compose cdar cadr))
+ (define cdadar (compose cdar cdar))
+ (define cdaddr (compose cdar cddr))
+ (define cddaar (compose cddr caar))
+ (define cddadr (compose cddr cadr))
+ (define cdddar (compose cddr cdar))
+ (define cddddr (compose cddr cddr))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g30]{2.7.1}. }(page \pageref{start_s126})
+
+  
+\begin{alltt}
+ (define atom?
+   (lambda (x)
+     (not (pair? x))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g31]{2.7.2}. }(page \pageref{start_s128})
+
+  
+\begin{alltt}
+ (define shorter
+   (lambda (ls1 ls2)
+     (if (\textless{} (length ls2) (length ls1))
+         ls2
+         ls1)))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g33]{2.8.1}. }(page \pageref{start_s149})
+
+  The structure of the output would be the mirror image of the structure of the input. For example, \texttt{(a . b)} would become \texttt{(b . a)} and \texttt{((a . b) . (c . d))} would become \texttt{((d . c) . (b . a))}. 
+
+
+\paragraph{Exercise \hyperref[start_g34]{2.8.2}. }(page \pageref{start_s150})
+
+  
+\begin{alltt}
+ (define append
+   (lambda (ls1 ls2)
+     (if (null? ls1)
+         ls2
+         (cons (car ls1) (append (cdr ls1) ls2)))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g35]{2.8.3}. }(page \pageref{start_s152})
+
+  
+\begin{alltt}
+ (define make-list
+   (lambda (n x)
+     (if (= n 0)
+         '()
+         (cons x (make-list (- n 1) x)))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g36]{2.8.4}. }(page \pageref{start_s154})
+
+  See the description of \texttt{list-ref} on page \pageref{objects_defn_list_ref} and the description of \texttt{list-tail} on page \pageref{objects_defn_list_tail}. 
+
+
+\paragraph{Exercise \hyperref[start_g37]{2.8.5}. }(page \pageref{start_s155})
+
+  
+\begin{alltt}
+ (define shorter?
+   (lambda (ls1 ls2)
+     (and (not (null? ls2))
+          (or (null? ls1)
+              (shorter? (cdr ls1) (cdr ls2)))))) 
+
+(define shorter
+   (lambda (ls1 ls2)
+     (if (shorter? ls2 ls1)
+         ls2
+         ls1)))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g38]{2.8.6}. }(page \pageref{start_s158})
+
+  
+\begin{alltt}
+ (define even?
+   (lambda (x)
+     (or (= x 0)
+         (odd? (- x 1)))))
+ (define odd?
+   (lambda (x)
+     (and (not (= x 0))
+          (even? (- x 1)))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g39]{2.8.7}. }(page \pageref{start_s161})
+
+  
+\begin{alltt}
+ (define transpose
+   (lambda (ls)
+     (cons (map car ls) (map cdr ls))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g41]{2.9.1}. }(page \pageref{start_s186})
+
+  
+\begin{alltt}
+ (define make-counter
+   (lambda (init incr)
+     (let ([next init])
+       (lambda ()
+         (let ([v next])
+           (set! next (+ next incr))
+           v)))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g42]{2.9.2}. }(page \pageref{start_s188})
+
+  
+\begin{alltt}
+ (define make-stack
+   (lambda ()
+     (let ([ls '()])
+       (lambda (msg . args)
+         (case msg
+           [(empty? mt?) (null? ls)]
+           [(push!) (set! ls (cons (car args) ls))]
+           [(top) (car ls)]
+           [(pop!) (set! ls (cdr ls))]
+           [else "oops"])))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g43]{2.9.3}. }(page \pageref{start_s191})
+
+  
+\begin{alltt}
+ (define make-stack
+   (lambda ()
+     (let ([ls '()])
+       (lambda (msg . args)
+         (case msg
+           [(empty? mt?) (null? ls)]
+           [(push!) (set! ls (cons (car args) ls))]
+           [(top) (car ls)]
+           [(pop!) (set! ls (cdr ls))]
+           [(ref) (list-ref ls (car args))]
+           [(set!) (set-car! (list-tail ls (car args)) (cadr args))]
+           [else "oops"])))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g44]{2.9.4}. }(page \pageref{start_s192})
+
+  
+\begin{alltt}
+ (define make-stack
+   (lambda (n)
+     (let ([v (make-vector n)] [i -1])
+       (lambda (msg . args)
+         (case msg
+           [(empty? mt?) (= i -1)]
+           [(push!)
+            (set! i (+ i 1))
+            (vector-set! v i (car args))]
+           [(top) (vector-ref v i)]
+           [(pop!) (set! i (- i 1))]
+           [(ref) (vector-ref v (- i (car args)))]
+           [(set!) (vector-set! v (- i (car args)) (cadr args))]
+           [else "oops"])))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g45]{2.9.5}. }(page \pageref{start_s194})
+
+  
+\begin{alltt}
+ (define emptyq?
+   (lambda (q)
+     (eq? (car q) (cdr q)))) 
+
+(define getq
+   (lambda (q)
+     (if (emptyq? q)
+         (assertion-violation 'getq "the queue is empty")
+         (car (car q))))) 
+
+(define delq!
+   (lambda (q)
+     (if (emptyq? q)
+         (assertion-violation 'delq! "the queue is empty")
+         (set-car! q (cdr (car q))))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g46]{2.9.6}. }(page \pageref{start_s195})
+
+  
+\begin{alltt}
+ (define make-queue
+   (lambda ()
+     (cons '() '()))) 
+
+(define putq!
+   (lambda (q v)
+     (let ([p (cons v '())])
+       (if (null? (car q))
+           (begin
+             (set-car! q p)
+             (set-cdr! q p))
+           (begin
+             (set-cdr! (cdr q) p)
+             (set-cdr! q p)))))) 
+
+(define getq
+   (lambda (q)
+     (car (car q)))) 
+
+(define delq!
+   (lambda (q)
+     (if (eq? (car q) (cdr q))
+         (begin
+           (set-car! q '())
+           (set-cdr! q '()))
+         (set-car! q (cdr (car q))))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[start_g47]{2.9.7}. }(page \pageref{start_s196})
+
+  When asked to print a cyclic structure, some implementations print a representation of the output that reflects its cyclic structure. Other implementations do not detect the cycle and produce either no output or an infinite stream of output. When \texttt{length} is passed a cyclic list, an exception is raised, likely with a message indicating that the list is not proper. The definition of \texttt{length} on page \pageref{start_defn_simplelength} will, however, simply loop indefinitely. 
+
+
+\paragraph{Exercise \hyperref[start_g48]{2.9.8}. }(page \pageref{start_s199})
+
+  
+\begin{alltt}
+ (define race
+   (lambda (hare tortoise)
+     (if (pair? hare)
+         (let ([hare (cdr hare)])
+           (if (pair? hare)
+               (and (not (eq? hare tortoise))
+                    (race (cdr hare) (cdr tortoise)))
+               (null? hare)))
+         (null? hare)))) 
+
+(define list?
+   (lambda (x)
+     (race x x)))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g51]{3.1.1}. }(page \pageref{further_s25})
+
+  
+\begin{alltt}
+ (let ([x (memv 'a ls)]) (and x (memv 'b x))) \(\rightarrow\)
+   ((lambda (x) (and x (memv 'b x))) (memv 'a ls)) \(\rightarrow\)
+   ((lambda (x) (if x (and (memv 'b x)) \#{}f)) (memv 'a ls)) \(\rightarrow\)
+   ((lambda (x) (if x (memv 'b x) \#{}f)) (memv 'a ls))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g52]{3.1.2}. }(page \pageref{further_s26})
+
+  
+\begin{alltt}
+ (or (memv x '(a b c)) (list x)) \(\rightarrow\)
+   (let ((t (memv x '(a b c)))) (if t t (or (list x)))) \(\rightarrow\)
+   ((lambda (t) (if t t (or (list x)))) (memv x '(a b c))) \(\rightarrow\)
+   ((lambda (t) (if t t (list x))) (memv x '(a b c)))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g53]{3.1.3}. }(page \pageref{further_s27})
+
+  See page \pageref{binding_defn_let*}. 
+
+
+\paragraph{Exercise \hyperref[further_g54]{3.1.4}. }(page \pageref{further_s29})
+
+  
+\begin{alltt}
+ (define-syntax when
+   (syntax-rules ()
+     [(\_{} e0 e1 e2 ...)
+      (if e0 (begin e1 e2 ...))])) 
+
+(define-syntax unless
+   (syntax-rules ()
+     [(\_{} e0 e1 e2 ...)
+      (when (not e0) e1 e2 ...)]))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g56]{3.2.1}. }(page \pageref{further_s52})
+
+  Tail-recursive: \texttt{even?} and \texttt{odd?}, \texttt{race}, \texttt{fact} in second definition of \texttt{factorial}, \texttt{fib} in second version of \texttt{fibonacci}. Nontail-recursive: \texttt{sum}, \texttt{factorial}, \texttt{fib} in first version of \texttt{fibonacci}. Both: \texttt{factor}. 
+
+
+\paragraph{Exercise \hyperref[further_g57]{3.2.2}. }(page \pageref{further_s53})
+
+  
+\begin{alltt}
+ (define factor
+   (lambda (n)
+     (letrec ([f (lambda (n i)
+                   (cond
+                     [(\textgreater{}= i n) (list n)]
+                     [(integer? (/ n i))
+                      (cons i (f (/ n i) i))]
+                     [else (f n (+ i 1))]))])
+       (f n 2))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g58]{3.2.3}. }(page \pageref{further_s55})
+
+  Yes, but we need two named \texttt{let} expressions, one for \texttt{even?} and one for \texttt{odd?}. 
+\begin{alltt}
+(let even? ([x 20])
+   (or (= x 0)
+       (let odd? ([x (- x 1)])
+         (and (not (= x 0))
+              (even? (- x 1))))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g59]{3.2.4}. }(page \pageref{further_s56})
+
+  
+\begin{alltt}
+ (define fibcount1 0)
+ (define fibonacci1
+   (lambda (n)
+     (let fib ([i n])
+       (set! fibcount1 (+ fibcount1 1))
+       (cond
+         [(= i 0) 0]
+         [(= i 1) 1]
+         [else (+ (fib (- i 1)) (fib (- i 2)))])))) 
+
+(define fibcount2 0)
+ (define fibonacci2
+   (lambda (n)
+     (if (= n 0)
+         0
+         (let fib ([i n] [a1 1] [a2 0])
+           (set! fibcount2 (+ fibcount2 1))
+           (if (= i 1)
+               a1
+               (fib (- i 1) (+ a1 a2) a1))))))
+\end{alltt}
+
+The counts for \texttt{(fibonacci 10)} are 177 and 10, for \texttt{(fibonacci 20)} are 21891 and 20, and for \texttt{(fibonacci 30)} are 2692537 and 30. While the number of calls made by the second is directly proportional to the input, the number of calls made by the first grows rapidly (exponentially, in fact) as the input value increases. 
+
+
+\paragraph{Exercise \hyperref[further_g60]{3.2.5}. }(page \pageref{further_s57})
+
+  See page \pageref{syntax_defn_let}. 
+
+
+\paragraph{Exercise \hyperref[further_g61]{3.2.6}. }(page \pageref{further_s58})
+
+  A call in the last subexpression of an \texttt{or} expression in tail position would not be a tail call with the modified definition of \texttt{or}. For the \texttt{even?}/\texttt{odd?} example, the resulting definition of \texttt{even?} would no longer be tail-recursive and for very large inputs might exhaust available space. 
+The expansion performed by this definition is incorrect in another way, which has to do with multiple return values (Section \ref{control_g104}): if the last subexpression returns multiple values, the \texttt{or} expression should return multiple values, but with the incorrect definition, each subexpression appears on the right-hand side of a \texttt{let}, which expects a single return value. The simpler and incorrect definition of \texttt{and} has the same problem. 
+
+
+\paragraph{Exercise \hyperref[further_g62]{3.2.7}. }(page \pageref{further_s59})
+
+  The first of the three versions of \texttt{factor} below directly addresses the identified problems by stopping at \(\sqrt{n}\), avoiding the redundant division, and skipping the even factors after 2. Stopping at \(\sqrt{n}\) probably yields the biggest savings, followed by skipping even factors greater than 2. Avoiding the redundant division is less important, since it occurs only when a factor is found. 
+\begin{alltt}
+(define factor
+   (lambda (n)
+     (let f ([n n] [i 2] [step 1])
+       (if (\textgreater{} i (sqrt n))
+           (list n)
+           (let ([n/i (/ n i)])
+             (if (integer? n/i)
+                 (cons i (f n/i i step))
+                 (f n (+ i step) 2)))))))
+\end{alltt}
+
+The second version replaces \texttt{(\textgreater{} i (sqrt n))} with \texttt{(\textgreater{} (* i i) n)}, since \texttt{*} is typically much faster than \texttt{sqrt}. 
+\begin{alltt}
+(define factor
+   (lambda (n)
+     (let f ([n n] [i 2] [step 1])
+       (if (\textgreater{} (* i i) n)
+           (list n)
+           (let ([n/i (/ n i)])
+             (if (integer? n/i)
+                 (cons i (f n/i i step))
+                 (f n (+ i step) 2)))))))
+\end{alltt}
+
+The third version uses \texttt{gcd} (see page \pageref{objects_page_gcd}) to avoid most of the divisions, since \texttt{gcd} should be faster than \texttt{/}. 
+\begin{alltt}
+(define factor
+   (lambda (n)
+     (let f ([n n] [i 2] [step 1])
+       (if (\textgreater{} (* i i) n)
+           (list n)
+           (if (= (gcd n i) 1)
+               (f n (+ i step) 2)
+               (cons i (f (/ n i) i step)))))))
+\end{alltt}
+
+To see the difference these changes make, time each version of \texttt{factor}, including the original, in your Scheme system to see which performs better. Try a variety of inputs, including larger ones like \texttt{(+ (expt 2 100) 1)}. 
+
+
+\paragraph{Exercise \hyperref[further_g70]{3.3.1}. }(page \pageref{further_s66})
+
+  
+\begin{alltt}
+ (let ([k.n (call/cc (lambda (k) (cons k 0)))])
+   (let ([k (car k.n)] [n (cdr k.n)])
+     (write n)
+     (newline)
+     (k (cons k (+ n 1)))))
+\end{alltt}
+
+Or with multiple values (see Section \ref{control_g104}): 
+\begin{alltt}
+(call-with-values
+   (lambda () (call/cc (lambda (k) (values k 0))))
+   (lambda (k n)
+     (write n)
+     (newline)
+     (k k (+ n 1))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g71]{3.3.2}. }(page \pageref{further_s67})
+
+  
+\begin{alltt}
+ (define product
+   (lambda (ls)
+     (if (null? ls)
+         1
+         (if (= (car ls) 0)
+             0
+             (let ([n (product (cdr ls))])
+               (if (= n 0) 0 (* n (car ls))))))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g72]{3.3.3}. }(page \pageref{further_s68})
+
+  If one of the processes returns without calling \texttt{pause}, it returns to the call to \texttt{pause} that first caused it to run, or to the original call to \texttt{start} if it was the first process in the list. Here is a reimplementation of the system that allows a process to \texttt{quit} explicitly. If other processes are active, the \texttt{lwp} system continues to run. Otherwise, control returns to the continuation of the original call to \texttt{start}. 
+\begin{alltt}
+(define lwp-list '())
+ (define lwp
+   (lambda (thunk)
+     (set! lwp-list (append lwp-list (list thunk)))))
+ (define start
+   (lambda ()
+     (call/cc
+       (lambda (k)
+         (set! quit-k k)
+         (next)))))
+ (define next
+   (lambda ()
+     (let ([p (car lwp-list)])
+       (set! lwp-list (cdr lwp-list))
+       (p))))
+ (define pause
+   (lambda ()
+     (call/cc
+       (lambda (k)
+         (lwp (lambda () (k \#{}f)))
+         (next)))))
+ (define quit
+   (lambda (v)
+     (if (null? lwp-list)
+         (quit-k v)
+         (next))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g73]{3.3.4}. }(page \pageref{further_s69})
+
+  
+\begin{alltt}
+ (define lwp-queue (make-queue))
+ (define lwp
+   (lambda (thunk)
+     (putq! lwp-queue thunk)))
+ (define start
+   (lambda ()
+     (let ([p (getq lwp-queue)])
+       (delq! lwp-queue)
+       (p))))
+ (define pause
+   (lambda ()
+     (call/cc
+       (lambda (k)
+         (lwp (lambda () (k \#{}f)))
+         (start)))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g76]{3.4.1}. }(page \pageref{further_s75})
+
+  
+\begin{alltt}
+ (define reciprocal
+   (lambda (n success failure)
+     (if (= n 0)
+         (failure)
+         (success (/ 1 n)))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g77]{3.4.2}. }(page \pageref{further_s77})
+
+  
+\begin{alltt}
+ (define retry \#{}f) 
+
+(define factorial
+   (lambda (x)
+     (let f ([x x] [k (lambda (x) x)])
+       (if (= x 0)
+           (begin (set! retry k) (k 1))
+           (f (- x 1) (lambda (y) (k (* x y))))))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g78]{3.4.3}. }(page \pageref{further_s79})
+
+  
+\begin{alltt}
+ (define map/k
+   (lambda (p ls k)
+     (if (null? ls)
+         (k '())
+         (p (car ls)
+            (lambda (x)
+              (map/k p (cdr ls)
+                (lambda (ls)
+                  (k (cons x ls))))))))) 
+
+(define reciprocals
+   (lambda (ls)
+     (map/k (lambda (x k) (if (= x 0) "zero found" (k (/ 1 x))))
+            ls
+            (lambda (x) x))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g80]{3.5.1}. }(page \pageref{further_s86})
+
+  
+\begin{alltt}
+ (define-syntax complain
+   (syntax-rules ()
+     [(\_{} ek msg expr) (ek (list msg expr))]))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g81]{3.5.2}. }(page \pageref{further_s87})
+
+  
+\begin{alltt}
+ (define calc
+   (lambda (expr)
+     (call/cc
+       (lambda (ek)
+         (define do-calc
+           (lambda (expr)
+             (cond
+               [(number? expr) expr]
+               [(and (list? expr) (= (length expr) 3))
+                (let ([op (car expr)] [args (cdr expr)])
+                  (case op
+                    [(add) (apply-op + args)]
+                    [(sub) (apply-op - args)]
+                    [(mul) (apply-op * args)]
+                    [(div) (apply-op / args)]
+                    [else (complain "invalid operator" op)]))]
+               [else (complain "invalid expression" expr)])))
+         (define apply-op
+           (lambda (op args)
+             (op (do-calc (car args)) (do-calc (cadr args)))))
+         (define complain
+           (lambda (msg expr)
+             (ek (list msg expr))))
+         (do-calc expr)))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g82]{3.5.3}. }(page \pageref{further_s88})
+
+  
+\begin{alltt}
+ (define calc \#{}f)
+ (let ()
+   (define do-calc
+     (lambda (expr)
+       (cond
+         [(number? expr) expr]
+         [(and (list? expr) (= (length expr) 3))
+          (let ([op (car expr)] [args (cdr expr)])
+            (case op
+              [(add) (apply-op + args)]
+              [(sub) (apply-op - args)]
+              [(mul) (apply-op * args)]
+              [(div) (apply-op / args)]
+              [else (complain "invalid operator" op)]))]
+         [else (complain "invalid expression" expr)])))
+   (define apply-op
+     (lambda (op args)
+       (op (do-calc (car args)) (do-calc (cadr args)))))
+   (define complain
+     (lambda (msg expr)
+       (assertion-violation 'calc msg expr)))
+   (set! calc
+     (lambda (expr)
+       (do-calc expr))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g83]{3.5.4}. }(page \pageref{further_s89})
+
+  This adds \texttt{sqrt}, \texttt{times} (an alias for \texttt{mul}), and \texttt{expt} along with \texttt{minus}. 
+\begin{alltt}
+(let ()
+   (define do-calc
+     (lambda (ek expr)
+       (cond
+         [(number? expr) expr]
+         [(and (list? expr) (= (length expr) 2))
+          (let ([op (car expr)] [args (cdr expr)])
+            (case op
+              [(minus) (apply-op1 ek - args)]
+              [(sqrt) (apply-op1 ek sqrt args)]
+              [else (complain ek "invalid unary operator" op)]))]
+         [(and (list? expr) (= (length expr) 3))
+          (let ([op (car expr)] [args (cdr expr)])
+            (case op
+              [(add) (apply-op2 ek + args)]
+              [(sub) (apply-op2 ek - args)]
+              [(mul times) (apply-op2 ek * args)]
+              [(div) (apply-op2 ek / args)]
+              [(expt) (apply-op2 ek expt args)]
+              [else (complain ek "invalid binary operator" op)]))]
+         [else (complain ek "invalid expression" expr)])))
+   (define apply-op1
+     (lambda (ek op args)
+       (op (do-calc ek (car args)))))
+   (define apply-op2
+     (lambda (ek op args)
+       (op (do-calc ek (car args)) (do-calc ek (cadr args)))))
+   (define complain
+     (lambda (ek msg expr)
+       (ek (list msg expr))))
+   (set! calc
+     (lambda (expr)
+       (call/cc
+         (lambda (ek)
+           (do-calc ek expr))))))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g85]{3.6.1}. }(page \pageref{further_s90})
+
+  This version of \texttt{gpa} returns \texttt{x} when all of the input letter grades are \texttt{x}. 
+\begin{alltt}
+(define-syntax gpa
+   (syntax-rules ()
+     [(\_{} g1 g2 ...)
+      (let ([ls (map letter-\textgreater{}number (remq 'x '(g1 g2 ...)))])
+        (if (null? ls)
+            'x
+            (/ (apply + ls) (length ls))))]))
+\end{alltt}
+
+
+
+\paragraph{Exercise \hyperref[further_g86]{3.6.2}. }(page \pageref{further_s91})
+
+  After defining \texttt{\${}distribution} and \texttt{distribution} within the library as follows: 
+\begin{alltt}
+(define \${}distribution
+   (lambda (ls)
+     (let loop ([ls ls] [a 0] [b 0] [c 0] [d 0] [f 0])
+       (if (null? ls)
+           (list (list a 'a) (list b 'b) (list c 'c)
+             (list d 'd) (list f 'f))
+           (case (car ls)
+             [(a) (loop (cdr ls) (+ a 1) b c d f)]
+             [(b) (loop (cdr ls) a (+ b 1) c d f)]
+             [(c) (loop (cdr ls) a b (+ c 1) d f)]
+             [(d) (loop (cdr ls) a b c (+ d 1) f)]
+             [(f) (loop (cdr ls) a b c d (+ f 1))]
+            ; ignore x grades, per preceding exercise
+             [(x) (loop (cdr ls) a b c d f)]
+             [else (assertion-violation 'distribution
+                     "unrecognized grade letter"
+                     (car ls))])))))
+ (define-syntax distribution
+   (syntax-rules ()
+     [(\_{} g1 g2 ...)
+      (\${}distribution '(g1 g2 ...))]))
+\end{alltt}
+
+modify the \texttt{export} line to add \texttt{distribution} (but not \texttt{\${}distribution}). 
+
+
+\paragraph{Exercise \hyperref[further_g87]{3.6.3}. }(page \pageref{further_s92})
+
+  After defining \texttt{histogram} as follows: 
+\begin{alltt}
+(define histogram
+   (lambda (port distr)
+     (for-each
+       (lambda (n g)
+         (put-datum port g)
+         (put-string port ": ")
+         (let loop ([n n])
+           (unless (= n 0)
+             (put-char port \#{}\textbackslash{}*)
+             (loop (- n 1))))
+         (put-string port "\textbackslash{}n"))
+       (map car distr)
+       (map cadr distr))))
+\end{alltt}
+
+modify the \texttt{export} line to add \texttt{histogram}. The solution uses \texttt{for-each}, which is described on page \pageref{control_desc_for_each} 
+
+  
+  

@@ -1,0 +1,25 @@
+\begin{tikzpicture}[start chain]
+
+\node[list,on chain] (A1) {$1$ \nodepart{two} \phantom{null}};
+\node[list,on chain] (A2) {\phantom{null} \nodepart{two} \phantom{null}};
+\node[list,on chain] (A3) {\phantom{null} \nodepart{two} \phantom{null}};
+\node[list,on chain] (A4) {$4$ \nodepart{two} $5$};
+
+\node[list,below=of A3] (B1) {\texttt{()} \nodepart{two} \texttt{()}};
+
+\node[list,below left=of B1] (C1) {$2$ \nodepart{two} \phantom{null}};
+\node[list,right=of C1] (C2) {\phantom{null} \nodepart{two} \texttt{()}};
+
+\node[list,below=of C2] (D1) {$3$ \nodepart{two} \texttt{()}};
+  
+\pSF{A1}{A2};
+\pSF{A2}{A3};
+\pSF{A3}{A4};
+
+\pSF{C1}{C2};
+
+\pFF{A2}{C1};
+\pFF{A3}{B1};
+\pFF{C2}{D1};
+
+\end{tikzpicture}
