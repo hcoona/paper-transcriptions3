@@ -1,0 +1,161 @@
+\PassOptionsToPackage{dvipsnames}{xcolor}
+\PassOptionsToPackage{unicode=true,colorlinks=true,urlcolor=blue}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[a4paper,12pt,notitlepage,twoside,openright]{article}
+
+\usepackage{ifxetex}
+\ifxetex{}
+\else
+\errmessage{Must be built with XeLaTeX}
+\fi
+
+\input{../common/fonts.tex}
+\input{../common/packages.tex}
+\usepackage{endnotes}
+\input{../common/setup.tex}
+
+\title{A Brief History of Log Structured Merge Trees \\{\footnotesize \url{https://ristret.com/s/gnd4yr/brief_history_log_structured_merge_trees}}}
+\author{Arjun Narayan}
+\date{February, 21, 2018}
+
+\begin{document}
+\maketitle
+
+LSMs have been around for the past two decades, popularized by their
+usage inside Google infrastructure. As Google infrastructure has been
+cloned outside Google, the usage of LSMs to store sorted data has as
+well. I've been searching for a history of
+\href{https://en.wikipedia.org/wiki/Log-structured_merge-tree}{log-structured
+merge trees}, for a while. Not finding one, this is my best shot at
+writing a start. While I asked people at my workplace for their personal
+recollections from their time at Google, all errors are solely my own. I
+welcome any and all input you might have, and will make an effort to
+keep this updated.
+
+In search of more information on why Google developed LSMs, I posed this
+question to \href{https://en.wikipedia.org/wiki/Ben_Darnell}{Ben
+Darnell}, who proved to be a wealth of information. One of the first
+things he said that the SSTable file format \emph{preceded} the LSM,
+which surprised me. SSTables always seemed to me like they were custom
+designed to be used as the basic building block of an LSM\endnote{
+The best concise explanation of the SSTable file format is found
+in Martin Kleppmann's \href{https://dataintensive.net/}{Designing Data
+Intensive Applications}.}.
+Apparently, MapReduce (\textasciitilde2002) used a \emph{flat}
+collection of SSTables. This makes sense to me: if you use MapReduce to
+build secondary indexes, then there's no size expectation for the output
+of any given reducer, as the distribution of secondary index keys is not
+predictable from your distribution of input keys (after all - why are
+you building a secondary index in the first place?). SSTables were kept
+sorted to facilitate incremental construction, that could then be merged
+on the way out: if you don't know how many KVs you're going to receive
+as a reducer, you can construct an SSTable up to the size that you can
+sort in-memory, and then output it to disk, and start on a new one, in a
+memoryless fashion. With \(k\) SSTables, you can then stream your
+output with \(k\) iterators. Neat\endnote{As an aside, MapReduce was designed for \emph{index building},
+not for computing PageRank. It seems every year there's an SOSP or OSDI
+paper that builds some distributed graph processing framework (it's
+better now, but good God was 2012 a bleak year) and then beats the dead
+horse of comparing PageRank computation versus MapReduce and claiming
+10x speedups. But Google never used MapReduce to compute PageRank, but
+rather to perform gigantic inverted index construction. Somehow ``Google
+= computing PageRank'' got conflated with ``Google runs on MapReduce'',
+providing a conveniently sandbagged comparison point for everyone's and
+their mother's graph processing framework.}.
+
+The idea to put these SSTables in a log-structured fashion to recover
+\(\log(n)\) time search while maintaining \(\log(n)\) iterators
+came later, with BigTable (\textasciitilde{}2004).
+\href{https://static.googleusercontent.com/media/research.google.com/en//archive/bigtable-osdi06.pdf}{The
+BigTable paper} describes this, although it doesn't pay much attention
+to the big-O analysis (the section on Compactions does not, for example,
+explain what the compaction strategy is).
+
+While we think of LevelDB as the main LSM implementation, LevelDB was
+designed after BigTable as an embedded ``BigTable-lite'' implementation,
+for storing Key-Value metadata in Google Chrome. This was eventually
+open-sourced as ``the'' key-value store, so it's retroactively gained
+the status of the defacto LSM implementation.
+
+Throughout all of this history, it wasn't clear to me \emph{why} you
+would want to do all of this! By \textasciitilde{}2004, we already had
+several mature BTree based database engines, and it seems like Google
+reinvented a fairly significant wheel. The reason seems to be that
+Google's infrastructure (namely
+\href{http://static.googleusercontent.com/media/research.google.com/en//archive/gfs-sosp2003.pdf}{Google
+File System}) was designed for appending files, and had atrocious
+non-append mutation performance. BTree writes are heavily mutating, and
+thus a non-starter if you're going to write your BTree pages to GFS.
+
+So it seems that the engineering efforts to productionize LSMs came out
+of an artifact of GFS's design focus on append-only writes at expense of
+random writes. I've heard some drunken chatter at SOSPs past that
+``LevelDB was optimized for the IO profile of spinning disks'', but I
+believe that it's \emph{GFS's} IO profile that's the reason (which is
+similar to spinning disks of having much better contiguous read and
+write performance to random reads and writes). And from
+\href{http://static.googleusercontent.com/media/research.google.com/en//archive/gfs-sosp2003.pdf}{the
+Google File System paper}, they say this is because the dominant
+paradigm is that their files are \emph{very large}, and for very large
+files, appending is the only realistic way to ever modify them.
+
+Facebook forked LevelDB as RocksDB, and invested some heavy resources
+into productionizing it to perform better on SSDs. I'm not the most
+familiar with RocksDB, but I believe this involved a lot of work on
+making the engine lock-free to allow continuous multi-threaded
+compactions\endnote{I have no idea \emph{why} continuous multi-thread compactions
+results in better SSD performance, and eagerly await your email
+explaining this.}. Mark Callaghan from Facebook has a performance
+\href{http://smalldatum.blogspot.com/2016/01/summary-of-advantages-of-lsm-vs-b-tree.html}{comparison
+of LSMs versus BTrees}, who's conclusion is that RocksDB (the chosen
+LSM) has better compression and less write-amplification than InnoDB
+(the chosen BTree), at the trade-off of having worse space
+amplification, and performing worse on scans (as opposed to point
+lookups) due to not being able to use SSTable Bloom Filters. While this
+comparison is careful to note the advantages and disadvantages of
+\emph{individual} LSM and BTree implementations, I do quibble with the
+title. These performance profiles aren't inherent to LSMs or BTrees: as
+\href{http://www.cs.utexas.edu/\%7Evijay/papers/sosp17-pebblesdb.pdf}{Vijay
+Chidambaram's research group shows}, LSM write/space amplification
+performance is all about the specific compaction strategy. PebblesDB
+(their LevelDB fork), achieves much better write amplification at the
+cost of worse space amplification. This paper is contrasted by
+\href{http://cidrdb.org/cidr2017/papers/p82-dong-cidr17.pdf}{some work
+from Facebook's RocksDB team} where they explicitly say they tune
+RocksDB to keep space amplification down. So perhaps it's merely
+quibbling about compaction strategy.
+
+Anyway, we've veered off trail here, but that's how these projects
+evolve too! The end result after all of this is that RocksDB has turned
+into a rock solid, battle tested key-value storage engine that has been
+used in some form or the other at two of the largest internet companies
+in the world. So, strangely, if you had to pick a storage engine to use
+for your single-node key-value needs, it turns out to be the best
+option! There aren't many battle tested BTree based storage engines out
+there that aren't tied quite closely to specific database
+implementations.
+
+I've come to the conclusion that LSMs and BTrees are essentially
+equivalent at this point. For whatever tradeoffs there may be for
+particular implementations (e.g. InnoDB vs RocksDB) there's a different
+compaction strategy that gets to the other's performance. It just so
+happens that the peculiarities of GFS (perhaps it all came down to
+spinning disks back around \textasciitilde{}2005?) resulted in Google
+investing heavily in LSM based storage infrastructure. Google
+open-sourced their work, and that allowed the rest of the world to take
+advantage of LSMs, and there are no comparable open-source BTree
+libraries with as much battle-testing, so new projects build off
+RocksDB, even if a BTree would be just as good.
+
+Edit (2/25/2018): Ben clarifies that there may have been a time when
+MapReduce was used to compute PageRank --- mainly because it already
+existed, and Pregel wasn't built yet. But again, this was an instance of
+using an existing hammer, not any claim that it was the optimal hammer
+for the task. So the point stands that everyone knows its a poor tool
+for the job of running graph computations and systems builders should
+stop comparing their graph computation systems against it.
+
+\enlargethispage{3\baselineskip}
+\theendnotes{}
+
+\end{document}
