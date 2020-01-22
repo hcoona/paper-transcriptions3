@@ -1,0 +1,10 @@
+= Paper Transcriptions
+Shuai Zhang<zhangshuai.ustc@gmail.com>
+
+Some papers are quite old or not well-maintained so that only blurred scanning version available now.
+
+I'd like to transcribe some valuable papers into LaTeX format for better reading. This could be helpful for other people who also need to read them.
+
+== Index
+
+TODO(zhangshuai.ds): Generate Index

@@ -1,0 +1,33 @@
+load("//:defs.bzl", "my_latex_gen")
+
+# TODO(zhangshuai.ds): Generate fig-1-1.pdf on-the-fly.
+# genrule(
+#     name = "fig_1_1",
+#     srcs = [
+#         "fig-1-1.tex",
+#         "//common",
+#     ],
+#     outs = ["fig-1-1.pdf"],
+#     cmd_bash = "latexmk -cd -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location fig-1-1.tex) && " +
+#                "mv \"$$(dirname $(location fig-1-1.tex))/fig-1-1.pdf\" \"$@\"",
+# )
+
+my_latex_gen(
+    name = "main",
+    main = "main.tex",
+    deps = [
+        "fig-1-1.pdf",
+        "media/fig-4-3.png",
+        "media/image1.jpeg",
+        "media/image10.jpeg",
+        "media/image2.jpeg",
+        "media/image3.jpeg",
+        "media/image4.jpeg",
+        "media/image5.jpeg",
+        "media/image6.jpeg",
+        "media/image7.jpeg",
+        "media/image8.jpeg",
+        "media/image9.jpeg",
+        "//common",
+    ],
+)
