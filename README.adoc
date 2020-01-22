@@ -8,3 +8,8 @@ I'd like to transcribe some valuable papers into LaTeX format for better reading
 == Index
 
 TODO(zhangshuai.ds): Generate Index
+
+== Styles
+
+* a4paper, 12pt for articles.
+* b5paper, 11pt for books.
