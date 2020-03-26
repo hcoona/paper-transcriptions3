@@ -1,0 +1,11 @@
+load("//:defs.bzl", "my_latex_gen")
+
+my_latex_gen(
+    name = "main",
+    main = "main.tex",
+    deps = [
+        "feasible_region.png",
+        "feasible_region_sol.png",
+        "//common:common",
+    ],
+)

@@ -1,0 +1,321 @@
+\PassOptionsToPackage{dvipsnames}{xcolor}
+\PassOptionsToPackage{unicode=true,colorlinks=true,urlcolor=blue}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[a4paper,12pt,notitlepage,twoside,openright]{article}
+
+\usepackage{ifxetex}
+\ifxetex{}
+\else
+\errmessage{Must be built with XeLaTeX}
+\fi
+
+\input{../common/fonts.tex}
+\input{../common/packages.tex}
+\usepackage{float}
+\input{../common/setup.tex}
+
+\title{Mixed-Integer Programming\\{\footnotesize \url{https://developers.google.com/optimization/mip/integer_opt}}}
+\author{}
+\date{2020-03-12}
+
+\begin{document}
+\maketitle
+
+The following sections describe how solve mixed-integer programming (MIP) problems with OR-Tools.
+
+\section{MIP solvers}
+
+OR-Tools provides an interface to several third-party MIP solvers. The \href{https://projects.coin-or.org/Cbc}{Coin-or branch and cut (CBC)} solver is included with OR-Tools. You can use it whether you install OR-Tools from binary or source.
+
+If you build OR-Tools from source, you can install and use any of the following third-party MIP solvers in place of CBC:
+
+\begin{enumerate}
+\item \href{http://scip.zib.de/}{SCIP}
+\item \href{https://www.gnu.org/software/glpk/}{GLPK}
+\item \href{http://www.gurobi.com/}{Gurobi}
+\end{enumerate}
+
+The section ``Using a third-party solver'' in the \href{https://developers.google.com/optimization/install}{Installation} guide for your platform explains how to build OR-Tools with the solver. For example, if you are using C++ on Linux, see the instructions \href{https://developers.google.com/optimization/install/cpp/source_linux#third_party}{here}.
+
+\subsection{Using a MIP solver}
+
+To use a MIP solver in OR-Tools, your program should include the following three sections.
+
+\subsubsection{Import the linear solver wrapper}
+
+To use a MIP solver, you first import (or include) the OR-Tools \href{https://developers.google.com/optimization/reference/linear_solver/linear_solver}{linear solver wrapper}, an interface for MIP solvers and the \href{https://developers.google.com/optimization/lp/glop#overview_1}{Glop} LP solver, as shown below.
+
+\begin{minted}{cpp}
+#include "ortools/linear_solver/linear_solver.h"
+\end{minted}
+
+\subsubsection{Declare the MIP solver}
+
+Declare the MIP solver you want to use. The code below declares the CBC solver.
+
+\begin{minted}{cpp}
+// Create the mip solver with the CBC backend.
+MPSolver solver("simple_mip_program",
+                MPSolver::CBC_MIXED_INTEGER_PROGRAMMING);
+\end{minted}
+
+\subsubsection{Call the MIP solver}
+
+The following code calls the solver.
+
+\begin{minted}{cpp}
+const MPSolver::ResultStatus result_status = solver.Solve();
+// Check that the problem has an optimal solution.
+if (result_status != MPSolver::OPTIMAL) {
+  LOG(FATAL) << "The problem does not have an optimal solution!";
+}
+\end{minted}
+
+\section{MIP Example}
+
+The following sections present an example of a MIP and show how to solve it. Here's the problem:
+
+\textbf{Maximize x + 10y subject to the following constraints:}
+
+\begin{align*}
+x + 7y &\leq 17.5 \\
+x      &\leq  3.5 \\
+x      &\geq  0   \\
+y      &\geq  0   \\
+x, y\; &\text{integers} \\
+\end{align*}
+
+Since the constraints are linear, this is just a linear optimization problem in which the solutions are required to be integers. The graph below shows the integer points in the feasible region for the problem.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\columnwidth]{feasible_region.png}
+\end{figure}
+
+Notice that this problem is very similar to the linear optimization problem described in \href{https://developers.google.com/optimization/lp/glop}{Linear Optimization with Glop}, but in this case we require the solutions to be integers.
+
+\subsection{Import the linear solver wrapper}
+
+To begin, you must import (or include) the linear solver wrapper.
+
+\begin{minted}{cpp}
+#include "ortools/linear_solver/linear_solver.h"
+\end{minted}
+
+\subsection{Declare the MIP solver}
+
+The following code declares the MIP solver for the problem. In this example, we're using the CBC solver.
+
+\begin{minted}{cpp}
+// Create the mip solver with the CBC backend.
+MPSolver solver("simple_mip_program",
+                MPSolver::CBC_MIXED_INTEGER_PROGRAMMING);
+\end{minted}
+
+\subsection{Define the variables}
+
+The following code defines the variables in the problem.
+
+\begin{minted}{cpp}
+const double infinity = solver.infinity();
+// x and y are integer non-negative variables.
+MPVariable* const x = solver.MakeIntVar(0.0, infinity, "x");
+MPVariable* const y = solver.MakeIntVar(0.0, infinity, "y");
+
+LOG(INFO) << "Number of variables = " << solver.NumVariables();
+\end{minted}
+
+The program uses the \texttt{MakeIntVar} method (or a variant, depending on the coding language) to create variables x and y that take on non-negative integer values.
+
+\subsection{Define the constraints}
+
+The following code defines the constraints for the problem.
+
+\begin{minted}{cpp}
+// x + 7 * y <= 17.5.
+MPConstraint* const c0 = solver.MakeRowConstraint(-infinity, 17.5, "c0");
+c0->SetCoefficient(x, 1);
+c0->SetCoefficient(y, 7);
+
+// x <= 3.5.
+MPConstraint* const c1 = solver.MakeRowConstraint(-infinity, 3.5, "c1");
+c1->SetCoefficient(x, 1);
+c1->SetCoefficient(y, 0);
+
+LOG(INFO) << "Number of constraints = " << solver.NumConstraints();
+\end{minted}
+
+\subsection{Define the objective}
+
+The following code defines the objective function for the problem.
+
+\begin{minted}{cpp}
+// Maximize x + 10 * y.
+MPObjective* const objective = solver.MutableObjective();
+objective->SetCoefficient(x, 1);
+objective->SetCoefficient(y, 10);
+objective->SetMaximization();
+\end{minted}
+
+\subsection{Call the solver}
+
+The following code calls the solver.
+
+\begin{minted}{cpp}
+const MPSolver::ResultStatus result_status = solver.Solve();
+// Check that the problem has an optimal solution.
+if (result_status != MPSolver::OPTIMAL) {
+  LOG(FATAL) << "The problem does not have an optimal solution!";
+}
+\end{minted}
+
+\subsection{Display the solution}
+
+The following code displays the solution.
+
+\begin{minted}{cpp}
+LOG(INFO) << "Solution:";
+LOG(INFO) << "Objective value = " << objective->Value();
+LOG(INFO) << "x = " << x->solution_value();
+LOG(INFO) << "y = " << y->solution_value();
+\end{minted}
+
+Here is the solution to the problem.
+
+\begin{verbatim}
+Number of variables = 2
+Number of constraints = 2
+Solution:
+Objective value = 23
+x = 3
+y = 2
+\end{verbatim}
+
+The optimal value of the objective function is 23, which occurs at the point \(x = 3, y = 2\).
+
+\subsection{Complete programs}
+
+Here are the complete programs.
+
+\begin{minted}{cpp}
+#include "ortools/linear_solver/linear_solver.h"
+
+namespace operations_research {
+void simple_mip_program() {
+  // Create the mip solver with the CBC backend.
+  MPSolver solver("simple_mip_program",
+                  MPSolver::CBC_MIXED_INTEGER_PROGRAMMING);
+
+  const double infinity = solver.infinity();
+  // x and y are integer non-negative variables.
+  MPVariable* const x = solver.MakeIntVar(0.0, infinity, "x");
+  MPVariable* const y = solver.MakeIntVar(0.0, infinity, "y");
+
+  LOG(INFO) << "Number of variables = " << solver.NumVariables();
+
+  // x + 7 * y <= 17.5.
+  MPConstraint* const c0 = solver.MakeRowConstraint(-infinity, 17.5, "c0");
+  c0->SetCoefficient(x, 1);
+  c0->SetCoefficient(y, 7);
+
+  // x <= 3.5.
+  MPConstraint* const c1 = solver.MakeRowConstraint(-infinity, 3.5, "c1");
+  c1->SetCoefficient(x, 1);
+  c1->SetCoefficient(y, 0);
+
+  LOG(INFO) << "Number of constraints = " << solver.NumConstraints();
+
+  // Maximize x + 10 * y.
+  MPObjective* const objective = solver.MutableObjective();
+  objective->SetCoefficient(x, 1);
+  objective->SetCoefficient(y, 10);
+  objective->SetMaximization();
+
+  const MPSolver::ResultStatus result_status = solver.Solve();
+  // Check that the problem has an optimal solution.
+  if (result_status != MPSolver::OPTIMAL) {
+    LOG(FATAL) << "The problem does not have an optimal solution!";
+  }
+
+  LOG(INFO) << "Solution:";
+  LOG(INFO) << "Objective value = " << objective->Value();
+  LOG(INFO) << "x = " << x->solution_value();
+  LOG(INFO) << "y = " << y->solution_value();
+
+  LOG(INFO) << "\nAdvanced usage:";
+  LOG(INFO) << "Problem solved in " << solver.wall_time() << " milliseconds";
+  LOG(INFO) << "Problem solved in " << solver.iterations() << " iterations";
+  LOG(INFO) << "Problem solved in " << solver.nodes()
+            << " branch-and-bound nodes";
+}
+}  // namespace operations_research
+
+int main(int argc, char** argv) {
+  operations_research::simple_mip_program();
+  return EXIT_SUCCESS;
+}
+\end{minted}
+
+\section{Comparing Linear and Integer Optimization}
+
+Let's compare the solution to the integer optimization problem, shown above, with the solution to the corresponding linear optimization problem, in which integer constraints are removed. You might guess that the solution to the integer problem would be the integer point in the feasible region closest to the linear solution --- namely, the point \(x = 0,  y = 2\). But as you will see next, this is not the case.
+
+You can easily modify the program in the preceding section to solve the linear problem by making the following changes:
+
+\begin{itemize}
+\item Replace the MIP solver
+\begin{minted}{cpp}
+// Create the mip solver with the CBC backend.
+MPSolver solver("simple_mip_program",
+                MPSolver::CBC_MIXED_INTEGER_PROGRAMMING);
+\end{minted}
+with the LP solver
+\begin{minted}{cpp}
+MPSolver solver("simple_lp_program",
+                MPSolver::GLOP_LINEAR_PROGRAMMING);
+\end{minted}
+\item Replace the integer variables
+\begin{minted}{cpp}
+const double infinity = solver.infinity();
+// x and y are integer non-negative variables.
+MPVariable* const x = solver.MakeIntVar(0.0, infinity, "x");
+MPVariable* const y = solver.MakeIntVar(0.0, infinity, "y");
+
+LOG(INFO) << "Number of variables = " << solver.NumVariables();
+\end{minted}
+with continuous variables
+\begin{minted}{cpp}
+const double infinity = solver.infinity();
+MPVariable* const x = solver.MakeNumVar(0.0, infinity, "x");
+MPVariable* const y = solver.MakeNumVar(0.0, infinity, "y");
+
+LOG(INFO) << "Number of variables = " << solver.NumVariables();
+\end{minted}
+\end{itemize}
+
+After making these changes and running the program again, you get the following output:
+
+\begin{verbatim}
+Number of variables = 2
+Number of constraints = 2
+Objective value = 25.000000
+x = 0.000000
+y = 2.500000
+\end{verbatim}
+
+The solution to the linear problem occurs at the point \(x = 0,  y = 2.5\), where the objective function equals 25. Here's a graph showing the solutions to both the linear and integer problems.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\columnwidth]{feasible_region_sol.png}
+\end{figure}
+
+Notice that the integer solution is not close to the linear solution, compared with most other integer points in the feasible region. In general, the solutions to a linear optimization problem and the corresponding integer optimization problems can be far apart. Because of this, the two types of problems require different methods for their solution.
+
+\section{Should I use MIP or CP-SAT?}
+
+You can solve integer optimization problems with either a MIP solver or the CP-SAT solver. For standard integer programming problems, in which a feasible point must satisfy all constraints, the MIP solver is faster. In this case, the feasible set is convex: for any two points in the set, the line segment joining them lies entirely in the set.
+
+On the other hand, for problems with highly non-convex feasible sets, the CP-SAT solver is often faster than the MIP solver. Such problems arise when the feasible set is defined by many constraints joined by "or," meaning that a point only needs to satisfy one of the constraints to be feasible. For an example, see \href{https://developers.google.com/optimization/assignment/assignment_groups}{Assignment with allowed groups}.
+
+\end{document}
