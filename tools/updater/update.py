@@ -36,6 +36,7 @@ def main():
                           src_checksum.resolve())
             return 11
 
+        # TODO(zhangshuai.ustc): Parse checksum file and opt out the output file.
         if dst_checksum.exists() and filecmp.cmp(src_checksum.resolve(),
                                                  dst_checksum.resolve()):
             logging.info('Checksum of %s and %s are same.',
