@@ -4,6 +4,9 @@ my_latex_gen(
     name = "main",
     main = "main.tex",
     deps = [
-        "//common:common",
+        "fig-1.png",
+        "fig-3.png",
+        "fig-4.png",
+        "//common",
     ],
 )
