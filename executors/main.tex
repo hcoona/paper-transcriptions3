@@ -1,0 +1,5184 @@
+\PassOptionsToPackage{dvipsnames}{xcolor}
+\PassOptionsToPackage{unicode=true,colorlinks=true,urlcolor=blue}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[a4paper,12pt,notitlepage,twoside,openright]{article}
+
+\usepackage{ifxetex}
+\ifxetex{}
+\else
+\errmessage{Must be built with XeLaTeX}
+\fi
+
+\input{../common/fonts.tex}
+\input{../common/packages.tex}
+\usepackage{endnotes}
+\input{../common/setup.tex}
+
+\title{A Unified Executors Proposal for C++ \textbar{} P0443R14}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule
+\endhead
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+Title:\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+A Unified Executors Proposal for C++\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+Authors:\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Jared Hoberock, jhoberock@nvidia.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Michael Garland, mgarland@nvidia.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Chris Kohlhoff, chris@kohlhoff.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Chris Mysen, mysen@google.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Carter Edwards, hcedwar@sandia.gov\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Gordon Brown, gordon@codeplay.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Daisy Hollman, dshollm@sandia.gov\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Lee Howes, lwh@fb.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Kirk Shoop, kirkshoop@fb.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Lewis Baker, lbaker@fb.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Eric Niebler, eniebler@fb.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+Other Contributors:\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Hans Boehm, hboehm@google.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Thomas Heller, thom.heller@gmail.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Bryce Lelbach, brycelelbach@gmail.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Hartmut Kaiser, hartmut.kaiser@gmail.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Bryce Lelbach, brycelelbach@gmail.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Gor Nishanov, gorn@microsoft.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Thomas Rodgers, rodgert@twrodgers.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+Michael Wong, michael@codeplay.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+Document Number:\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+P0443R14\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+Date:\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+2020-09-15\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+Audience:\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+SG1 - Concurrency and Parallelism, LEWG\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+Reply-to:\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+sg1-exec@googlegroups.com\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+Abstract:\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+This paper proposes \protect\hyperlink{proposed-wording}{a programming
+model} for executors, which are modular components for creating
+execution, and senders, which are lazy descriptions of execution.\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.26\columnwidth}\raggedright
+pandoc-minted: language: cpp\strut
+\end{minipage} & \begin{minipage}[t]{0.50\columnwidth}\raggedright
+\strut
+\end{minipage}\tabularnewline
+\bottomrule
+\end{longtable}
+
+\hypertarget{design-document}{%
+\section{Design Document}\label{design-document}}
+
+\hypertarget{motivation}{%
+\subsection{Motivation}\label{motivation}}
+
+When we imagine the future of C++ programs, we envision elegant
+compositions of networked, asynchronous parallel computations
+accelerated by diverse hardware, ranging from tiny mobile devices to
+giant supercomputers. In the present, hardware diversity is greater than
+ever, but C++ programmers lack satisfying parallel programming tools for
+them. Industrial-strength concurrency primitives like
+\mintinline[]{text}{std::thread} and \mintinline[]{text}{std::atomic}
+are powerful but hazardous. \mintinline[]{text}{std::async} and
+\mintinline[]{text}{std::future} suffer from well-known problems. And
+the standard algorithms library, though parallelized, remains inflexible
+and non-composable.
+
+To address these temporary challenges and build toward the future, C++
+must lay a foundation for controlling program execution. First,
+\textbf{C++ must provide flexible facilities to control where and when
+work happens.} This paper proposes a design for those facilities. After
+\protect\hyperlink{appendix-executors-bibilography}{much discussion and
+collaboration}, SG1 adopted this design by universal consensus at the
+Cologne meeting in 2019.
+
+\hypertarget{usage-example}{%
+\subsection{Usage Example}\label{usage-example}}
+
+This proposal defines requirements for two key components of execution:
+a work execution interface and a representation of work and their
+interrelationships. Respectively, these are \textbf{executors} and
+\textbf{senders and receivers}:
+
+\begin{minted}{cpp}
+// make P0443 APIs in namespace std::execution available
+using namespace std::execution;
+
+// get an executor from somewhere, e.g. a thread pool
+std::static_thread_pool pool(16);
+executor auto ex = pool.executor();
+
+// use the executor to describe where some high-level library should execute its work
+perform_business_logic(ex);
+
+// alternatively, use primitive P0443 APIs directly
+
+// immediately submit work to the pool
+execute(ex, []{ std::cout << "Hello world from the thread pool!"; });
+
+// immediately submit work to the pool and require this thread to block until completion
+execute(std::require(ex, blocking.always), foo);
+
+// describe a chain of dependent work to submit later
+sender auto begin    = schedule(ex);
+sender auto hi_again = then(begin, []{ std::cout << "Hi again! Have an int."; return 13; });
+sender auto work     = then(hi_again, [](int arg) { return arg + 42; });
+
+// prints the final result
+receiver auto print_result = as_receiver([](int arg) { std::cout << "Received " << arg << std::endl; });
+
+// submit the work for execution on the pool by combining with the receiver
+submit(work, print_result);
+
+// Blue: proposed by P0443. Teal: possible extensions.
+\end{minted}
+
+\hypertarget{executors-execute-work}{%
+\subsection{Executors Execute Work}\label{executors-execute-work}}
+
+As lightweight handles, executors impose uniform access to execution
+contexts.
+
+Executors provide a uniform interface for work creation by abstracting
+underlying resources where work physically executes. The previous code
+example's underlying resource was a thread pool. Other examples include
+SIMD units, GPU runtimes, or simply the current thread. In general, we
+call such resources \textbf{execution contexts}. As lightweight handles,
+executors impose uniform access to execution contexts. Uniformity
+enables control over where work executes, even when it is executed
+indirectly behind library interfaces.
+
+The basic executor interface is the \mintinline[]{text}{execute}
+function through which clients execute work:
+
+\begin{minted}{cpp}
+// obtain an executor
+executor auto ex = ...
+
+// define our work as a nullary invocable
+invocable auto work = []{ cout << "My work" << endl; };
+
+// execute our work via the execute customization point
+execute(ex, work);
+\end{minted}
+
+On its own, \mintinline[]{text}{execute} is a primitive
+``fire-and-forget''-style interface. It accepts a single nullary
+invocable, and returns nothing to identify or interact with the work it
+creates. In this way, it trades convenience for universality. As a
+consequence, we expect most programmers to interact with executors via
+more convenient higher-level libraries, our envisioned asynchronous STL
+being such an example.
+
+Consider how \mintinline[]{text}{std::async} could be extended to
+interoperate with executors enabling client control over execution:
+
+\begin{minted}{cpp}
+template<class Executor, class F, class Args...>
+future<invoke_result_t<F,Args...>> async(const Executor& ex, F&& f, Args&&... args) {
+  // package up the work
+  packaged_task work(forward<F>(f), forward<Args>(args)...);
+
+  // get the future
+  auto result = work.get_future();
+
+  // execute work on the given executor
+  execution::execute(ex, move(work));
+
+  return result;
+}
+\end{minted}
+
+The benefit of such an extension is that a client can select from among
+multiple thread pools to control exactly which pool
+\mintinline[]{text}{std::async} uses simply by providing a corresponding
+executor. Inconveniences of work packaging and submission become the
+library's responsibility.
+
+\textbf{Authoring executors.} Programmers author custom executor types
+by defining a type with an \mintinline[]{text}{execute} function.
+Consider the implementation of an executor whose
+\mintinline[]{text}{execute} function executes the client's work
+``inline'':
+
+\begin{minted}{cpp}
+struct inline_executor {
+  // define execute
+  template<class F>
+  void execute(F&& f) const noexcept {
+    std::invoke(std::forward<F>(f));
+  }
+
+  // enable comparisons
+  auto operator<=>(const inline_executor&) const = default;
+};
+\end{minted}
+
+Additionally, a comparison function determines whether two executor
+objects refer to the same underlying resource and therefore execute with
+equivalent semantics. Concepts \mintinline[]{text}{executor} and
+\mintinline[]{text}{executor_of} summarize these requirements. The
+former validates executors in isolation; the latter, when both executor
+and work are available.
+
+\textbf{Executor customization} can accelerate execution or introduce
+novel behavior. The previous example demonstrated custom execution at
+the granularity of a new executor type, but finer-grained and
+coarser-grained customization techniques are also possible. These are
+\textbf{executor properties} and \textbf{control structures},
+respectively.
+
+\textbf{Executor properties} communicate optional behavioral
+requirements beyond the minimal contract of
+\mintinline[]{text}{execute}, and this proposal specifies several. We
+expect expert implementors to impose these requirements beneath
+higher-level abstractions. In principle, optional, dynamic data members
+or function parameters could communicate these requirements, but C++
+requires the ability to introduce customization at compile time.
+Moreover, optional parameters lead to
+\href{https://wg21.link/P2033}{combinatorially many function variants}.
+
+Instead, statically-actionable properties factor such requirements and
+thereby avoid a combinatorial explosion of executor APIs. For example,
+consider the requirement to execute blocking work with priority. An
+unscalable design might embed these options into the
+\mintinline[]{text}{execute} interface by multiplying individual factors
+into separate functions: \mintinline[]{text}{execute},
+\mintinline[]{text}{blocking_execute},
+\mintinline[]{text}{execute_with_priority},
+\mintinline[]{text}{blocking_execute_with_priority}, etc.
+
+Executors avoid this unscalable situation by adopting
+\href{https://wg21.link/P1393}{P1393}'s properties design based on
+\mintinline[]{text}{require} and \mintinline[]{text}{prefer}:
+
+\begin{minted}{cpp}
+// obtain an executor
+executor auto ex = ...;
+
+// require the execute operation to block
+executor auto blocking_ex = std::require(ex, execution::blocking.always);
+
+// prefer to execute with a particular priority p
+executor auto blocking_ex_with_priority = std::prefer(blocking_ex, execution::priority(p));
+
+// execute my blocking, possibly prioritized work
+execution::execute(blocking_ex_with_priority, work);
+\end{minted}
+
+Each application of \mintinline[]{text}{require} or
+\mintinline[]{text}{prefer} transforms an executor into one with the
+requested property. In this example, if \mintinline[]{text}{ex} cannot
+be transformed into a blocking executor, the call to
+\mintinline[]{text}{require} will fail to compile.
+\mintinline[]{text}{prefer} is a weaker request used to communicate
+hints and consequently always succeeds because it may ignore the
+request.
+
+Consider a version of \mintinline[]{text}{std::async} which \emph{never}
+blocks the caller:
+
+\begin{minted}{cpp}
+template<executor E, class F, class... Args>
+auto really_async(const E& ex, F&& f, Args&&... args) {
+  // package up the work
+  std::packaged_task work(std::forward<F>(f), std::forward<Args>(args)...);
+
+  // get the future
+  auto result = work.get_future();
+
+  // execute the nonblocking work on the given executor
+  execution::execute(std::require(ex, execution::blocking.never), std::move(work));
+
+  return result;
+}
+\end{minted}
+
+Such an enhancement could address a well-known hazard of
+\mintinline[]{text}{std::async}:
+
+\begin{minted}{cpp}
+// confusingly, always blocks in the returned but discarded future's destructor
+std::async(foo);
+
+// *never* blocks
+really_async(ex, foo);
+\end{minted}
+
+\textbf{Control structures} permit customizations at a higher level of
+abstraction by allowing executors to ``hook'' them and is useful when an
+efficient implementation is possible on a particular execution context.
+The first such control structure this proposal defines is
+\mintinline[]{text}{bulk_execute}, which creates a group of function
+invocations in a single operation. This pattern permits a wide range of
+efficient implementations and is of fundamental importance to C++
+programs and the standard library.
+
+By default, \mintinline[]{text}{bulk_execute} invokes
+\mintinline[]{text}{execute} repeatedly, but repeatedly executing
+individual work items is inefficient at scale. Consequently, many
+platforms provide APIs that explicitly and efficiently execute bulk
+work. In such cases, a custom \mintinline[]{text}{bulk_execute} avoids
+inefficient platform interactions via direct access to these accelerated
+bulk APIs while also optimizing the use of scalar APIs.
+
+\mintinline[]{text}{bulk_execute} receives an invocable and an
+invocation count. Consider a possible implementation:
+
+\begin{minted}{cpp}
+struct simd_executor : inline_executor { // first, satisfy executor requirements via inheritance
+  template<class F>
+  simd_sender bulk_execute(F f, size_t n) const {
+    #pragma simd
+    for(size_t i = 0; i != n; ++i) {
+      std::invoke(f, i);
+    }
+
+    return {};
+  }
+};
+\end{minted}
+
+To accelerate \mintinline[]{text}{bulk_execute},
+\mintinline[]{text}{simd_executor} uses a SIMD loop.
+
+\mintinline[]{text}{bulk_execute} should be used in cases where multiple
+pieces of work are available at once:
+
+\begin{minted}{cpp}
+template<class Executor, class F, class Range>
+void my_for_each(const Executor& ex, F f, Range rng) {
+  // request bulk execution, receive a sender
+  sender auto s = execution::bulk_execute(ex, [=](size_t i) {
+    f(rng[i]);
+  }, std::ranges::size(rng));
+
+  // initiate execution and wait for it to complete
+  execution::sync_wait(s);
+}
+\end{minted}
+
+\mintinline[]{text}{simd_executor}'s particular
+\mintinline[]{text}{bulk_execute} implementation executes ``eagerly'',
+but \mintinline[]{text}{bulk_execute}'s semantics do not require it. As
+\mintinline[]{text}{my_for_each} demonstrates, unlike
+\mintinline[]{text}{execute}, \mintinline[]{text}{bulk_execute} is an
+example of a ``lazy'' operation whose execution may be optionally
+postponed. The token this \mintinline[]{text}{bulk_execute} returns is
+an example of a sender a client may use to initiate execution or
+otherwise interact with the work. For example, calling
+\mintinline[]{text}{sync_wait} on the sender ensures that the bulk work
+completes before the caller continues. Senders and receivers are the
+subject of the next section.
+
+\hypertarget{senders-and-receivers-represent-work}{%
+\subsection{Senders and Receivers Represent
+Work}\label{senders-and-receivers-represent-work}}
+
+The \mintinline[]{text}{executor} concept addresses a basic need of
+executing a single operation in a specified execution context. The
+expressive power of \mintinline[]{text}{executor} is limited, however:
+since \mintinline[]{text}{execute} returns \mintinline[]{text}{void}
+instead of a handle to the just-scheduled work, the
+\mintinline[]{text}{executor} abstraction gives no generic way to chain
+operations and thereby propagate values, errors, and cancellation
+signals downstream; no way to handle scheduling errors occurring between
+when work submission and execution; and no convenient way to control the
+allocation and lifetime of state associated with an operation.
+
+Without such controls, it is not possible to define Generic (in the
+Stepanov sense) asynchronous algorithms that compose efficiently with
+sensible default implementations. To fill this gap, this paper proposes
+two related abstractions, \mintinline[]{text}{sender} and
+\mintinline[]{text}{receiver}, concretely motivated below.
+
+\hypertarget{generic-async-algorithm-example-retry}{%
+\subsubsection{\texorpdfstring{Generic async algorithm example:
+\mintinline[]{text}{retry}}{Generic async algorithm example: }}\label{generic-async-algorithm-example-retry}}
+
+\mintinline[]{text}{retry} is the kind of Generic algorithm senders and
+receivers enable. It has simple semantics: schedule work on an execution
+context; if the execution succeeds, done; otherwise, if the user
+requests cancellation, done; otherwise, if a scheduling error occurs,
+try again.
+
+\begin{minted}{cpp}
+template<invocable Fn>
+void retry(executor_of<Fn> auto ex, Fn fn) {
+  // ???
+}
+\end{minted}
+
+Executors alone prohibit a generic implementation because they lack a
+portable way to intercept and react to scheduling errors. Later we show
+how this algorithm might look when implemented with senders and
+receivers.
+
+\hypertarget{goal-an-asynchronous-stl}{%
+\subsubsection{Goal: an asynchronous
+STL}\label{goal-an-asynchronous-stl}}
+
+Suitably chosen concepts driving the definition of Generic async
+algorithms like \mintinline[]{text}{retry} streamline the creation of
+efficient, asynchronous graphs of work. Here is some sample syntax for
+the sorts of async programs we envision (borrowed from
+\href{http://wg21.link/P1897}{P1897}):
+
+\begin{minted}{cpp}
+sender auto s = just(3) |                               // produce '3' immediately
+                on(scheduler1) |                        // transition context
+                transform([](int a){return a+1;}) |     // chain continuation
+                transform([](int a){return a*2;}) |     // chain another continuation
+                on(scheduler2) |                        // transition context
+                let_error([](auto e){return just(3);}); // with default value on errors
+int r = sync_wait(s);                                   // wait for the result
+\end{minted}
+
+It should be possible to replace \mintinline[]{text}{just(3)} with a
+call to any asynchronous API whose return type satisfies the correct
+concept and maintain this program's correctness. Generic algorithms like
+\mintinline[]{text}{when_all} and \mintinline[]{text}{when_any} would
+permit users to express fork/join concurrency in their DAGs. As with
+STL's \mintinline[]{text}{iterator} abstraction, the cost of satisfying
+the conceptual requirements are offset by the expressivity of a large
+reusable and composable library of algorithms.
+
+\hypertarget{current-techniques}{%
+\subsubsection{Current techniques}\label{current-techniques}}
+
+There are many techniques for creating chains of dependent asynchronous
+execution. Ordinary callbacks have enjoyed success in C++ and elsewhere
+for years. Modern codebases have switched to variations of future
+abstractions that support continuations (e.g.,
+\mintinline[]{text}{std::experimental::future::then}). In C++20 and
+beyond, we could imagine standardizing on coroutines, so that launching
+an async operation returns an awaitable. Each of these approaches has
+strengths and weaknesses.
+
+\textbf{Futures}, as traditionally realized, require the dynamic
+allocation and management of a shared state, synchronization, and
+typically type-erasure of work and continuation. Many of these costs are
+inherent in the nature of ``future'' as a handle to an operation that is
+already scheduled for execution. These expenses rule out the future
+abstraction for many uses and makes it a poor choice for a basis of a
+Generic mechanism.
+
+\textbf{Coroutines} suffer many of the same problems but can avoid
+synchronizing when chaining dependent work because they typically start
+suspended. In many cases, coroutine frames require unavoidable dynamic
+allocation. Consequently, coroutines in embedded or heterogeneous
+environments require great attention to detail. Neither are coroutines
+good candidates for cancellation because the early and safe termination
+of coordinating coroutines requires unsatisfying solutions. On the one
+hand, exceptions are inefficient and disallowed in many environments.
+Alternatively, clumsy \emph{ad hoc} mechanisms, whereby
+\mintinline[]{text}{co_yield} returns a status code, hinder correctness.
+\href{http://wg21.link/P1662}{P1662} provides a complete discussion.
+
+\textbf{Callbacks} are the simplest, most powerful, and most efficient
+mechanism for creating chains of work, but suffer problems of their own.
+Callbacks must propagate either errors or values. This simple
+requirement yields many different interface possibilities, but the lack
+of a standard obstructs Generic design. Additionally, few of these
+possibilities accomodate cancellation signals when the user requests
+upstream work to stop and clean up.
+
+\hypertarget{receiver-sender-and-scheduler}{%
+\subsection{Receiver, sender, and
+scheduler}\label{receiver-sender-and-scheduler}}
+
+With the preceding as motivation, we introduce primitives to address the
+needs of Generic asynchronous programming in the presence of value,
+error, and cancellation propagation.
+
+\hypertarget{receiver}{%
+\subsubsection{Receiver}\label{receiver}}
+
+A \mintinline[]{text}{receiver} is simply a callback with a particular
+interface and semantics. Unlike a traditional callback which uses
+function-call syntax and a single signature handling both success and
+error cases, a receiver has three separate channels for value, error,
+and ``done'' (aka cancelled).
+
+These channels are specified as customization points, and a type
+\mintinline[]{text}{R} modeling
+\mintinline[]{text}{receiver_of<R,Ts...>} supports them:
+
+\begin{minted}{cpp}
+std::execution::set_value(r, ts...); // signal success, but set_value itself may fail
+std::execution::set_error(r, ep);    // signal error (ep is std::exception_ptr), never fails
+std::execution::set_done(r);         // signal stopped, never fails
+\end{minted}
+
+Exactly one of the three functions must be called on a
+\mintinline[]{text}{receiver} before it is destroyed. Each of these
+interfaces is considered ``terminal''. That is, a particular receiver
+may assume that if one is called, no others ever will be. The one
+exception being if \mintinline[]{text}{set_value} exits with an
+exception, the receiver is not yet complete. Consequently, another
+function must be called on it before it is destroyed. After a failed
+call to \mintinline[]{text}{set_value}, correctness requires a
+subsequent call either to \mintinline[]{text}{set_error} or
+\mintinline[]{text}{set_done}; a receiver need not guarantee that a
+second call to \mintinline[]{text}{set_value} is well-formed.
+Collectively, these requirements are the ``\emph{receiver contract}''.
+
+Although \mintinline[]{text}{receiver}'s interface appears novel at
+first glance, it remains just a callback. Moreover,
+\mintinline[]{text}{receiver}'s novelty disappears when recognizing that
+\mintinline[]{text}{std::promise}'s \mintinline[]{text}{set_value} and
+\mintinline[]{text}{set_exception} provide essentially the same
+interface. This choice of interface and semantics, along with
+\mintinline[]{text}{sender}, facilitate the Generic implementation of
+many useful async algorithms like \mintinline[]{text}{retry}.
+
+\hypertarget{sender}{%
+\subsubsection{Sender}\label{sender}}
+
+A \mintinline[]{text}{sender} represents work that has not been
+scheduled for execution yet, to which one must add a continuation (a
+\mintinline[]{text}{receiver}) and then ``launch'', or enqueue for
+execution. A sender's duty to its connected receiver is to fulfill the
+\emph{receiver contract} by ensuring that one of the three
+\mintinline[]{text}{receiver} functions returns normally.
+
+Earlier versions of this paper fused these two operations --- attach a
+continuation and launch for execution --- into the single operation
+\mintinline[]{text}{submit}. This paper proposes to split
+\mintinline[]{text}{submit} into a \mintinline[]{text}{connect} step
+that packages a \mintinline[]{text}{sender} and a
+\mintinline[]{text}{receiver} into an operation state, and a
+\mintinline[]{text}{start} step that logically starts the operation and
+schedules the receiver completion-signalling methods to be called when
+the operation completes.
+
+\begin{minted}{cpp}
+// P0443R12
+std::execution::submit(snd, rec);
+
+// P0443R13
+auto state = std::execution::connect(snd, rec);
+// ... later
+std::execution::start(state);
+\end{minted}
+
+This split offers interesting opportunities for optimization, and
+\protect\hyperlink{appendix-a-note-on-coroutines}{harmonizes senders
+with coroutines}.
+
+The \mintinline[]{text}{sender} concept itself places no requirements on
+the execution context on which a sender's work executes. Instead,
+specific models of the \mintinline[]{text}{sender} concept may offer
+stronger guarantees about the context from which the receiver's methods
+will be invoked. This is particularly true of the senders created by a
+\mintinline[]{text}{scheduler}.
+
+\hypertarget{scheduler}{%
+\subsubsection{Scheduler}\label{scheduler}}
+
+Many generic async algorithms create multiple execution agents on the
+same execution context. Therefore, it is insufficient to parameterize
+these algorithms with a single-shot sender completing in a known
+context. Rather, it makes sense to pass these algorithms a factory of
+single-shot senders. Such a factory is called a
+``\mintinline[]{text}{scheduler}'', and it has a single basis operation:
+\mintinline[]{text}{schedule}:
+
+\begin{minted}{cpp}
+sender auto s = std::execution::schedule(sched);
+// OK, s is a single-shot sender of void that completes in sched's execution context
+\end{minted}
+
+Like executors, schedulers act as handles to an execution context.
+Unlike executors, schedulers submit execution lazily, but a single type
+may simultaneously model both concepts. We envision that subsumptions of
+the \mintinline[]{text}{scheduler} concept will add the ability to
+postpone or cancel execution until after some time period has elapsed.
+
+\hypertarget{senders-receivers-and-generic-algorithms}{%
+\subsection{Senders, receivers, and generic
+algorithms}\label{senders-receivers-and-generic-algorithms}}
+
+Useful concepts constrain generic algorithms while allowing default
+implementations via those concepts' basis operations. Below, we show how
+these \mintinline[]{text}{sender} and \mintinline[]{text}{receiver}
+provide efficient default implementations of common async algorithms. We
+envision that most generic async algorithms will be implemented as
+taking a sender and returning a sender whose
+\mintinline[]{text}{connect} method wraps its receiver an adaptor that
+implements the algorithm's logic. The \mintinline[]{text}{then}
+algorithm below, which chains a continuation function on a
+\mintinline[]{text}{sender}, is a simple demonstration.
+
+\hypertarget{algorithm-then}{%
+\subsubsection{\texorpdfstring{Algorithm
+\mintinline[]{text}{then}}{Algorithm }}\label{algorithm-then}}
+
+The following code implements a \mintinline[]{text}{then} algorithm
+that, like \mintinline[]{text}{std::experimental::future::then},
+schedules a function to be applied to the result of an asynchronous
+operation when available. This code demonstrates how an algorithm can
+adapt receivers to codify the algorithm's logic.
+
+\begin{minted}{cpp}
+template<receiver R, class F>
+struct _then_receiver : R { // for exposition, inherit set_error and set_done from R
+    F f_;
+
+    // Customize set_value by invoking the callable and passing the result to the base class
+    template<class... As>
+      requires receiver_of<R, invoke_result_t<F, As...>>
+    void set_value(As&&... as) && noexcept(/*...*/) {
+      std::execution::set_value((R&&) *this, invoke((F&&) f_, (As&&) as...));
+    }
+
+    // Not shown: handle the case when the callable returns void
+};
+
+template<sender S, class F>
+struct _then_sender : std::execution::sender_base {
+    S s_;
+    F f_;
+
+    template<receiver R>
+      requires sender_to<S, _then_receiver<R, F>>
+    state_t<S, _then_receiver<R, F>> connect(R r) && {
+        return std::execution::connect((S&&)s_, _then_receiver<R, F>{(R&&)r, (F&&)f_});
+    }
+};
+
+template<sender S, class F>
+sender auto then(S s, F f) {
+    return _then_sender{{}, (S&&)s, (F&&)f};
+}
+\end{minted}
+
+Given some asynchronous, \mintinline[]{text}{sender}-returning API
+\mintinline[]{text}{async_foo}, a user of \mintinline[]{text}{then} can
+execute some code once the async result is available:
+
+\begin{minted}{cpp}
+sender auto s = then(async_foo(args...), [](auto result) {/* stuff... */});
+\end{minted}
+
+This builds a composed asynchronous operation. When the user wants to
+schedule this operation for execution, they would
+\mintinline[]{text}{connect} a receiver, and then call
+\mintinline[]{text}{start} on the resulting operation state.
+
+Scheduling work on an execution context can also be done with
+\mintinline[]{text}{then}. Given a
+\mintinline[]{text}{static_thread_pool} object \mintinline[]{text}{pool}
+that satisfied the \mintinline[]{text}{scheduler} concept, a user may do
+the following:
+
+\begin{minted}{cpp}
+sender auto s = then(
+    std::execution::schedule( pool ),
+    []{ std::printf("hello world"); } );
+\end{minted}
+
+This creates a \mintinline[]{text}{sender} that, when submitted, will
+call \mintinline[]{text}{printf} from a thread in the thread pool.
+
+There exist heterogeneous computing environments that are unable to
+execute arbitrary code. For those, an implementation of
+\mintinline[]{text}{then} as shown above would either not work or would
+incur the cost of a transition to the host in order to execute the
+unknown code. Therefore, \mintinline[]{text}{then} itself and several
+other fundamental algorithmic primitives, would themselves need to be
+customizable on a per-execution context basis.
+
+A full working example of \mintinline[]{text}{then} can be found here:
+\url{https://godbolt.org/z/dafqM-}
+
+\hypertarget{algorithm-retry}{%
+\subsubsection{\texorpdfstring{Algorithm
+\mintinline[]{text}{retry}}{Algorithm }}\label{algorithm-retry}}
+
+As described above, the idea of \mintinline[]{text}{retry} is to retry
+the async operation on failure, but not on success or cancellation. Key
+to a correct generic implementation of \mintinline[]{text}{retry} is the
+ability to distinguish the error case from the cancelled case.
+
+As with the \mintinline[]{text}{then} algorithm, the
+\mintinline[]{text}{retry} algorithm places the logic of the algorithm
+into a custom receiver to which the sender to be retried is
+\mintinline[]{text}{connect}-ed.~That custom receiver has
+\mintinline[]{text}{set_value} and \mintinline[]{text}{set_done} members
+that simply pass their signals through unmodified. The
+\mintinline[]{text}{set_error} member, on the other hand, reconstructs
+the operation state in-place by making another call to
+\mintinline[]{text}{connect} with the original sender and a new instance
+of the custom receiver. That new operation state is then
+\mintinline[]{text}{start}-ed again, which effectively causes the
+original sender to be retried.
+
+\protect\hyperlink{appendix-the-retry-algorithm}{The appendix} lists the
+source of the \mintinline[]{text}{retry} algorithm. Note that the
+signature of the retry algorithm is simply:
+
+\begin{minted}{cpp}
+sender auto retry(sender auto s);
+\end{minted}
+
+That is, it is not parameterized on an execution context on which to
+retry the operation. That is because we can assume the existence of a
+function \mintinline[]{text}{on} which schedules a sender for execution
+on a specified execution context:
+
+\begin{minted}{cpp}
+sender auto on(sender auto s, scheduler auto sched);
+\end{minted}
+
+Given these two functions, a user can simply do
+\mintinline[]{text}{retry(on(s, sched))} to retry an operation on a
+particular execution context.
+
+\hypertarget{toward-an-asynchronous-stl}{%
+\subsubsection{Toward an asynchronous
+STL}\label{toward-an-asynchronous-stl}}
+
+The algorithms \mintinline[]{text}{then} and \mintinline[]{text}{retry}
+are only two of many interesting Generic asynchronous algorithms that
+are expressible in terms of senders and receivers. Two other important
+algorithms are \mintinline[]{text}{on} and \mintinline[]{text}{via}, the
+former which schedules a sender for execution on a particular
+\mintinline[]{text}{scheduler}, and the latter which causes a sender's
+\emph{continuations} to be run on a particular
+\mintinline[]{text}{scheduler}. In this way, chains of asynchronous
+computation can be created that transition from one execution context to
+another.
+
+Other important algorithms are \mintinline[]{text}{when_all} and
+\mintinline[]{text}{when_any}, encapsulating fork/join semantics. With
+these algorithms and others, entire DAGs of async computation can be
+created and executed. \mintinline[]{text}{when_any} can in turn be used
+to implement a generic \mintinline[]{text}{timeout} algorithm, together
+with a sender that sleeps for a duration and then sends a ``done''
+signal, and so these algorithms compose.
+
+In short, sender/receiver permits a rich set of Generic asynchronous
+algorithms to sit alongside Stepanov's sequence algorithms in the STL.
+Asynchronous APIs that return senders would be usable with these Generic
+algorithms, increasing reusability. \href{http://wg21.link/P1897}{P1897}
+suggest an initial set of these algorithms.
+
+\hypertarget{summary}{%
+\subsection{Summary}\label{summary}}
+
+We envision a future when C++ programmers can express asynchronous,
+parallel execution of work on diverse hardware resources through elegant
+standard interfaces. This proposal provides a foundation for flexible
+execution and is our initial step towards that goal. \textbf{Executors}
+represent hardware resources that execute work. \textbf{Senders and
+receivers} represent lazily-constructed asynchronous DAGs of work. These
+primitives empower programmers to control where and when work happens.
+
+\hypertarget{proposed-wording}{%
+\section{Proposed Wording}\label{proposed-wording}}
+
+\hypertarget{execution-support-library}{%
+\subsection{Execution Support Library}\label{execution-support-library}}
+
+\hypertarget{general}{%
+\subsubsection{General}\label{general}}
+
+This Clause describes components supporting execution of function
+objects {[}function.objects{]}.
+
+\emph{(The following definition appears in working draft N4762
+{[}thread.req.lockable.general{]})}
+
+\begin{quote}
+An \emph{execution agent} is an entity such as a thread that may perform
+work in parallel with other execution agents. {[}\emph{Note:}
+Implementations or users may introduce other kinds of agents such as
+processes or thread-pool tasks. \emph{--end note}{]} The calling agent
+is determined by context; e.g., the calling thread that contains the
+call, and so on.
+\end{quote}
+
+An execution agent invokes a function object within an \emph{execution
+context} such as the calling thread or thread-pool. An \emph{executor}
+submits a function object to an execution context to be invoked by an
+execution agent within that execution context. {[}\emph{Note:}
+Invocation of the function object may be inlined such as when the
+execution context is the calling thread, or may be scheduled such as
+when the execution context is a thread-pool with task scheduler.
+\emph{--end note}{]} An executor may submit a function object with
+\emph{execution properties} that specify how the submission and
+invocation of the function object interacts with the submitting thread
+and execution context, including forward progress guarantees
+{[}intro.progress{]}.
+
+For the intent of this library and extensions to this library, the
+\emph{lifetime of an execution agent} begins before the function object
+is invoked and ends after this invocation completes, either normally or
+having thrown an exception.
+
+\hypertarget{header-execution-synopsis}{%
+\subsubsection{\texorpdfstring{Header \mintinline[]{text}{<execution>}
+synopsis}{Header  synopsis}}\label{header-execution-synopsis}}
+
+\begin{minted}{cpp}
+namespace std {
+namespace execution {
+
+  // Exception types:
+
+  extern runtime_error const invocation-error; // exposition only
+  struct receiver_invocation_error : runtime_error, nested_exception {
+    receiver_invocation_error() noexcept
+      : runtime_error(invocation-error), nested_exception() {}
+  };
+
+  // Invocable archetype
+
+  using invocable_archetype = unspecified;
+
+  // Customization points:
+
+  inline namespace unspecified{
+    inline constexpr unspecified set_value = unspecified;
+
+    inline constexpr unspecified set_done = unspecified;
+
+    inline constexpr unspecified set_error = unspecified;
+
+    inline constexpr unspecified execute = unspecified;
+
+    inline constexpr unspecified connect = unspecified;
+
+    inline constexpr unspecified start = unspecified;
+
+    inline constexpr unspecified submit = unspecified;
+
+    inline constexpr unspecified schedule = unspecified;
+
+    inline constexpr unspecified bulk_execute = unspecified;
+  }
+
+  template<class S, class R>
+    using connect_result_t = invoke_result_t<decltype(connect), S, R>;
+
+  template<class, class> struct as-receiver; // exposition only
+
+  template<class, class> struct as-invocable; // exposition only
+
+  // Concepts:
+
+  template<class T, class E = exception_ptr>
+    concept receiver = see-below;
+
+  template<class T, class... An>
+    concept receiver_of = see-below;
+
+  template<class R, class... An>
+    inline constexpr bool is_nothrow_receiver_of_v =
+      receiver_of<R, An...> &&
+      is_nothrow_invocable_v<decltype(set_value), R, An...>;
+
+  template<class O>
+    concept operation_state = see-below;
+
+  template<class S>
+    concept sender = see-below;
+
+  template<class S>
+    concept typed_sender = see-below;
+
+  template<class S, class R>
+    concept sender_to = see-below;
+
+  template<class S>
+    concept scheduler = see-below;
+
+  template<class E>
+    concept executor = see-below;
+
+  template<class E, class F>
+    concept executor_of = see-below;
+
+  // Sender and receiver utilities type
+  namespace unspecified { struct sender_base {}; }
+  using unspecified::sender_base;
+
+  template<class S> struct sender_traits;
+
+  // Associated execution context property:
+
+  struct context_t;
+
+  constexpr context_t context;
+
+  // Blocking properties:
+
+  struct blocking_t;
+
+  constexpr blocking_t blocking;
+
+  // Properties to indicate if submitted tasks represent continuations:
+
+  struct relationship_t;
+
+  constexpr relationship_t relationship;
+
+  // Properties to indicate likely task submission in the future:
+
+  struct outstanding_work_t;
+
+  constexpr outstanding_work_t outstanding_work;
+
+  // Properties for bulk execution guarantees:
+
+  struct bulk_guarantee_t;
+
+  constexpr bulk_guarantee_t bulk_guarantee;
+
+  // Properties for mapping of execution on to threads:
+
+  struct mapping_t;
+
+  constexpr mapping_t mapping;
+
+  // Memory allocation properties:
+
+  template <typename ProtoAllocator>
+  struct allocator_t;
+
+  constexpr allocator_t<void> allocator;
+
+  // Executor type traits:
+
+  template<class Executor> struct executor_shape;
+  template<class Executor> struct executor_index;
+
+  template<class Executor> using executor_shape_t = typename executor_shape<Executor>::type;
+  template<class Executor> using executor_index_t = typename executor_index<Executor>::type;
+
+  // Polymorphic executor support:
+
+  class bad_executor;
+
+  template <class... SupportableProperties> class any_executor;
+
+  template<class Property> struct prefer_only;
+
+} // namespace execution
+} // namespace std
+\end{minted}
+
+\hypertarget{requirements}{%
+\subsection{Requirements}\label{requirements}}
+
+\hypertarget{protoallocator-requirements}{%
+\subsubsection{\texorpdfstring{\mintinline[]{text}{ProtoAllocator}
+requirements}{ requirements}}\label{protoallocator-requirements}}
+
+A type \mintinline[]{text}{A} meets the
+\mintinline[]{text}{ProtoAllocator} requirements if
+\mintinline[]{text}{A} is \mintinline[]{text}{CopyConstructible} (C++Std
+{[}copyconstructible{]}), \mintinline[]{text}{Destructible} (C++Std
+{[}destructible{]}), and
+\mintinline[]{text}{allocator_traits<A>::rebind_alloc<U>} meets the
+allocator requirements (C++Std {[}allocator.requirements{]}), where
+\mintinline[]{text}{U} is an object type. {[}\emph{Note:} For example,
+\mintinline[]{text}{std::allocator<void>} meets the proto-allocator
+requirements but not the allocator requirements. \emph{--end note}{]} No
+comparison operator, copy operation, move operation, or swap operation
+on these types shall exit via an exception.
+
+\hypertarget{invocable-archetype}{%
+\subsubsection{Invocable archetype}\label{invocable-archetype}}
+
+The name \mintinline[]{text}{execution::invocable_archetype} is an
+implementation-defined type such that
+\mintinline[]{text}{invocable<execution::invocable_archetype&>} is
+\mintinline[]{text}{true}.
+
+A program that creates an instance of
+\mintinline[]{text}{execution::invocable_archetype} is ill-formed.
+
+\hypertarget{customization-points}{%
+\subsubsection{Customization points}\label{customization-points}}
+
+\hypertarget{executionset_value}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{execution::set_value}}{}}\label{executionset_value}}
+
+The name \mintinline[]{text}{execution::set_value} denotes a
+customization point object. The expression
+\mintinline[]{text}{execution::set_value(R, Vs...)} for some
+subexpressions \mintinline[]{text}{R} and \mintinline[]{text}{Vs...} is
+expression-equivalent to:
+
+\begin{itemize}
+\item
+  \mintinline[]{text}{R.set_value(Vs...)}, if that expression is valid.
+  If the function selected does not send the value(s)
+  \mintinline[]{text}{Vs...} to the receiver \mintinline[]{text}{R}'s
+  value channel, the program is ill-formed with no diagnostic required.
+\item
+  Otherwise, \mintinline[]{text}{set_value(R, Vs...)}, if that
+  expression is valid, with overload resolution performed in a context
+  that includes the declaration
+
+  \begin{minted}{cpp}
+    void set_value();
+  \end{minted}
+
+  and that does not include a declaration of
+  \mintinline[]{text}{execution::set_value}. If the function selected by
+  overload resolution does not send the value(s)
+  \mintinline[]{text}{Vs...} to the receiver \mintinline[]{text}{R}'s
+  value channel, the program is ill-formed with no diagnostic required.
+\item
+  Otherwise, \mintinline[]{text}{execution::set_value(R, Vs...)} is
+  ill-formed.
+\end{itemize}
+
+{[}\emph{Editorial note:} We should probably define what ``send the
+value(s) \mintinline[]{text}{Vs...} to the receiver
+\mintinline[]{text}{R}'s value channel'' means more carefully.
+\emph{--end editorial note}{]}
+
+\hypertarget{executionset_done}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{execution::set_done}}{}}\label{executionset_done}}
+
+The name \mintinline[]{text}{execution::set_done} denotes a
+customization point object. The expression
+\mintinline[]{text}{execution::set_done(R)} for some subexpression
+\mintinline[]{text}{R} is expression-equivalent to:
+
+\begin{itemize}
+\item
+  \mintinline[]{text}{R.set_done()}, if that expression is valid. If the
+  function selected does not signal the receiver
+  \mintinline[]{text}{R}'s done channel, the program is ill-formed with
+  no diagnostic required.
+\item
+  Otherwise, \mintinline[]{text}{set_done(R)}, if that expression is
+  valid, with overload resolution performed in a context that includes
+  the declaration
+
+  \begin{minted}{cpp}
+    void set_done();
+  \end{minted}
+
+  and that does not include a declaration of
+  \mintinline[]{text}{execution::set_done}. If the function selected by
+  overload resolution does not signal the receiver
+  \mintinline[]{text}{R}'s done channel, the program is ill-formed with
+  no diagnostic required.
+\item
+  Otherwise, \mintinline[]{text}{execution::set_done(R)} is ill-formed.
+\end{itemize}
+
+{[}\emph{Editorial note:} We should probably define what ``signal
+receiver \mintinline[]{text}{R}'s done channel'' means more carefully.
+\emph{--end editorial note}{]}
+
+\hypertarget{executionset_error}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{execution::set_error}}{}}\label{executionset_error}}
+
+The name \mintinline[]{text}{execution::set_error} denotes a
+customization point object. The expression
+\mintinline[]{text}{execution::set_error(R, E)} for some subexpressions
+\mintinline[]{text}{R} and \mintinline[]{text}{E} are
+expression-equivalent to:
+
+\begin{itemize}
+\item
+  \mintinline[]{text}{R.set_error(E)}, if that expression is valid. If
+  the function selected does not send the error \mintinline[]{text}{E}
+  to the receiver \mintinline[]{text}{R}'s error channel, the program is
+  ill-formed with no diagnostic required.
+\item
+  Otherwise, \mintinline[]{text}{set_error(R, E)}, if that expression is
+  valid, with overload resolution performed in a context that includes
+  the declaration
+
+  \begin{minted}{cpp}
+    void set_error();
+  \end{minted}
+
+  and that does not include a declaration of
+  \mintinline[]{text}{execution::set_error}. If the function selected by
+  overload resolution does not send the error \mintinline[]{text}{E} to
+  the receiver \mintinline[]{text}{R}'s error channel, the program is
+  ill-formed with no diagnostic required.
+\item
+  Otherwise, \mintinline[]{text}{execution::set_error(R, E)} is
+  ill-formed.
+\end{itemize}
+
+{[}\emph{Editorial note:} We should probably define what ``send the
+error \mintinline[]{text}{E} to the receiver \mintinline[]{text}{R}'s
+error channel'' means more carefully. \emph{--end editorial note}{]}
+
+\hypertarget{executionexecute}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{execution::execute}}{}}\label{executionexecute}}
+
+The name \mintinline[]{text}{execution::execute} denotes a customization
+point object.
+
+For some subexpressions \mintinline[]{text}{e} and
+\mintinline[]{text}{f}, let \mintinline[]{text}{E} be
+\mintinline[]{text}{decltype((e))} and let \mintinline[]{text}{F} be
+\mintinline[]{text}{decltype((f))}. The expression
+\mintinline[]{text}{execution::execute(e, f)} is ill-formed if
+\mintinline[]{text}{F} does not model \mintinline[]{text}{invocable}, or
+if \mintinline[]{text}{E} does not model either
+\mintinline[]{text}{executor} or \mintinline[]{text}{sender}. Otherwise,
+it is expression-equivalent to:
+
+\begin{itemize}
+\item
+  \mintinline[]{text}{e.execute(f)}, if that expression is valid. If the
+  function selected does not execute the function object
+  \mintinline[]{text}{f} on the executor \mintinline[]{text}{e}, the
+  program is ill-formed with no diagnostic required.
+\item
+  Otherwise, \mintinline[]{text}{execute(e, f)}, if that expression is
+  valid, with overload resolution performed in a context that includes
+  the declaration
+
+  \begin{minted}{cpp}
+    void execute();
+  \end{minted}
+
+  and that does not include a declaration of
+  \mintinline[]{text}{execution::execute}. If the function selected by
+  overload resolution does not execute the function object
+  \mintinline[]{text}{f} on the executor \mintinline[]{text}{e}, the
+  program is ill-formed with no diagnostic required.
+\item
+  Otherwise,
+  \mintinline[]{text}{execution::submit(e, as-receiver<remove_cvref_t<F>, E>{forward<F>(f)})}
+  if
+
+  \begin{itemize}
+  \item
+    \mintinline[]{text}{F} is not an instance of
+    \mintinline[]{text}{as-invocable<R,E'>} for some type
+    \mintinline[]{text}{R} where \mintinline[]{text}{E} and
+    \mintinline[]{text}{E'} name the same type ignoring cv and reference
+    qualifiers, and
+  \item
+    \mintinline[]{text}{invocable<remove_cvref_t<F>&> && sender_to<E, as-receiver<remove_cvref_t<F>, E>>}
+    is true
+  \end{itemize}
+
+  where \emph{\mintinline[]{text}{as-receiver}} is some
+  implementation-defined class template equivalent to:
+
+  \begin{minted}{cpp}
+      template<class F, class>
+      struct as-receiver {
+        F f_;
+        void set_value() noexcept(is_nothrow_invocable_v<F&>) {
+          invoke(f_);
+        }
+        template<class E>
+        [[noreturn]] void set_error(E&&) noexcept {
+          terminate();
+        }
+        void set_done() noexcept {}
+      };
+  \end{minted}
+\end{itemize}
+
+{[}\emph{Editorial note:} We should probably define what ``execute the
+function object \mintinline[]{text}{F} on the executor
+\mintinline[]{text}{E}'' means more carefully. \emph{--end editorial
+note}{]}
+
+\hypertarget{executionconnect}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{execution::connect}}{}}\label{executionconnect}}
+
+The name \mintinline[]{text}{execution::connect} denotes a customization
+point object. For some subexpressions \mintinline[]{text}{s} and
+\mintinline[]{text}{r}, let \mintinline[]{text}{S}
+\mintinline[]{text}{decltype((s))} and let \mintinline[]{text}{R} be
+\mintinline[]{text}{decltype((r))}. If \mintinline[]{text}{R} does not
+satisfy \mintinline[]{text}{receiver},
+\mintinline[]{text}{execution::connect(s, r)} is ill-formed; otherwise,
+the expression \mintinline[]{text}{execution::connect(s, r)} is
+expression-equivalent to:
+
+\begin{itemize}
+\item
+  \mintinline[]{text}{s.connect(r)}, if that expression is valid, if its
+  type satisfies \mintinline[]{text}{operation_state}, and if
+  \mintinline[]{text}{S} satisfies \mintinline[]{text}{sender}.
+\item
+  Otherwise, \mintinline[]{text}{connect(s, r)}, if that expression is
+  valid, if its type satisfies \mintinline[]{text}{operation_state}, and
+  if \mintinline[]{text}{S} satisfies \mintinline[]{text}{sender}, with
+  overload resolution performed in a context that includes the
+  declaration
+
+  \begin{minted}{cpp}
+    void connect();
+  \end{minted}
+
+  and that does not include a declaration of
+  \mintinline[]{text}{execution::connect}.
+\item
+  Otherwise,
+  \emph{\mintinline[]{text}{as-operation}}\mintinline[]{text}{{s, r}},
+  if
+
+  \begin{itemize}
+  \item
+    \mintinline[]{text}{r} is not an instance of
+    \mintinline[]{text}{as-receiver<F, S'>} for some type
+    \mintinline[]{text}{F} where \mintinline[]{text}{S} and
+    \mintinline[]{text}{S'} name the same type ignoring cv and reference
+    qualifiers, and
+  \item
+    \mintinline[]{text}{receiver_of<R> && executor-of-impl<remove_cvref_t<S>, as-invocable<remove_cvref_t<R>, S>>}
+    is true,
+  \end{itemize}
+
+  where \emph{\mintinline[]{text}{as-operation}} is an
+  implementation-defined class equivalent to
+
+  \begin{minted}{cpp}
+    struct as-operation {
+      remove_cvref_t<S> e_;
+      remove_cvref_t<R> r_;
+      void start() noexcept try {
+        execution::execute(std::move(e_), as-invocable<remove_cvref_t<R>, S>{r_});
+      } catch(...) {
+        execution::set_error(std::move(r_), current_exception());
+      }
+    };
+  \end{minted}
+
+  and \emph{\mintinline[]{text}{as-invocable}} is a class template
+  equivalent to the following:
+
+  \begin{minted}{cpp}
+    template<class R, class>
+    struct as-invocable {
+      R* r_;
+      explicit as-invocable(R& r) noexcept
+        : r_(std::addressof(r)) {}
+      as-invocable(as-invocable && other) noexcept
+        : r_(std::exchange(other.r_, nullptr)) {}
+      ~as-invocable() {
+        if(r_)
+          execution::set_done(std::move(*r_));
+      }
+      void operator()() & noexcept try {
+        execution::set_value(std::move(*r_));
+        r_ = nullptr;
+      } catch(...) {
+        execution::set_error(std::move(*r_), current_exception());
+        r_ = nullptr;
+      }
+    };
+  \end{minted}
+\item
+  Otherwise, \mintinline[]{text}{execution::connect(s, r)} is
+  ill-formed.
+\end{itemize}
+
+\hypertarget{executionstart}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{execution::start}}{}}\label{executionstart}}
+
+The name \mintinline[]{text}{execution::start} denotes a customization
+point object. The expression \mintinline[]{text}{execution::start(O)}
+for some lvalue subexpression \mintinline[]{text}{O} is
+expression-equivalent to:
+
+\begin{itemize}
+\item
+  \mintinline[]{text}{O.start()}, if that expression is valid.
+\item
+  Otherwise, \mintinline[]{text}{start(O)}, if that expression is valid,
+  with overload resolution performed in a context that includes the
+  declaration
+
+  \begin{minted}{cpp}
+    void start();
+  \end{minted}
+
+  and that does not include a declaration of
+  \mintinline[]{text}{execution::start}.
+\item
+  Otherwise, \mintinline[]{text}{execution::start(O)} is ill-formed.
+\end{itemize}
+
+\hypertarget{executionsubmit}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{execution::submit}}{}}\label{executionsubmit}}
+
+The name \mintinline[]{text}{execution::submit} denotes a customization
+point object.
+
+For some subexpressions \mintinline[]{text}{s} and
+\mintinline[]{text}{r}, let \mintinline[]{text}{S} be
+\mintinline[]{text}{decltype((s))} and let \mintinline[]{text}{R} be
+\mintinline[]{text}{decltype((r))}. The expression
+\mintinline[]{text}{execution::submit(s, r)} is ill-formed if
+\mintinline[]{text}{sender_to<S, R>} is not \mintinline[]{text}{true}.
+Otherwise, it is expression-equivalent to:
+
+\begin{itemize}
+\item
+  \mintinline[]{text}{s.submit(r)}, if that expression is valid and
+  \mintinline[]{text}{S} models \mintinline[]{text}{sender}. If the
+  function selected does not submit the receiver object
+  \mintinline[]{text}{r} via the sender \mintinline[]{text}{s}, the
+  program is ill-formed with no diagnostic required.
+\item
+  Otherwise, \mintinline[]{text}{submit(s, r)}, if that expression is
+  valid and \mintinline[]{text}{S} models \mintinline[]{text}{sender},
+  with overload resolution performed in a context that includes the
+  declaration
+
+  \begin{minted}{cpp}
+    void submit();
+  \end{minted}
+
+  and that does not include a declaration of
+  \mintinline[]{text}{execution::submit}. If the function selected by
+  overload resolution does not submit the receiver object
+  \mintinline[]{text}{r} via the sender \mintinline[]{text}{s}, the
+  program is ill-formed with no diagnostic required.
+\item
+  Otherwise,
+  \mintinline[]{text}{execution::start((new}\emph{\mintinline[]{text}{submit-state}}\mintinline[]{text}{<S, R>{s,r})->state_)},
+  where \emph{\mintinline[]{text}{submit-state}} is an
+  implementation-defined class template equivalent to
+
+  \begin{minted}{cpp}
+    template<class S, class R>
+    struct submit-state {
+      struct submit-receiver {
+        submit-state * p_;
+        template<class...As>
+          requires receiver_of<R, As...>
+        void set_value(As&&... as) && noexcept(is_nothrow_receiver_of_v<R, As...>) {
+          execution::set_value(std::move(p_->r_), (As&&) as...);
+          delete p_;
+        }
+        template<class E>
+          requires receiver<R, E>
+        void set_error(E&& e) && noexcept {
+          execution::set_error(std::move(p_->r_), (E&&) e);
+          delete p_;
+        }
+        void set_done() && noexcept {
+          execution::set_done(std::move(p_->r_));
+          delete p_;
+        }
+      };
+      remove_cvref_t<R> r_;
+      connect_result_t<S, submit-receiver> state_;
+      submit-state(S&& s, R&& r)
+        : r_((R&&) r)
+        , state_(execution::connect((S&&) s, submit-receiver{this})) {}
+    };
+  \end{minted}
+\end{itemize}
+
+\hypertarget{executionschedule}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{execution::schedule}}{}}\label{executionschedule}}
+
+The name \mintinline[]{text}{execution::schedule} denotes a
+customization point object. For some subexpression
+\mintinline[]{text}{s}, let \mintinline[]{text}{S} be
+\mintinline[]{text}{decltype((s))}. The expression
+\mintinline[]{text}{execution::schedule(s)} is expression-equivalent to:
+
+\begin{itemize}
+\item
+  \mintinline[]{text}{s.schedule()}, if that expression is valid and its
+  type models \mintinline[]{text}{sender}.
+\item
+  Otherwise, \mintinline[]{text}{schedule(s)}, if that expression is
+  valid and its type models \mintinline[]{text}{sender} with overload
+  resolution performed in a context that includes the declaration
+
+  \begin{minted}{cpp}
+    void schedule();
+  \end{minted}
+
+  and that does not include a declaration of
+  \mintinline[]{text}{execution::schedule}.
+\item
+  Otherwise,
+  \emph{\mintinline[]{text}{as-sender}}\mintinline[]{text}{<remove_cvref_t<S>>{s}}
+  if \mintinline[]{text}{S} satisfies \mintinline[]{text}{executor},
+  where \emph{\mintinline[]{text}{as-sender}} is an
+  implementation-defined class template equivalent to
+
+  \begin{minted}{cpp}
+    template<class E>
+    struct as-sender {
+    private:
+      E ex_;
+    public:
+      template<template<class...> class Tuple, template<class...> class Variant>
+        using value_types = Variant<Tuple<>>;
+      template<template<class...> class Variant>
+        using error_types = Variant<std::exception_ptr>;
+      static constexpr bool sends_done = true;
+
+      explicit as-sender(E e) noexcept
+        : ex_((E&&) e) {}
+      template<class R>
+        requires receiver_of<R>
+      connect_result_t<E, R> connect(R&& r) && {
+        return execution::connect((E&&) ex_, (R&&) r);
+      }
+      template<class R>
+        requires receiver_of<R>
+      connect_result_t<const E &, R> connect(R&& r) const & {
+        return execution::connect(ex_, (R&&) r);
+      }
+    };
+  \end{minted}
+\item
+  Otherwise, \mintinline[]{text}{execution::schedule(s)} is ill-formed.
+\end{itemize}
+
+\hypertarget{executionbulk_execute}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{execution::bulk_execute}}{}}\label{executionbulk_execute}}
+
+The name \mintinline[]{text}{execution::bulk_execute} denotes a
+customization point object. If
+\mintinline[]{text}{is_convertible_v<N, size_t>} is true, then the
+expression \mintinline[]{text}{execution::bulk_execute(S, F, N)} for
+some subexpressions \mintinline[]{text}{S}, \mintinline[]{text}{F}, and
+\mintinline[]{text}{N} is expression-equivalent to:
+
+\begin{itemize}
+\item
+  \mintinline[]{text}{S.bulk_execute(F, N)}, if that expression is
+  valid. If the function selected does not execute
+  \mintinline[]{text}{N} invocations of the function object
+  \mintinline[]{text}{F} on the executor \mintinline[]{text}{S} in bulk
+  with forward progress guarantee
+  \mintinline[]{text}{std::query(S, execution::bulk_guarantee)}, and the
+  result of that function does not model
+  \mintinline[]{text}{sender<void>}, the program is ill-formed with no
+  diagnostic required.
+\item
+  Otherwise, \mintinline[]{text}{bulk_execute(S, F, N)}, if that
+  expression is valid, with overload resolution performed in a context
+  that includes the declaration
+
+  \begin{minted}{cpp}
+    void bulk_execute();
+  \end{minted}
+
+  and that does not include a declaration of
+  \mintinline[]{text}{execution::bulk_execute}. If the function selected
+  by overload resolution does not execute \mintinline[]{text}{N}
+  invocations of the function object \mintinline[]{text}{F} on the
+  executor \mintinline[]{text}{S} in bulk with forward progress
+  guarantee
+  \mintinline[]{text}{std::query(E, execution::bulk_guarantee)}, and the
+  result of that function does not model
+  \mintinline[]{text}{sender<void>}, the program is ill-formed with no
+  diagnostic required.
+\item
+  Otherwise, if the types \mintinline[]{text}{F} and
+  \mintinline[]{text}{executor_index_t<remove_cvref_t<S>>} model
+  \mintinline[]{text}{invocable} and if
+  \mintinline[]{text}{std::query(S, execution::bulk_guarantee)} equals
+  \mintinline[]{text}{execution::bulk_guarantee.unsequenced}, then
+
+  \begin{itemize}
+
+  \item
+    Evaluates
+    \mintinline[]{text}{DECAY_COPY(std::forward<decltype(F)>(F))} on the
+    calling thread to create a function object \mintinline[]{text}{cf}.
+    {[}\emph{Note:} Additional copies of \mintinline[]{text}{cf} may
+    subsequently be created. \emph{--end note.}{]}
+  \item
+    For each value of \mintinline[]{text}{i} in \mintinline[]{text}{N},
+    \mintinline[]{text}{cf(i)} (or copy of \mintinline[]{text}{cf}))
+    will be invoked at most once by an execution agent that is unique
+    for each value of \mintinline[]{text}{i}.
+  \item
+    May block pending completion of one or more invocations of
+    \mintinline[]{text}{cf}.
+  \item
+    Synchronizes with (C++Std {[}intro.multithread{]}) the invocations
+    of \mintinline[]{text}{cf}.
+  \end{itemize}
+\item
+  Otherwise, \mintinline[]{text}{execution::bulk_execute(S, F, N)} is
+  ill-formed.
+\end{itemize}
+
+{[}\emph{Editorial note:} We should probably define what ``execute
+\mintinline[]{text}{N} invocations of the function object
+\mintinline[]{text}{F} on the executor \mintinline[]{text}{S} in bulk''
+means more carefully. \emph{--end editorial note}{]}
+
+\hypertarget{concepts-receiver-and-receiver_of}{%
+\subsubsection{\texorpdfstring{Concepts \mintinline[]{text}{receiver}
+and
+\mintinline[]{text}{receiver_of}}{Concepts  and }}\label{concepts-receiver-and-receiver_of}}
+
+A receiver represents the continuation of an asynchronous operation. An
+asynchronous operation may complete with a (possibly empty) set of
+values, an error, or it may be cancelled. A receiver has three principal
+operations corresponding to the three ways an asynchronous operation may
+complete: \mintinline[]{text}{set_value},
+\mintinline[]{text}{set_error}, and \mintinline[]{text}{set_done}. These
+are collectively known as a receiver's \emph{completion-signal
+operations}.
+
+\begin{minted}{cpp}
+    template<class T, class E = exception_ptr>
+    concept receiver =
+      move_constructible<remove_cvref_t<T>> &&
+      constructible_from<remove_cvref_t<T>, T> &&
+      requires(remove_cvref_t<T>&& t, E&& e) {
+        { execution::set_done(std::move(t)) } noexcept;
+        { execution::set_error(std::move(t), (E&&) e) } noexcept;
+      };
+
+    template<class T, class... An>
+    concept receiver_of =
+      receiver<T> &&
+      requires(remove_cvref_t<T>&& t, An&&... an) {
+        execution::set_value(std::move(t), (An&&) an...);
+      };
+\end{minted}
+
+The receiver's completion-signal operations have semantic requirements
+that are collectively known as the \emph{receiver contract}, described
+below:
+
+\begin{itemize}
+\item
+  None of a receiver's completion-signal operations shall be invoked
+  before \mintinline[]{text}{execution::start} has been called on the
+  operation state object that was returned by
+  \mintinline[]{text}{execution::connect} to connect that receiver to a
+  sender.
+\item
+  Once \mintinline[]{text}{execution::start} has been called on the
+  operation state object, exactly one of the receiver's
+  completion-signal operations shall complete non-exceptionally before
+  the receiver is destroyed.
+\item
+  If \mintinline[]{text}{execution::set_value} exits with an exception,
+  it is still valid to call \mintinline[]{text}{execution::set_error} or
+  \mintinline[]{text}{execution::set_done} on the receiver.
+\end{itemize}
+
+Once one of a receiver's completion-signal operations has completed
+non-exceptionally, the receiver contract has been satisfied.
+
+\hypertarget{concept-operation_state}{%
+\subsubsection{\texorpdfstring{Concept
+\mintinline[]{text}{operation_state}}{Concept }}\label{concept-operation_state}}
+
+\begin{minted}{cpp}
+    template<class O>
+      concept operation_state =
+        destructible<O> &&
+        is_object_v<O> &&
+        requires (O& o) {
+          { execution::start(o) } noexcept;
+        };
+\end{minted}
+
+An object whose type satisfies \mintinline[]{text}{operation_state}
+represents the state of an asynchronous operation. It is the result of
+calling \mintinline[]{text}{execution::connect} with a
+\mintinline[]{text}{sender} and a \mintinline[]{text}{receiver}.
+
+\mintinline[]{text}{execution::start} may be called on an
+\mintinline[]{text}{operation_state} object at most once. Once
+\mintinline[]{text}{execution::start} has been invoked, the caller shall
+ensure that the start of a non-exceptional invocation of one of the
+receiver's completion-signalling operations strongly happens before
+{[}intro.multithread{]} the call to the
+\mintinline[]{text}{operation_state} destructor.
+
+The start of the invocation of \mintinline[]{text}{execution::start}
+shall strongly happen before {[}intro.multithread{]} the invocation of
+one of the three receiver operations.
+
+\mintinline[]{text}{execution::start} may or may not block pending the
+successful transfer of execution to one of the three receiver
+operations.
+
+\hypertarget{concepts-sender-and-sender_to}{%
+\subsubsection{\texorpdfstring{Concepts \mintinline[]{text}{sender} and
+\mintinline[]{text}{sender_to}}{Concepts  and }}\label{concepts-sender-and-sender_to}}
+
+A sender represents an asynchronous operation not yet scheduled for
+execution. A sender's responsibility is to fulfill the receiver contract
+to a connected receiver by delivering a completion signal.
+
+\begin{minted}{cpp}
+    template<class S>
+      concept sender =
+        move_constructible<remove_cvref_t<S>> &&
+        !requires {
+          typename sender_traits<remove_cvref_t<S>>::__unspecialized; // exposition only
+        };
+
+    template<class S, class R>
+      concept sender_to =
+        sender<S> &&
+        receiver<R> &&
+        requires (S&& s, R&& r) {
+          execution::connect((S&&) s, (R&&) r);
+        };
+\end{minted}
+
+None of these operations shall introduce data races as a result of
+concurrent invocations of those functions from different threads.
+
+A sender type's destructor shall not block pending completion of the
+submitted function objects. {[}\emph{Note:} The ability to wait for
+completion of submitted function objects may be provided by the
+associated execution context. \emph{--end note}{]}
+
+\hypertarget{concept-typed_sender}{%
+\subsubsection{\texorpdfstring{Concept
+\mintinline[]{text}{typed_sender}}{Concept }}\label{concept-typed_sender}}
+
+A sender is \emph{typed} if it declares what types it sends through a
+receiver's channels. The \mintinline[]{text}{typed_sender} concept is
+defined as:
+
+\begin{minted}{cpp}
+    template<template<template<class...> class Tuple, template<class...> class Variant> class>
+      struct has-value-types; // exposition only
+
+    template<template<class...> class Variant>
+      struct has-error-types; // exposition only
+
+    template<class S>
+      concept has-sender-types = // exposition only
+        requires {
+          typename has-value-types<S::template value_types>;
+          typename has-error-types<S::template error_types>;
+          typename bool_constant<S::sends_done>;
+        };
+
+    template<class S>
+      concept typed_sender =
+        sender<S> &&
+        has-sender-types<sender_traits<remove_cvref_t<S>>>;
+\end{minted}
+
+\hypertarget{concept-scheduler}{%
+\subsubsection{\texorpdfstring{Concept
+\mintinline[]{text}{scheduler}}{Concept }}\label{concept-scheduler}}
+
+XXX TODO The \mintinline[]{text}{scheduler} concept\ldots{}
+
+\begin{minted}{cpp}
+    template<class S>
+      concept scheduler =
+        copy_constructible<remove_cvref_t<S>> &&
+        equality_comparable<remove_cvref_t<S>> &&
+        requires(S&& s) {
+          execution::schedule((S&&)s);
+        };
+\end{minted}
+
+None of a scheduler's copy constructor, destructor, equality comparison,
+or \mintinline[]{text}{swap} operation shall exit via an exception.
+
+None of these operations, nor an scheduler type's
+\mintinline[]{text}{schedule} function, or associated query functions
+shall introduce data races as a result of concurrent invocations of
+those functions from different threads.
+
+For any two (possibly const) values \mintinline[]{text}{x1} and
+\mintinline[]{text}{x2} of some scheduler type \mintinline[]{text}{X},
+\mintinline[]{text}{x1 == x2} shall return \mintinline[]{text}{true}
+only if \mintinline[]{text}{x1.query(p) == x2.query(p)} for every
+property \mintinline[]{text}{p} where both
+\mintinline[]{text}{x1.query(p)} and \mintinline[]{text}{x2.query(p)}
+are well-formed and result in a non-void type that is
+\mintinline[]{text}{EqualityComparable} (C++Std
+{[}equalitycomparable{]}). {[}\emph{Note:} The above requirements imply
+that \mintinline[]{text}{x1 == x2} returns \mintinline[]{text}{true} if
+\mintinline[]{text}{x1} and \mintinline[]{text}{x2} can be interchanged
+with identical effects. An scheduler may conceptually contain additional
+properties which are not exposed by a named property type that can be
+observed via \mintinline[]{text}{execution::query}; in this case, it is
+up to the concrete scheduler implementation to decide if these
+properties affect equality. Returning \mintinline[]{text}{false} does
+not necessarily imply that the effects are not identical. \emph{--end
+note}{]}
+
+An scheduler type's destructor shall not block pending completion of any
+receivers submitted to the sender objects returned from
+\mintinline[]{text}{schedule}. {[}\emph{Note:} The ability to wait for
+completion of submitted function objects may be provided by the
+execution context that produced the scheduler. \emph{--end note}{]}
+
+In addition to the above requirements, type \mintinline[]{text}{S}
+models \mintinline[]{text}{scheduler} only if it satisfies the
+requirements in the Table below.
+
+In the Table below,
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{s} denotes a (possibly const) scheduler object of
+  type \mintinline[]{text}{S},
+\item
+  \mintinline[]{text}{N} denotes a type that models
+  \mintinline[]{text}{sender}, and
+\item
+  \mintinline[]{text}{n} denotes a sender object of type
+  \mintinline[]{text}{N}
+\end{itemize}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule
+\begin{minipage}[b]{0.23\columnwidth}\raggedright
+Expression\strut
+\end{minipage} & \begin{minipage}[b]{0.25\columnwidth}\raggedright
+Return Type\strut
+\end{minipage} & \begin{minipage}[b]{0.43\columnwidth}\raggedright
+Operational semantics\strut
+\end{minipage}\tabularnewline
+\midrule
+\endhead
+\begin{minipage}[t]{0.23\columnwidth}\raggedright
+\mintinline[]{text}{execution::schedule(s)}\strut
+\end{minipage} & \begin{minipage}[t]{0.25\columnwidth}\raggedright
+\mintinline[]{text}{N}\strut
+\end{minipage} & \begin{minipage}[t]{0.43\columnwidth}\raggedright
+Evaluates \mintinline[]{text}{execution::schedule(s)} on the calling
+thread to create \mintinline[]{text}{N}.\strut
+\end{minipage}\tabularnewline
+\bottomrule
+\end{longtable}
+
+\mintinline[]{text}{execution::start(o)}, where \mintinline[]{text}{o}
+is the result of a call to \mintinline[]{text}{execution::connect(N, r)}
+for some receiver object \mintinline[]{text}{r}, is required to eagerly
+submit \mintinline[]{text}{r} for execution on an execution agent that
+\mintinline[]{text}{s} creates for it. Let \mintinline[]{text}{rc} be
+\mintinline[]{text}{r} or an object created by copy or move construction
+from \mintinline[]{text}{r}. The semantic constraints on the
+\mintinline[]{text}{sender} \mintinline[]{text}{N} returned from a
+scheduler \mintinline[]{text}{s}'s \mintinline[]{text}{schedule}
+function are as follows:
+
+\begin{itemize}
+\item
+  If \mintinline[]{text}{rc}'s \mintinline[]{text}{set_error} function
+  is called in response to a submission error, scheduling error, or
+  other internal error, let \mintinline[]{text}{E} be an expression that
+  refers to that error if \mintinline[]{text}{set_error(rc, E)} is
+  well-formed; otherwise, let \mintinline[]{text}{E} be an
+  \mintinline[]{text}{exception_ptr} that refers to that error. {[}
+  \emph{Note:} \mintinline[]{text}{E} could be the result of calling
+  \mintinline[]{text}{current_exception} or
+  \mintinline[]{text}{make_exception_ptr} --- \emph{end note} {]} The
+  scheduler calls \mintinline[]{text}{set_error(rc, E)} on an
+  unspecified weakly-parallel execution agent ({[} \emph{Note:} An
+  invocation of \mintinline[]{text}{set_error} on a receiver is required
+  to be \mintinline[]{text}{noexcept} --- \emph{end note}{]}), and
+\item
+  If \mintinline[]{text}{rc}'s \mintinline[]{text}{set_error} function
+  is called in response to an exception that propagates out of the
+  invocation of \mintinline[]{text}{set_value} on
+  \mintinline[]{text}{rc}, let \mintinline[]{text}{E} be
+  \mintinline[]{text}{make_exception_ptr(receiver_invocation_error{})}
+  invoked from within a catch clause that has caught the exception. The
+  executor calls \mintinline[]{text}{set_error(rc, E)} on an unspecified
+  weakly-parallel execution agent, and
+\item
+  A call to \mintinline[]{text}{set_done(rc)} is made on an unspecified
+  weakly-parallel execution agent ({[} \emph{Note:} An invocation of a
+  receiver's \mintinline[]{text}{set_done} function is required to be
+  \mintinline[]{text}{noexcept} --- \emph{end note} {]}).
+\end{itemize}
+
+{[} Note: The senders returned from a scheduler's
+\mintinline[]{text}{schedule} function have wide discretion when
+deciding which of the three receiver functions to call upon submission.
+--- \emph{end note} {]}
+
+\hypertarget{concepts-executor-and-executor_of}{%
+\subsubsection{\texorpdfstring{Concepts \mintinline[]{text}{executor}
+and
+\mintinline[]{text}{executor_of}}{Concepts  and }}\label{concepts-executor-and-executor_of}}
+
+XXX TODO The \mintinline[]{text}{executor} and
+\mintinline[]{text}{executor_of} concepts\ldots{}
+
+Let \emph{\mintinline[]{text}{executor-of-impl}} be the exposition-only
+concept
+
+\begin{minted}{cpp}
+    template<class E, class F>
+      concept executor-of-impl =
+        invocable<remove_cvref_t<F>&> &&
+        constructible_from<remove_cvref_t<F>, F> &&
+        move_constructible<remove_cvref_t<F>> &&
+        copy_constructible<E> &&
+        is_nothrow_copy_constructible_v<E> &&
+        equality_comparable<E> &&
+        requires(const E& e, F&& f) {
+          execution::execute(e, (F&&)f);
+        };
+\end{minted}
+
+Then,
+
+\begin{minted}{cpp}
+    template<class E>
+      concept executor =
+        executor-of-impl<E, execution::invocable_archetype>;
+
+    template<class E, class F>
+      concept executor_of =
+        executor<E> &&
+        executor-of-impl<E, F>;
+\end{minted}
+
+Neither of an executor's equality comparison or
+\mintinline[]{text}{swap} operation shall exit via an exception.
+
+None of an executor type's copy constructor, destructor, equality
+comparison, \mintinline[]{text}{swap} function,
+\mintinline[]{text}{execute} function, or associated
+\mintinline[]{text}{query} functions shall introduce data races as a
+result of concurrent invocations of those functions from different
+threads.
+
+For any two (possibly const) values \mintinline[]{text}{x1} and
+\mintinline[]{text}{x2} of some executor type \mintinline[]{text}{X},
+\mintinline[]{text}{x1 == x2} shall return \mintinline[]{text}{true}
+only if \mintinline[]{text}{std::query(x1,p) == std::query(x2,p)} for
+every property \mintinline[]{text}{p} where both
+\mintinline[]{text}{std::query(x1,p)} and
+\mintinline[]{text}{std::query(x2,p)} are well-formed and result in a
+non-void type that is \mintinline[]{text}{equality_comparable} (C++Std
+{[}equalitycomparable{]}). {[}\emph{Note:} The above requirements imply
+that \mintinline[]{text}{x1 == x2} returns \mintinline[]{text}{true} if
+\mintinline[]{text}{x1} and \mintinline[]{text}{x2} can be interchanged
+with identical effects. An executor may conceptually contain additional
+properties which are not exposed by a named property type that can be
+observed via \mintinline[]{text}{std::query}; in this case, it is up to
+the concrete executor implementation to decide if these properties
+affect equality. Returning \mintinline[]{text}{false} does not
+necessarily imply that the effects are not identical. \emph{--end
+note}{]}
+
+An executor type's destructor shall not block pending completion of the
+submitted function objects. {[}\emph{Note:} The ability to wait for
+completion of submitted function objects may be provided by the
+associated execution context. \emph{--end note}{]}
+
+In addition to the above requirements, types \mintinline[]{text}{E} and
+\mintinline[]{text}{F} model \mintinline[]{text}{executor_of} only if
+they satisfy the requirements of the Table below.
+
+In the Table below,
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{e} denotes a (possibly const) executor object of
+  type \mintinline[]{text}{E},
+\item
+  \mintinline[]{text}{cf} denotes the function object
+  \mintinline[]{text}{DECAY_COPY(std::forward<F>(f))}
+\item
+  \mintinline[]{text}{f} denotes a function of type
+  \mintinline[]{text}{F&&} invocable as \mintinline[]{text}{cf()} and
+  where \mintinline[]{text}{decay_t<F>} models
+  \mintinline[]{text}{move_constructible}.
+\end{itemize}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule
+\begin{minipage}[b]{0.23\columnwidth}\raggedright
+Expression\strut
+\end{minipage} & \begin{minipage}[b]{0.25\columnwidth}\raggedright
+Return Type\strut
+\end{minipage} & \begin{minipage}[b]{0.43\columnwidth}\raggedright
+Operational semantics\strut
+\end{minipage}\tabularnewline
+\midrule
+\endhead
+\begin{minipage}[t]{0.23\columnwidth}\raggedright
+\mintinline[]{text}{execution::execute(e, f)}\strut
+\end{minipage} & \begin{minipage}[t]{0.25\columnwidth}\raggedright
+\mintinline[]{text}{void}\strut
+\end{minipage} & \begin{minipage}[t]{0.43\columnwidth}\raggedright
+Evaluates \mintinline[]{text}{DECAY_COPY(std::forward<F>(f))} on the
+calling thread to create \mintinline[]{text}{cf} that will be invoked at
+most once by an execution agent. May block pending completion of this
+invocation. Synchronizes with {[}intro.multithread{]} the invocation of
+\mintinline[]{text}{f}. Shall not propagate any exception thrown by the
+function object or any other function submitted to the executor.
+{[}\emph{Note:} The treatment of exceptions thrown by one-way submitted
+functions is implementation-defined. The forward progress guarantee of
+the associated execution agent(s) is implementation-defined. \emph{--end
+note.}{]}\strut
+\end{minipage}\tabularnewline
+\bottomrule
+\end{longtable}
+
+{[}\emph{Editorial note:} The operational semantics of
+\mintinline[]{text}{execution::execute} should be specified with the
+\mintinline[]{text}{execution::execute} CPO rather than the
+\mintinline[]{text}{executor} concept. \emph{--end note.}{]}
+
+\hypertarget{sender-and-receiver-traits}{%
+\subsubsection{Sender and receiver
+traits}\label{sender-and-receiver-traits}}
+
+\hypertarget{class-template-sender_traits}{%
+\paragraph{\texorpdfstring{Class template
+\mintinline[]{text}{sender_traits}}{Class template }}\label{class-template-sender_traits}}
+
+XXX TODO The class template\mintinline[]{text}{sender_traits}\ldots{}
+
+The class template \mintinline[]{text}{sender_traits} can be used to
+query information about a \mintinline[]{text}{sender}; in particular,
+what values and errors it sends through a receiver's value and error
+channel, and whether or not it ever calls \mintinline[]{text}{set_done}
+on a receiver.
+
+The primary \mintinline[]{text}{sender_traits<S>} class template is
+defined as if inheriting from an implementation-defined class template
+\emph{\mintinline[]{text}{sender-traits-base}}\mintinline[]{text}{<S>}
+defined as follows:
+
+\begin{itemize}
+\item
+  Let \emph{\mintinline[]{text}{has-sender-types}} be an
+  implementation-defined concept equivalent to:
+
+  \begin{minted}{cpp}
+    template<template<template<class...> class, template<class...> class> class>
+      struct has-value-types ; // exposition only
+
+    template<template<template<class...> class> class>
+      struct has-error-types ; // exposition only
+
+    template<class S>
+      concept has-sender-types =
+        requires {
+          typename has-value-types <S::template value_types>;
+          typename has-error-types <S::template error_types>;
+          typename bool_constant<S::sends_done>;
+        };
+  \end{minted}
+
+  If
+  \emph{\mintinline[]{text}{has-sender-types}}\mintinline[]{text}{<S>}
+  is true, then \emph{\mintinline[]{text}{sender-traits-base}} is
+  equivalent to:
+
+  \begin{minted}{cpp}
+    template<class S>
+      struct sender-traits-base {
+        template<template<class...> class Tuple, template<class...> class Variant>
+          using value_types = typename S::template value_types<Tuple, Variant>;
+
+        template<template<class...> class Variant>
+          using error_types = typename S::template error_types<Variant>;
+
+        static constexpr bool sends_done = S::sends_done;
+      };
+  \end{minted}
+\item
+  Otherwise, let \emph{\mintinline[]{text}{void-receiver}} be an
+  implementation-defined class type equivalent to
+
+  \begin{minted}{cpp}
+    struct void-receiver { // exposition only
+      void set_value() noexcept;
+      void set_error(exception_ptr) noexcept;
+      void set_done() noexcept;
+    };
+  \end{minted}
+
+  If
+  \emph{\mintinline[]{text}{executor-of-impl}}\mintinline[]{text}{<S,}\emph{\mintinline[]{text}{as-invocable}}\mintinline[]{text}{<}\emph{\mintinline[]{text}{void-receiver}}\mintinline[]{text}{, S>>}
+  is \mintinline[]{text}{true}, then
+  \emph{\mintinline[]{text}{sender-traits-base}} is equivalent to
+
+  \begin{minted}{cpp}
+    template<class S>
+      struct sender-traits-base {
+        template<template<class...> class Tuple, template<class...> class Variant>
+          using value_types = Variant<Tuple<>>;
+
+        template<template<class...> class Variant>
+          using error_types = Variant<exception_ptr>;
+
+        static constexpr bool sends_done = true;
+      };
+  \end{minted}
+\item
+  Otherwise, if \mintinline[]{text}{derived_from<S, sender_base>} is
+  \mintinline[]{text}{true}, then
+  \emph{\mintinline[]{text}{sender-traits-base}} is equivalent to
+
+  \begin{minted}{cpp}
+    template<class S>
+      struct sender-traits-base {};
+  \end{minted}
+\item
+  Otherwise, \emph{\mintinline[]{text}{sender-traits-base}} is
+  equivalent to
+
+  \begin{minted}{cpp}
+    template<class S>
+      struct sender-traits-base {
+        using __unspecialized = void; // exposition only
+      };
+  \end{minted}
+\end{itemize}
+
+Because a sender may send one set of types or another to a receiver
+based on some runtime condition, \mintinline[]{text}{sender_traits} may
+provide a nested \mintinline[]{text}{value_types} template that is
+parameterized on a tuple-like class template and a variant-like class
+template that are used to hold the result.
+
+{[}\emph{Example:} If a sender type \mintinline[]{text}{S} sends types
+\mintinline[]{text}{As...} or \mintinline[]{text}{Bs...} to a receiver's
+value channel, it may specialize \mintinline[]{text}{sender_traits} such
+that
+\mintinline[]{text}{typename sender_traits<S>::value_types<tuple, variant>}
+names the type \mintinline[]{text}{variant<tuple<As...>, tuple<Bs...>>}
+-- \emph{end example}{]}
+
+Because a sender may send one or another type of error types to a
+receiver, \mintinline[]{text}{sender_traits} may provide a nested
+\mintinline[]{text}{error_types} template that is parameterized on a
+variant-like class template that is used to hold the result.
+
+{[}\emph{Example:} If a sender type \mintinline[]{text}{S} sends error
+types \mintinline[]{text}{exception_ptr} or
+\mintinline[]{text}{error_code} to a receiver's error channel, it may
+specialize \mintinline[]{text}{sender_traits} such that
+\mintinline[]{text}{typename sender_traits<S>::error_types<variant>}
+names the type \mintinline[]{text}{variant<exception_ptr, error_code>}
+-- \emph{end example}{]}
+
+A sender type can signal that it never calls
+\mintinline[]{text}{set_done} on a receiver by specializing
+\mintinline[]{text}{sender_traits} such that
+\mintinline[]{text}{sender_traits<S>::sends_done} is
+\mintinline[]{text}{false}; conversely, it may set
+\mintinline[]{text}{sender_traits<S>::sends_done} to
+\mintinline[]{text}{true} to indicate that it does call
+\mintinline[]{text}{set_done} on a receiver.
+
+Users may specialize \mintinline[]{text}{sender_traits} on
+program-defined types.
+
+\hypertarget{query-only-properties}{%
+\subsubsection{Query-only properties}\label{query-only-properties}}
+
+\hypertarget{associated-execution-context-property}{%
+\paragraph{Associated execution context
+property}\label{associated-execution-context-property}}
+
+\begin{minted}{cpp}
+struct context_t
+{
+  template <class T>
+    static constexpr bool is_applicable_property_v = executor<T>;
+
+  static constexpr bool is_requirable = false;
+  static constexpr bool is_preferable = false;
+
+  using polymorphic_query_result_type = any;
+
+  template<class Executor>
+    static constexpr decltype(auto) static_query_v
+      = Executor::query(context_t());
+};
+\end{minted}
+
+The \mintinline[]{text}{context_t} property can be used only with
+\mintinline[]{text}{query}, which returns the execution context
+associated with the executor.
+
+The value returned from \mintinline[]{text}{std::query(e, context_t)},
+where \mintinline[]{text}{e} is an executor, shall not change between
+invocations.
+
+\hypertarget{behavioral-properties}{%
+\subsubsection{Behavioral properties}\label{behavioral-properties}}
+
+Behavioral properties define a set of mutually-exclusive nested
+properties describing executor behavior.
+
+Unless otherwise specified, behavioral property types
+\mintinline[]{text}{S}, their nested property types
+\mintinline[]{text}{S::N}\emph{i}, and nested property objects
+\mintinline[]{text}{S::n}\emph{i} conform to the following
+specification:
+
+\begin{minted}{cpp}
+struct S
+{
+  template <class T>
+    static constexpr bool is_applicable_property_v = executor<T>;
+
+  static constexpr bool is_requirable = false;
+  static constexpr bool is_preferable = false;
+  using polymorphic_query_result_type = S;
+
+  template<class Executor>
+    static constexpr auto static_query_v
+      = see-below;
+
+  template<class Executor, class Property>
+  friend constexpr S query(const Executor& ex, const Property& p) noexcept(see-below);
+
+  friend constexpr bool operator==(const S& a, const S& b);
+  friend constexpr bool operator!=(const S& a, const S& b) { return !operator==(a, b); }
+
+  constexpr S();
+
+  struct N1
+  {
+    static constexpr bool is_requirable = true;
+    static constexpr bool is_preferable = true;
+    using polymorphic_query_result_type = S;
+
+    template<class Executor>
+      static constexpr auto static_query_v
+        = see-below;
+
+    static constexpr S value() { return S(N1()); }
+  };
+
+  static constexpr N1 n1;
+
+  constexpr S(const N1);
+
+  ...
+
+  struct NN
+  {
+    static constexpr bool is_requirable = true;
+    static constexpr bool is_preferable = true;
+    using polymorphic_query_result_type = S;
+
+    template<class Executor>
+      static constexpr auto static_query_v
+        = see-below;
+
+    static constexpr S value() { return S(NN()); }
+  };
+
+  static constexpr NN nN;
+
+  constexpr S(const NN);
+};
+\end{minted}
+
+Queries for the value of an executor's behavioral property shall not
+change between invocations unless the executor is assigned another
+executor with a different value of that behavioral property.
+
+\mintinline[]{text}{S()} and
+\mintinline[]{text}{S(S::N}\emph{i}\mintinline[]{text}{())} are all
+distinct values of \mintinline[]{text}{S}. {[}\emph{Note:} This means
+they compare unequal. \emph{--end note.}{]}
+
+The value returned from \mintinline[]{text}{std::query(e1, p1)} and a
+subsequent invocation \mintinline[]{text}{std::query(e1, p1)}, where
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{p1} is an instance of \mintinline[]{text}{S} or
+  \mintinline[]{text}{S::N}\emph{i}, and
+\item
+  \mintinline[]{text}{e2} is the result of
+  \mintinline[]{text}{std::require(e1, p2)} or
+  \mintinline[]{text}{std::prefer(e1, p2)},
+\end{itemize}
+
+shall compare equal unless
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{p2} is an instance of
+  \mintinline[]{text}{S::N}\emph{i}, and
+\item
+  \mintinline[]{text}{p1} and \mintinline[]{text}{p2} are different
+  types.
+\end{itemize}
+
+The value of the expression
+\mintinline[]{text}{S::N1::static_query_v<Executor>} is
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{Executor::query(S::N1())}, if that expression is a
+  well-formed expression;
+\item
+  ill-formed if \mintinline[]{text}{declval<Executor>().query(S::N1())}
+  is well-formed;
+\item
+  ill-formed if
+  \mintinline[]{text}{can_query_v<Executor,S::N}\emph{i}\mintinline[]{text}{>}
+  is \mintinline[]{text}{true} for any \mintinline[]{text}{1 <} \emph{i}
+  \mintinline[]{text}{<= N};
+\item
+  otherwise \mintinline[]{text}{S::N1()}.
+\end{itemize}
+
+{[}\emph{Note:} These rules automatically enable the
+\mintinline[]{text}{S::N1} property by default for executors which do
+not provide a \mintinline[]{text}{query} function for properties
+\mintinline[]{text}{S::N}\emph{i}. \emph{--end note}{]}
+
+The value of the expression
+\mintinline[]{text}{S::N}\emph{i}\mintinline[]{text}{::static_query_v<Executor>},
+for all \mintinline[]{text}{1 <} \emph{i} \mintinline[]{text}{<= N}, is
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{Executor::query(S::N}\emph{i}\mintinline[]{text}{())},
+  if that expression is a well-formed constant expression;
+\item
+  otherwise ill-formed.
+\end{itemize}
+
+The value of the expression
+\mintinline[]{text}{S::static_query_v<Executor>} is
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{Executor::query(S())}, if that expression is a
+  well-formed constant expression;
+\item
+  otherwise, ill-formed if
+  \mintinline[]{text}{declval<Executor>().query(S())} is well-formed;
+\item
+  otherwise,
+  \mintinline[]{text}{S::N}\emph{i}\mintinline[]{text}{::static_query_v<Executor>}
+  for the least \emph{i} \mintinline[]{text}{<= N} for which this
+  expression is a well-formed constant expression;
+\item
+  otherwise ill-formed.
+\end{itemize}
+
+{[}\emph{Note:} These rules automatically enable the
+\mintinline[]{text}{S::N1} property by default for executors which do
+not provide a \mintinline[]{text}{query} function for properties
+\mintinline[]{text}{S} or \mintinline[]{text}{S::N}\emph{i}. \emph{--end
+note}{]}
+
+Let \emph{k} be the least value of \emph{i} for which
+\mintinline[]{text}{can_query_v<Executor,S::N}\emph{i}\mintinline[]{text}{>}
+is true, if such a value of \emph{i} exists.
+
+\begin{minted}{cpp}
+template<class Executor, class Property>
+  friend constexpr S query(const Executor& ex, const Property& p) noexcept(noexcept(std::query(ex, std::declval<const S::Nk>())));
+\end{minted}
+
+\emph{Returns:}
+\mintinline[]{text}{std::query(ex, S::N}\emph{k}\mintinline[]{text}{())}.
+
+\emph{Remarks:} This function shall not participate in overload
+resolution unless
+\mintinline[]{text}{is_same_v<Property,S> && can_query_v<Executor,S::N}\emph{i}\mintinline[]{text}{>}
+is true for at least one \mintinline[]{text}{S::N}\emph{i}`.
+
+\begin{minted}{cpp}
+bool operator==(const S& a, const S& b);
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{true} if \mintinline[]{text}{a} and
+\mintinline[]{text}{b} were constructed from the same constructor;
+\mintinline[]{text}{false}, otherwise.
+
+\hypertarget{blocking-properties}{%
+\paragraph{Blocking properties}\label{blocking-properties}}
+
+The \mintinline[]{text}{blocking_t} property describes what guarantees
+executors provide about the blocking behavior of their execution
+functions.
+
+\mintinline[]{text}{blocking_t} provides nested property types and
+objects as described below.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule
+\begin{minipage}[b]{0.37\columnwidth}\raggedright
+Nested Property Type\strut
+\end{minipage} & \begin{minipage}[b]{0.34\columnwidth}\raggedright
+Nested Property Object Name\strut
+\end{minipage} & \begin{minipage}[b]{0.20\columnwidth}\raggedright
+Requirements\strut
+\end{minipage}\tabularnewline
+\midrule
+\endhead
+\begin{minipage}[t]{0.37\columnwidth}\raggedright
+\mintinline[]{text}{blocking_t::possibly_t}\strut
+\end{minipage} & \begin{minipage}[t]{0.34\columnwidth}\raggedright
+\mintinline[]{text}{blocking.possibly}\strut
+\end{minipage} & \begin{minipage}[t]{0.20\columnwidth}\raggedright
+Invocation of an executor's execution function may block pending
+completion of one or more invocations of the submitted function
+object.\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.37\columnwidth}\raggedright
+\mintinline[]{text}{blocking_t::always_t}\strut
+\end{minipage} & \begin{minipage}[t]{0.34\columnwidth}\raggedright
+\mintinline[]{text}{blocking.always}\strut
+\end{minipage} & \begin{minipage}[t]{0.20\columnwidth}\raggedright
+Invocation of an executor's execution function shall block until
+completion of all invocations of submitted function object.\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.37\columnwidth}\raggedright
+\mintinline[]{text}{blocking_t::never_t}\strut
+\end{minipage} & \begin{minipage}[t]{0.34\columnwidth}\raggedright
+\mintinline[]{text}{blocking.never}\strut
+\end{minipage} & \begin{minipage}[t]{0.20\columnwidth}\raggedright
+Invocation of an executor's execution function shall not block pending
+completion of the invocations of the submitted function object.\strut
+\end{minipage}\tabularnewline
+\bottomrule
+\end{longtable}
+
+\hypertarget{properties-to-indicate-if-submitted-tasks-represent-continuations}{%
+\paragraph{Properties to indicate if submitted tasks represent
+continuations}\label{properties-to-indicate-if-submitted-tasks-represent-continuations}}
+
+The \mintinline[]{text}{relationship_t} property allows users of
+executors to indicate that submitted tasks represent continuations.
+
+\mintinline[]{text}{relationship_t} provides nested property types and
+objects as indicated below.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule
+\begin{minipage}[b]{0.33\columnwidth}\raggedright
+Nested Property Type\strut
+\end{minipage} & \begin{minipage}[b]{0.41\columnwidth}\raggedright
+Nested Property Object Name\strut
+\end{minipage} & \begin{minipage}[b]{0.18\columnwidth}\raggedright
+Requirements\strut
+\end{minipage}\tabularnewline
+\midrule
+\endhead
+\begin{minipage}[t]{0.33\columnwidth}\raggedright
+\mintinline[]{text}{relationship_t::fork_t}\strut
+\end{minipage} & \begin{minipage}[t]{0.41\columnwidth}\raggedright
+\mintinline[]{text}{relationship.fork}\strut
+\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright
+Function objects submitted through the executor do not represent
+continuations of the caller.\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.33\columnwidth}\raggedright
+\mintinline[]{text}{relationship_t::continuation_t}\strut
+\end{minipage} & \begin{minipage}[t]{0.41\columnwidth}\raggedright
+\mintinline[]{text}{relationship.continuation}\strut
+\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright
+Function objects submitted through the executor represent continuations
+of the caller. Invocation of the submitted function object may be
+deferred until the caller completes.\strut
+\end{minipage}\tabularnewline
+\bottomrule
+\end{longtable}
+
+\hypertarget{properties-to-indicate-likely-task-submission-in-the-future}{%
+\paragraph{Properties to indicate likely task submission in the
+future}\label{properties-to-indicate-likely-task-submission-in-the-future}}
+
+The \mintinline[]{text}{outstanding_work_t} property allows users of
+executors to indicate that task submission is likely in the future.
+
+\mintinline[]{text}{outstanding_work_t} provides nested property types
+and objects as indicated below.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule
+\begin{minipage}[b]{0.32\columnwidth}\raggedright
+Nested Property Type\strut
+\end{minipage} & \begin{minipage}[b]{0.42\columnwidth}\raggedright
+Nested Property Object Name\strut
+\end{minipage} & \begin{minipage}[b]{0.18\columnwidth}\raggedright
+Requirements\strut
+\end{minipage}\tabularnewline
+\midrule
+\endhead
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\mintinline[]{text}{outstanding_work_t::untracked_t}\strut
+\end{minipage} & \begin{minipage}[t]{0.42\columnwidth}\raggedright
+\mintinline[]{text}{outstanding_work.untracked}\strut
+\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright
+The existence of the executor object does not indicate any likely future
+submission of a function object.\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\mintinline[]{text}{outstanding_work_t::tracked_t}\strut
+\end{minipage} & \begin{minipage}[t]{0.42\columnwidth}\raggedright
+\mintinline[]{text}{outstanding_work.tracked}\strut
+\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright
+The existence of the executor object represents an indication of likely
+future submission of a function object. The executor or its associated
+execution context may choose to maintain execution resources in
+anticipation of this submission.\strut
+\end{minipage}\tabularnewline
+\bottomrule
+\end{longtable}
+
+{[}\emph{Note:} The \mintinline[]{text}{outstanding_work_t::tracked_t}
+and \mintinline[]{text}{outstanding_work_t::untracked_t} properties are
+used to communicate to the associated execution context intended future
+work submission on the executor. The intended effect of the properties
+is the behavior of execution context's facilities for awaiting
+outstanding work; specifically whether it considers the existance of the
+executor object with the
+\mintinline[]{text}{outstanding_work_t::tracked_t} property enabled
+outstanding work when deciding what to wait on. However this will be
+largely defined by the execution context implementation. It is intended
+that the execution context will define its wait facilities and
+on-destruction behaviour and provide an interface for querying this. An
+initial work towards this is included in P0737r0. \emph{--end note}{]}
+
+\hypertarget{properties-for-bulk-execution-guarantees}{%
+\paragraph{Properties for bulk execution
+guarantees}\label{properties-for-bulk-execution-guarantees}}
+
+Bulk execution guarantee properties communicate the forward progress and
+ordering guarantees of execution agents associated with the bulk
+execution.
+
+\mintinline[]{text}{bulk_guarantee_t} provides nested property types and
+objects as indicated below.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule
+\begin{minipage}[b]{0.33\columnwidth}\raggedright
+Nested Property Type\strut
+\end{minipage} & \begin{minipage}[b]{0.41\columnwidth}\raggedright
+Nested Property Object Name\strut
+\end{minipage} & \begin{minipage}[b]{0.18\columnwidth}\raggedright
+Requirements\strut
+\end{minipage}\tabularnewline
+\midrule
+\endhead
+\begin{minipage}[t]{0.33\columnwidth}\raggedright
+\mintinline[]{text}{bulk_guarantee_t::unsequenced_t}\strut
+\end{minipage} & \begin{minipage}[t]{0.41\columnwidth}\raggedright
+\mintinline[]{text}{bulk_guarantee.unsequenced}\strut
+\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright
+Execution agents within the same bulk execution may be parallelized and
+vectorized.\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.33\columnwidth}\raggedright
+\mintinline[]{text}{bulk_guarantee_t::sequenced_t}\strut
+\end{minipage} & \begin{minipage}[t]{0.41\columnwidth}\raggedright
+\mintinline[]{text}{bulk_guarantee.sequenced}\strut
+\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright
+Execution agents within the same bulk execution may not be
+parallelized.\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.33\columnwidth}\raggedright
+\mintinline[]{text}{bulk_guarantee_t::parallel_t}\strut
+\end{minipage} & \begin{minipage}[t]{0.41\columnwidth}\raggedright
+\mintinline[]{text}{bulk_guarantee.parallel}\strut
+\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright
+Execution agents within the same bulk execution may be
+parallelized.\strut
+\end{minipage}\tabularnewline
+\bottomrule
+\end{longtable}
+
+Execution agents associated with the
+\mintinline[]{text}{bulk_guarantee_t::unsequenced_t} property may invoke
+the function object in an unordered fashion. Any such invocations in the
+same thread of execution are unsequenced with respect to each other.
+{[}\emph{Note:} This means that multiple execution agents may be
+interleaved on a single thread of execution, which overrides the usual
+guarantee from {[}intro.execution{]} that function executions do not
+interleave with one another. \emph{--end note}{]}
+
+Execution agents associated with the
+\mintinline[]{text}{bulk_guarantee_t::sequenced_t} property invoke the
+function object in sequence in lexicographic order of their indices.
+
+Execution agents associated with the
+\mintinline[]{text}{bulk_guarantee_t::parallel_t} property invoke the
+function object with a parallel forward progress guarantee. Any such
+invocations in the same thread of execution are indeterminately
+sequenced with respect to each other. {[}\emph{Note:} It is the caller's
+responsibility to ensure that the invocation does not introduce data
+races or deadlocks. \emph{--end note}{]}
+
+{[}\emph{Editorial note:} The descriptions of these properties were
+ported from {[}algorithms.parallel.user{]}. The intention is that a
+future standard will specify execution policy behavior in terms of the
+fundamental properties of their associated executors. We did not include
+the accompanying code examples from {[}algorithms.parallel.user{]}
+because the examples seem easier to understand when illustrated by
+\mintinline[]{text}{std::for_each}. \emph{--end editorial note}{]}
+
+\hypertarget{properties-for-mapping-of-execution-on-to-threads}{%
+\paragraph{Properties for mapping of execution on to
+threads}\label{properties-for-mapping-of-execution-on-to-threads}}
+
+The \mintinline[]{text}{mapping_t} property describes what guarantees
+executors provide about the mapping of execution agents onto threads of
+execution.
+
+\mintinline[]{text}{mapping_t} provides nested property types and
+objects as indicated below.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule
+\begin{minipage}[b]{0.32\columnwidth}\raggedright
+Nested Property Type\strut
+\end{minipage} & \begin{minipage}[b]{0.42\columnwidth}\raggedright
+Nested Property Object Name\strut
+\end{minipage} & \begin{minipage}[b]{0.18\columnwidth}\raggedright
+Requirements\strut
+\end{minipage}\tabularnewline
+\midrule
+\endhead
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\mintinline[]{text}{mapping_t::thread_t}\strut
+\end{minipage} & \begin{minipage}[t]{0.42\columnwidth}\raggedright
+\mintinline[]{text}{mapping.thread}\strut
+\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright
+Execution agents are mapped onto threads of execution.\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\mintinline[]{text}{mapping_t::new_thread_t}\strut
+\end{minipage} & \begin{minipage}[t]{0.42\columnwidth}\raggedright
+\mintinline[]{text}{mapping.new_thread}\strut
+\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright
+Each execution agent is mapped onto a new thread of execution.\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\mintinline[]{text}{mapping_t::other_t}\strut
+\end{minipage} & \begin{minipage}[t]{0.42\columnwidth}\raggedright
+\mintinline[]{text}{mapping.other}\strut
+\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright
+Mapping of each execution agent is implementation-defined.\strut
+\end{minipage}\tabularnewline
+\bottomrule
+\end{longtable}
+
+{[}\emph{Note:} A mapping of an execution agent onto a thread of
+execution implies the execution agent runs as-if on a
+\mintinline[]{text}{std::thread}. Therefore, the facilities provided by
+\mintinline[]{text}{std::thread}, such as thread-local storage, are
+available. \mintinline[]{text}{mapping_t::new_thread_t} provides
+stronger guarantees, in particular that thread-local storage will not be
+shared between execution agents. \emph{--end note}{]}
+
+\hypertarget{properties-for-customizing-memory-allocation}{%
+\subsubsection{Properties for customizing memory
+allocation}\label{properties-for-customizing-memory-allocation}}
+
+\begin{minted}{cpp}
+template <typename ProtoAllocator>
+struct allocator_t;
+\end{minted}
+
+The \mintinline[]{text}{allocator_t} property conforms to the following
+specification:
+
+\begin{minted}{cpp}
+template <typename ProtoAllocator>
+struct allocator_t
+{
+    template <class T>
+      static constexpr bool is_applicable_property_v = executor<T>;
+
+    static constexpr bool is_requirable = true;
+    static constexpr bool is_preferable = true;
+
+    template<class Executor>
+    static constexpr auto static_query_v
+      = Executor::query(allocator_t);
+
+    template <typename OtherProtoAllocator>
+    allocator_t<OtherProtoAllocator> operator()(const OtherProtoAllocator &a) const;
+
+    static constexpr ProtoAllocator value() const;
+
+private:
+    ProtoAllocator a_; // exposition only
+};
+\end{minted}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule
+\begin{minipage}[b]{0.29\columnwidth}\raggedright
+Property\strut
+\end{minipage} & \begin{minipage}[b]{0.21\columnwidth}\raggedright
+Notes\strut
+\end{minipage} & \begin{minipage}[b]{0.41\columnwidth}\raggedright
+Requirements\strut
+\end{minipage}\tabularnewline
+\midrule
+\endhead
+\begin{minipage}[t]{0.29\columnwidth}\raggedright
+\mintinline[]{text}{allocator_t<ProtoAllocator>}\strut
+\end{minipage} & \begin{minipage}[t]{0.21\columnwidth}\raggedright
+Objects of this type are created via
+\mintinline[]{text}{execution::allocator(a)}, where
+\mintinline[]{text}{a} is the desired
+\mintinline[]{text}{ProtoAllocator}.\strut
+\end{minipage} & \begin{minipage}[t]{0.41\columnwidth}\raggedright
+The executor shall use the encapsulated allocator to allocate any memory
+required to store the submitted function object.\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.29\columnwidth}\raggedright
+\mintinline[]{text}{allocator_t<void>}\strut
+\end{minipage} & \begin{minipage}[t]{0.21\columnwidth}\raggedright
+Specialisation of
+\mintinline[]{text}{allocator_t<ProtoAllocator>}.\strut
+\end{minipage} & \begin{minipage}[t]{0.41\columnwidth}\raggedright
+The executor shall use an implementation-defined default allocator to
+allocate any memory required to store the submitted function
+object.\strut
+\end{minipage}\tabularnewline
+\bottomrule
+\end{longtable}
+
+If the expression \mintinline[]{text}{std::query(E, P)} is well formed,
+where \mintinline[]{text}{P} is an object of type
+\mintinline[]{text}{allocator_t<ProtoAllocator>}, then: * the type of
+the expression \mintinline[]{text}{std::query(E, P)} shall satisfy the
+\mintinline[]{text}{ProtoAllocator} requirements; * the result of the
+expression \mintinline[]{text}{std::query(E, P)} shall be the allocator
+currently established in the executor \mintinline[]{text}{E}; and * the
+expression \mintinline[]{text}{std::query(E, allocator_t<void>{})} shall
+also be well formed and have the same result as
+\mintinline[]{text}{std::query(E, P)}.
+
+\hypertarget{allocator_t-members}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{allocator_t}
+members}{ members}}\label{allocator_t-members}}
+
+\begin{minted}{cpp}
+template <typename OtherProtoAllocator>
+allocator_t<OtherProtoAllocator> operator()(const OtherProtoAllocator &a) const;
+\end{minted}
+
+\emph{Returns:} An allocator object whose exposition-only member
+\mintinline[]{text}{a_} is initialized as \mintinline[]{text}{a_(a)}.
+
+\emph{Remarks:} This function shall not participate in overload
+resolution unless \mintinline[]{text}{ProtoAllocator} is
+\mintinline[]{text}{void}.
+
+{[}\emph{Note:} It is permitted for \mintinline[]{text}{a} to be an
+executor's implementation-defined default allocator and, if so, the
+default allocator may also be established within an executor by passing
+the result of this function to \mintinline[]{text}{require}. \emph{--end
+note}{]}
+
+\begin{minted}{cpp}
+constexpr ProtoAllocator value() const;
+\end{minted}
+
+\emph{Returns:} The exposition-only member \mintinline[]{text}{a_}.
+
+\emph{Remarks:} This function shall not participate in overload
+resolution unless \mintinline[]{text}{ProtoAllocator} is not
+\mintinline[]{text}{void}.
+
+\hypertarget{executor-type-traits}{%
+\subsection{Executor type traits}\label{executor-type-traits}}
+
+\hypertarget{associated-shape-type}{%
+\subsubsection{Associated shape type}\label{associated-shape-type}}
+
+\begin{minted}{cpp}
+template<class Executor>
+struct executor_shape
+{
+  private:
+    // exposition only
+    template<class T>
+    using helper = typename T::shape_type;
+
+  public:
+    using type = std::experimental::detected_or_t<
+      size_t, helper, decltype(std::require(declval<const Executor&>(), execution::bulk))
+    >;
+
+    // exposition only
+    static_assert(std::is_integral_v<type>, "shape type must be an integral type");
+};
+\end{minted}
+
+\hypertarget{associated-index-type}{%
+\subsubsection{Associated index type}\label{associated-index-type}}
+
+\begin{minted}{cpp}
+template<class Executor>
+struct executor_index
+{
+  private:
+    // exposition only
+    template<class T>
+    using helper = typename T::index_type;
+
+  public:
+    using type = std::experimental::detected_or_t<
+      executor_shape_t<Executor>, helper, decltype(std::require(declval<const Executor&>(), execution::bulk))
+    >;
+
+    // exposition only
+    static_assert(std::is_integral_v<type>, "index type must be an integral type");
+};
+\end{minted}
+
+\hypertarget{polymorphic-executor-support}{%
+\subsection{Polymorphic executor
+support}\label{polymorphic-executor-support}}
+
+\hypertarget{class-bad_executor}{%
+\subsubsection{\texorpdfstring{Class
+\mintinline[]{text}{bad_executor}}{Class }}\label{class-bad_executor}}
+
+An exception of type \mintinline[]{text}{bad_executor} is thrown by
+polymorphic executor member function \mintinline[]{text}{execute} when
+the executor object has no target.
+
+\begin{minted}{cpp}
+class bad_executor : public exception
+{
+public:
+  // constructor:
+  bad_executor() noexcept;
+};
+\end{minted}
+
+\hypertarget{bad_executor-constructors}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{bad_executor}
+constructors}{ constructors}}\label{bad_executor-constructors}}
+
+\begin{minted}{cpp}
+bad_executor() noexcept;
+\end{minted}
+
+\emph{Effects:} Constructs a \mintinline[]{text}{bad_executor} object.
+
+\emph{Postconditions:} \mintinline[]{text}{what()} returns an
+implementation-defined NTBS.
+
+\hypertarget{struct-prefer_only}{%
+\subsubsection{\texorpdfstring{Struct
+\mintinline[]{text}{prefer_only}}{Struct }}\label{struct-prefer_only}}
+
+The \mintinline[]{text}{prefer_only} struct is a property adapter that
+disables the \mintinline[]{text}{is_requirable} value.
+
+{[}\emph{Example:}
+
+Consider a generic function that performs some task immediately if it
+can, and otherwise asynchronously in the background.
+
+\begin{minted}{cpp}
+template<class Executor, class Callback>
+void do_async_work(
+    Executor ex,
+    Callback callback)
+{
+  if (try_work() == done)
+  {
+    // Work completed immediately, invoke callback.
+    execution::execute(ex, callback);
+  }
+  else
+  {
+    // Perform work in background. Track outstanding work.
+    start_background_work(
+        std::prefer(ex,
+          execution::outstanding_work.tracked),
+        callback);
+  }
+}
+\end{minted}
+
+This function can be used with an inline executor which is defined as
+follows:
+
+\begin{minted}{cpp}
+struct inline_executor
+{
+  constexpr bool operator==(const inline_executor&) const noexcept
+  {
+    return true;
+  }
+
+  constexpr bool operator!=(const inline_executor&) const noexcept
+  {
+    return false;
+  }
+
+  template<class Function> void execute(Function f) const noexcept
+  {
+    f();
+  }
+};
+\end{minted}
+
+as, in the case of an unsupported property, invocation of
+\mintinline[]{text}{std::prefer} will fall back to an identity
+operation.
+
+The polymorphic \mintinline[]{text}{any_executor} wrapper should be able
+to simply swap in, so that we could change
+\mintinline[]{text}{do_async_work} to the non-template function:
+
+\begin{minted}{cpp}
+void do_async_work(any_executor<execution::outstanding_work_t::tracked_t> ex,
+                   std::function<void()> callback)
+{
+  if (try_work() == done)
+  {
+    // Work completed immediately, invoke callback.
+    execution::execute(ex, callback);
+  }
+  else
+  {
+    // Perform work in background. Track outstanding work.
+    start_background_work(
+        std::prefer(ex,
+          execution::outstanding_work.tracked),
+        callback);
+  }
+}
+\end{minted}
+
+with no change in behavior or semantics.
+
+However, if we simply specify
+\mintinline[]{text}{execution::outstanding_work.tracked} in the
+\mintinline[]{text}{executor} template parameter list, we will get a
+compile error due to the \mintinline[]{text}{executor} template not
+knowing that \mintinline[]{text}{execution::outstanding_work.tracked} is
+intended for use with \mintinline[]{text}{prefer} only. At the point of
+construction from an \mintinline[]{text}{inline_executor} called
+\mintinline[]{text}{ex}, \mintinline[]{text}{executor} will try to
+instantiate implementation templates that perform the ill-formed
+\mintinline[]{text}{std::require(ex, execution::outstanding_work.tracked)}.
+
+The \mintinline[]{text}{prefer_only} adapter addresses this by turning
+off the \mintinline[]{text}{is_requirable} attribute for a specific
+property. It would be used in the above example as follows:
+
+\begin{minted}{cpp}
+void do_async_work(any_executor<prefer_only<execution::outstanding_work_t::tracked_t>> ex,
+                   std::function<void()> callback)
+{
+  ...
+}
+\end{minted}
+
+\emph{-- end example}{]}
+
+\begin{minted}{cpp}
+template<class InnerProperty>
+struct prefer_only
+{
+  InnerProperty property;
+
+  static constexpr bool is_requirable = false;
+  static constexpr bool is_preferable = InnerProperty::is_preferable;
+
+  using polymorphic_query_result_type = see-below; // not always defined
+
+  template<class Executor>
+    static constexpr auto static_query_v = see-below; // not always defined
+
+  constexpr prefer_only(const InnerProperty& p);
+
+  constexpr auto value() const
+    noexcept(noexcept(std::declval<const InnerProperty>().value()))
+      -> decltype(std::declval<const InnerProperty>().value());
+
+  template<class Executor, class Property>
+  friend auto prefer(Executor ex, const Property& p)
+    noexcept(noexcept(std::prefer(std::move(ex), std::declval<const InnerProperty>())))
+      -> decltype(std::prefer(std::move(ex), std::declval<const InnerProperty>()));
+
+  template<class Executor, class Property>
+  friend constexpr auto query(const Executor& ex, const Property& p)
+    noexcept(noexcept(std::query(ex, std::declval<const InnerProperty>())))
+      -> decltype(std::query(ex, std::declval<const InnerProperty>()));
+};
+\end{minted}
+
+If \mintinline[]{text}{InnerProperty::polymorphic_query_result_type} is
+valid and denotes a type, the template instantiation
+\mintinline[]{text}{prefer_only<InnerProperty>} defines a nested type
+\mintinline[]{text}{polymorphic_query_result_type} as a synonym for
+\mintinline[]{text}{InnerProperty::polymorphic_query_result_type}.
+
+If \mintinline[]{text}{InnerProperty::static_query_v} is a variable
+template and \mintinline[]{text}{InnerProperty::static_query_v<E>} is
+well formed for some executor type \mintinline[]{text}{E}, the template
+instantiation \mintinline[]{text}{prefer_only<InnerProperty>} defines a
+nested variable template \mintinline[]{text}{static_query_v} as a
+synonym for \mintinline[]{text}{InnerProperty::static_query_v}.
+
+\begin{minted}{cpp}
+constexpr prefer_only(const InnerProperty& p);
+\end{minted}
+
+\emph{Effects:} Initializes \mintinline[]{text}{property} with
+\mintinline[]{text}{p}.
+
+\begin{minted}{cpp}
+constexpr auto value() const
+  noexcept(noexcept(std::declval<const InnerProperty>().value()))
+    -> decltype(std::declval<const InnerProperty>().value());
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{property.value()}.
+
+\emph{Remarks:} Shall not participate in overload resolution unless the
+expression \mintinline[]{text}{property.value()} is well-formed.
+
+\begin{minted}{cpp}
+template<class Executor, class Property>
+friend auto prefer(Executor ex, const Property& p)
+  noexcept(noexcept(std::prefer(std::move(ex), std::declval<const InnerProperty>())))
+    -> decltype(std::prefer(std::move(ex), std::declval<const InnerProperty>()));
+\end{minted}
+
+\emph{Returns:}
+\mintinline[]{text}{std::prefer(std::move(ex), p.property)}.
+
+\emph{Remarks:} Shall not participate in overload resolution unless
+\mintinline[]{text}{std::is_same_v<Property, prefer_only>} is
+\mintinline[]{text}{true}, and the expression
+\mintinline[]{text}{std::prefer(std::move(ex), p.property)} is
+well-formed.
+
+\begin{minted}{cpp}
+template<class Executor, class Property>
+friend constexpr auto query(const Executor& ex, const Property& p)
+  noexcept(noexcept(std::query(ex, std::declval<const InnerProperty>())))
+    -> decltype(std::query(ex, std::declval<const InnerProperty>()));
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{std::query(ex, p.property)}.
+
+\emph{Remarks:} Shall not participate in overload resolution unless
+\mintinline[]{text}{std::is_same_v<Property, prefer_only>} is
+\mintinline[]{text}{true}, and the expression
+\mintinline[]{text}{std::query(ex, p.property)} is well-formed.
+
+\hypertarget{polymorphic-executor-wrappers}{%
+\subsubsection{Polymorphic executor
+wrappers}\label{polymorphic-executor-wrappers}}
+
+The \mintinline[]{text}{any_executor} class template provides
+polymorphic wrappers for executors.
+
+In several places in this section the operation
+\mintinline[]{text}{CONTAINS_PROPERTY(p, pn)} is used. All such uses
+mean \mintinline[]{text}{std::disjunction_v<std::is_same<p, pn>...>}.
+
+In several places in this section the operation
+\mintinline[]{text}{FIND_CONVERTIBLE_PROPERTY(p, pn)} is used. All such
+uses mean the first type \mintinline[]{text}{P} in the parameter pack
+\mintinline[]{text}{pn} for which
+\mintinline[]{text}{std::is_same_v<p, P>} is true or
+\mintinline[]{text}{std::is_convertible_v<p, P>} is
+\mintinline[]{text}{true}. If no such type \mintinline[]{text}{P}
+exists, the operation
+\mintinline[]{text}{FIND_CONVERTIBLE_PROPERTY(p, pn)} is ill-formed.
+
+\begin{minted}{cpp}
+template <class... SupportableProperties>
+class any_executor
+{
+public:
+  // construct / copy / destroy:
+
+  any_executor() noexcept;
+  any_executor(nullptr_t) noexcept;
+  any_executor(const any_executor& e) noexcept;
+  any_executor(any_executor&& e) noexcept;
+  template<class... OtherSupportableProperties>
+    any_executor(any_executor<OtherSupportableProperties...> e);
+  template<class... OtherSupportableProperties>
+    any_executor(any_executor<OtherSupportableProperties...> e) = delete;
+  template<executor Executor>
+    any_executor(Executor e);
+
+  any_executor& operator=(const any_executor& e) noexcept;
+  any_executor& operator=(any_executor&& e) noexcept;
+  any_executor& operator=(nullptr_t) noexcept;
+  template<executor Executor>
+    any_executor& operator=(Executor e);
+
+  ~any_executor();
+
+  // any_executor modifiers:
+
+  void swap(any_executor& other) noexcept;
+
+  // any_executor operations:
+
+  template <class Property>
+  any_executor require(const Property& p) const;
+
+  template <class Property>
+  any_executor prefer(const Property& p);
+
+  template <class Property>
+  typename Property::polymorphic_query_result_type query(const Property& p) const;
+
+  template<class Function>
+    void execute(Function&& f) const;
+
+  // any_executor capacity:
+
+  explicit operator bool() const noexcept;
+
+  // any_executor target access:
+
+  const type_info& target_type() const noexcept;
+  template<executor Executor> Executor* target() noexcept;
+  template<executor Executor> const Executor* target() const noexcept;
+};
+
+// any_executor comparisons:
+
+template <class... SupportableProperties>
+bool operator==(const any_executor<SupportableProperties...>& a, const any_executor<SupportableProperties...>& b) noexcept;
+template <class... SupportableProperties>
+bool operator==(const any_executor<SupportableProperties...>& e, nullptr_t) noexcept;
+template <class... SupportableProperties>
+bool operator==(nullptr_t, const any_executor<SupportableProperties...>& e) noexcept;
+template <class... SupportableProperties>
+bool operator!=(const any_executor<SupportableProperties...>& a, const any_executor<SupportableProperties...>& b) noexcept;
+template <class... SupportableProperties>
+bool operator!=(const any_executor<SupportableProperties...>& e, nullptr_t) noexcept;
+template <class... SupportableProperties>
+bool operator!=(nullptr_t, const any_executor<SupportableProperties...>& e) noexcept;
+
+// any_executor specialized algorithms:
+
+template <class... SupportableProperties>
+void swap(any_executor<SupportableProperties...>& a, any_executor<SupportableProperties...>& b) noexcept;
+\end{minted}
+
+The \mintinline[]{text}{any_executor} class satisfies the
+\mintinline[]{text}{executor} concept requirements.
+
+{[}\emph{Note:} To meet the \mintinline[]{text}{noexcept} requirements
+for executor copy constructors and move constructors, implementations
+may share a target between two or more \mintinline[]{text}{any_executor}
+objects. \emph{--end note}{]}
+
+Each property type in the \mintinline[]{text}{SupportableProperties...}
+pack shall provide a nested type
+\mintinline[]{text}{polymorphic_query_result_type}.
+
+The \emph{target} is the executor object that is held by the wrapper.
+
+\hypertarget{any_executor-constructors}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{any_executor}
+constructors}{ constructors}}\label{any_executor-constructors}}
+
+\begin{minted}{cpp}
+any_executor() noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{!*this}.
+
+\begin{minted}{cpp}
+any_executor(nullptr_t) noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{!*this}.
+
+\begin{minted}{cpp}
+any_executor(const any_executor& e) noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{!*this} if
+\mintinline[]{text}{!e}; otherwise, \mintinline[]{text}{*this} targets
+\mintinline[]{text}{e.target()} or a copy of
+\mintinline[]{text}{e.target()}.
+
+\begin{minted}{cpp}
+any_executor(any_executor&& e) noexcept;
+\end{minted}
+
+\emph{Effects:} If \mintinline[]{text}{!e}, \mintinline[]{text}{*this}
+has no target; otherwise, moves \mintinline[]{text}{e.target()} or
+move-constructs the target of \mintinline[]{text}{e} into the target of
+\mintinline[]{text}{*this}, leaving \mintinline[]{text}{e} in a valid
+state with an unspecified value.
+
+\begin{minted}{cpp}
+template<class... OtherSupportableProperties>
+  any_executor(any_executor<OtherSupportableProperties...> e);
+\end{minted}
+
+\emph{Remarks:} This function shall not participate in overload
+resolution unless: *
+\mintinline[]{text}{CONTAINS_PROPERTY(p, OtherSupportableProperties)} ,
+where \mintinline[]{text}{p} is each property in
+\mintinline[]{text}{SupportableProperties...}.
+
+\emph{Effects:} \mintinline[]{text}{*this} targets a copy of
+\mintinline[]{text}{e} initialized with
+\mintinline[]{text}{std::move(e)}.
+
+\begin{minted}{cpp}
+template<class... OtherSupportableProperties>
+  any_executor(any_executor<OtherSupportableProperties...> e) = delete;
+\end{minted}
+
+\emph{Remarks:} This function shall not participate in overload
+resolution unless
+\mintinline[]{text}{CONTAINS_PROPERTY(p, OtherSupportableProperties)} is
+\mintinline[]{text}{false} for some property \mintinline[]{text}{p} in
+\mintinline[]{text}{SupportableProperties...}.
+
+\begin{minted}{cpp}
+template<executor Executor>
+  any_executor(Executor e);
+\end{minted}
+
+\emph{Remarks:} This function shall not participate in overload
+resolution unless:
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{can_require_v<Executor, P>}, if
+  \mintinline[]{text}{P::is_requirable}, where \mintinline[]{text}{P} is
+  each property in \mintinline[]{text}{SupportableProperties...}.
+\item
+  \mintinline[]{text}{can_prefer_v<Executor, P>}, if
+  \mintinline[]{text}{P::is_preferable}, where \mintinline[]{text}{P} is
+  each property in \mintinline[]{text}{SupportableProperties...}.
+\item
+  and \mintinline[]{text}{can_query_v<Executor, P>}, if
+  \mintinline[]{text}{P::is_requirable == false} and
+  \mintinline[]{text}{P::is_preferable == false}, where
+  \mintinline[]{text}{P} is each property in
+  \mintinline[]{text}{SupportableProperties...}.
+\end{itemize}
+
+\emph{Effects:} \mintinline[]{text}{*this} targets a copy of
+\mintinline[]{text}{e}.
+
+\hypertarget{any_executor-assignment}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{any_executor}
+assignment}{ assignment}}\label{any_executor-assignment}}
+
+\begin{minted}{cpp}
+any_executor& operator=(const any_executor& e) noexcept;
+\end{minted}
+
+\emph{Effects:} \mintinline[]{text}{any_executor(e).swap(*this)}.
+
+\emph{Returns:} \mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+any_executor& operator=(any_executor&& e) noexcept;
+\end{minted}
+
+\emph{Effects:} Replaces the target of \mintinline[]{text}{*this} with
+the target of \mintinline[]{text}{e}, leaving \mintinline[]{text}{e} in
+a valid state with an unspecified value.
+
+\emph{Returns:} \mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+any_executor& operator=(nullptr_t) noexcept;
+\end{minted}
+
+\emph{Effects:} \mintinline[]{text}{any_executor(nullptr).swap(*this)}.
+
+\emph{Returns:} \mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+template<executor Executor>
+  any_executor& operator=(Executor e);
+\end{minted}
+
+\emph{Requires:} As for
+\mintinline[]{text}{template<executor Executor> any_executor(Executor e)}.
+
+\emph{Effects:}
+\mintinline[]{text}{any_executor(std::move(e)).swap(*this)}.
+
+\emph{Returns:} \mintinline[]{text}{*this}.
+
+\hypertarget{any_executor-destructor}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{any_executor}
+destructor}{ destructor}}\label{any_executor-destructor}}
+
+\begin{minted}{cpp}
+~any_executor();
+\end{minted}
+
+\emph{Effects:} If \mintinline[]{text}{*this != nullptr}, releases
+shared ownership of, or destroys, the target of
+\mintinline[]{text}{*this}.
+
+\hypertarget{any_executor-modifiers}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{any_executor}
+modifiers}{ modifiers}}\label{any_executor-modifiers}}
+
+\begin{minted}{cpp}
+void swap(any_executor& other) noexcept;
+\end{minted}
+
+\emph{Effects:} Interchanges the targets of \mintinline[]{text}{*this}
+and \mintinline[]{text}{other}.
+
+\hypertarget{any_executor-operations}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{any_executor}
+operations}{ operations}}\label{any_executor-operations}}
+
+\begin{minted}{cpp}
+template <class Property>
+any_executor require(const Property& p) const;
+\end{minted}
+
+Let \mintinline[]{text}{FIND_REQUIRABLE_PROPERTY(p, pn)} be the first
+type \mintinline[]{text}{P} in the parameter pack
+\mintinline[]{text}{pn} for which
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{is_same_v<p, P>} is \mintinline[]{text}{true} or
+  \mintinline[]{text}{is_convertible_v<p, P>} is
+  \mintinline[]{text}{true}, and
+\item
+  \mintinline[]{text}{P::is_requirable} is \mintinline[]{text}{true}.
+\end{itemize}
+
+If no such \mintinline[]{text}{P} exists, the operation
+\mintinline[]{text}{FIND_REQUIRABLE_PROPERTY(p, pn)} is ill-formed.
+
+\emph{Remarks:} This function shall not participate in overload
+resolution unless
+\mintinline[]{text}{FIND_REQUIRABLE_PROPERTY(Property, SupportableProperties)}
+is well-formed.
+
+\emph{Returns:} A polymorphic wrapper whose target is the result of
+\mintinline[]{text}{std::require(e, p)}, where \mintinline[]{text}{e} is
+the target object of \mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+template <class Property>
+any_executor prefer(const Property& p);
+\end{minted}
+
+Let \mintinline[]{text}{FIND_PREFERABLE_PROPERTY(p, pn)} be the first
+type \mintinline[]{text}{P} in the parameter pack
+\mintinline[]{text}{pn} for which
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{is_same_v<p, P>} is \mintinline[]{text}{true} or
+  \mintinline[]{text}{is_convertible_v<p, P>} is
+  \mintinline[]{text}{true}, and
+\item
+  \mintinline[]{text}{P::is_preferable} is \mintinline[]{text}{true}.
+\end{itemize}
+
+If no such \mintinline[]{text}{P} exists, the operation
+\mintinline[]{text}{FIND_PREFERABLE_PROPERTY(p, pn)} is ill-formed.
+
+\emph{Remarks:} This function shall not participate in overload
+resolution unless
+\mintinline[]{text}{FIND_PREFERABLE_PROPERTY(Property, SupportableProperties)}
+is well-formed.
+
+\emph{Returns:} A polymorphic wrapper whose target is the result of
+\mintinline[]{text}{std::prefer(e, p)}, where \mintinline[]{text}{e} is
+the target object of \mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+template <class Property>
+typename Property::polymorphic_query_result_type query(const Property& p) const;
+\end{minted}
+
+\emph{Remarks:} This function shall not participate in overload
+resolution unless
+\mintinline[]{text}{FIND_CONVERTIBLE_PROPERTY(Property, SupportableProperties)}
+is well-formed.
+
+\emph{Returns:} If \mintinline[]{text}{std::query(e, p)} is well-formed,
+\mintinline[]{text}{static_cast<Property::polymorphic_query_result_type>(std::query(e, p))},
+where \mintinline[]{text}{e} is the target object of
+\mintinline[]{text}{*this}. Otherwise,
+\mintinline[]{text}{Property::polymorphic_query_result_type{}}.
+
+\begin{minted}{cpp}
+template<class Function>
+  void execute(Function&& f) const;
+\end{minted}
+
+\emph{Effects:} Performs \mintinline[]{text}{execution::execute(e, f2)},
+where:
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{e} is the target object of
+  \mintinline[]{text}{*this};
+\item
+  \mintinline[]{text}{f1} is the result of
+  \mintinline[]{text}{DECAY_COPY(std::forward<Function>(f))};
+\item
+  \mintinline[]{text}{f2} is a function object of unspecified type that,
+  when invoked as \mintinline[]{text}{f2()}, performs
+  \mintinline[]{text}{f1()}.
+\end{itemize}
+
+\hypertarget{any_executor-capacity}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{any_executor}
+capacity}{ capacity}}\label{any_executor-capacity}}
+
+\begin{minted}{cpp}
+explicit operator bool() const noexcept;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{true} if \mintinline[]{text}{*this}
+has a target, otherwise \mintinline[]{text}{false}.
+
+\hypertarget{any_executor-target-access}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{any_executor} target
+access}{ target access}}\label{any_executor-target-access}}
+
+\begin{minted}{cpp}
+const type_info& target_type() const noexcept;
+\end{minted}
+
+\emph{Returns:} If \mintinline[]{text}{*this} has a target of type
+\mintinline[]{text}{T}, \mintinline[]{text}{typeid(T)}; otherwise,
+\mintinline[]{text}{typeid(void)}.
+
+\begin{minted}{cpp}
+template<executor Executor> Executor* target() noexcept;
+template<executor Executor> const Executor* target() const noexcept;
+\end{minted}
+
+\emph{Returns:} If
+\mintinline[]{text}{target_type() == typeid(Executor)} a pointer to the
+stored executor target; otherwise a null pointer value.
+
+\hypertarget{any_executor-comparisons}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{any_executor}
+comparisons}{ comparisons}}\label{any_executor-comparisons}}
+
+\begin{minted}{cpp}
+template<class... SupportableProperties>
+bool operator==(const any_executor<SupportableProperties...>& a, const any_executor<SupportableProperties...>& b) noexcept;
+\end{minted}
+
+\emph{Returns:}
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{true} if \mintinline[]{text}{!a} and
+  \mintinline[]{text}{!b};
+\item
+  \mintinline[]{text}{true} if \mintinline[]{text}{a} and
+  \mintinline[]{text}{b} share a target;
+\item
+  \mintinline[]{text}{true} if \mintinline[]{text}{e} and
+  \mintinline[]{text}{f} are the same type and
+  \mintinline[]{text}{e == f}, where \mintinline[]{text}{e} is the
+  target of \mintinline[]{text}{a} and \mintinline[]{text}{f} is the
+  target of \mintinline[]{text}{b};
+\item
+  otherwise \mintinline[]{text}{false}.
+\end{itemize}
+
+\begin{minted}{cpp}
+template<class... SupportableProperties>
+bool operator==(const any_executor<SupportableProperties...>& e, nullptr_t) noexcept;
+template<class... SupportableProperties>
+bool operator==(nullptr_t, const any_executor<SupportableProperties...>& e) noexcept;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{!e}.
+
+\begin{minted}{cpp}
+template<class... SupportableProperties>
+bool operator!=(const any_executor<SupportableProperties...>& a, const any_executor<SupportableProperties...>& b) noexcept;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{!(a == b)}.
+
+\begin{minted}{cpp}
+template<class... SupportableProperties>
+bool operator!=(const any_executor<SupportableProperties...>& e, nullptr_t) noexcept;
+template<class... SupportableProperties>
+bool operator!=(nullptr_t, const any_executor<SupportableProperties...>& e) noexcept;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{(bool) e}.
+
+\hypertarget{any_executor-specialized-algorithms}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{any_executor} specialized
+algorithms}{ specialized algorithms}}\label{any_executor-specialized-algorithms}}
+
+\begin{minted}{cpp}
+template<class... SupportableProperties>
+void swap(any_executor<SupportableProperties...>& a, any_executor<SupportableProperties...>& b) noexcept;
+\end{minted}
+
+\emph{Effects:} \mintinline[]{text}{a.swap(b)}.
+
+\hypertarget{thread-pools}{%
+\subsection{Thread pools}\label{thread-pools}}
+
+Thread pools manage execution agents which run on threads without
+incurring the overhead of thread creation and destruction whenever such
+agents are needed.
+
+\hypertarget{header-thread_pool-synopsis}{%
+\subsubsection{\texorpdfstring{Header \mintinline[]{text}{<thread_pool>}
+synopsis}{Header  synopsis}}\label{header-thread_pool-synopsis}}
+
+\begin{minted}{cpp}
+namespace std {
+
+  class static_thread_pool;
+
+} // namespace std
+\end{minted}
+
+\hypertarget{class-static_thread_pool}{%
+\subsubsection{\texorpdfstring{Class
+\mintinline[]{text}{static_thread_pool}}{Class }}\label{class-static_thread_pool}}
+
+\mintinline[]{text}{static_thread_pool} is a statically-sized thread
+pool which may be explicitly grown via thread attachment. The
+\mintinline[]{text}{static_thread_pool} is expected to be created with
+the use case clearly in mind with the number of threads known by the
+creator. As a result, no default constructor is considered correct for
+arbitrary use cases and \mintinline[]{text}{static_thread_pool} does not
+support any form of automatic resizing.
+
+\mintinline[]{text}{static_thread_pool} presents an effectively
+unbounded input queue and the execution functions of
+\mintinline[]{text}{static_thread_pool}'s associated executors do not
+block on this input queue.
+
+{[}\emph{Note:} Because \mintinline[]{text}{static_thread_pool}
+represents work as parallel execution agents, situations which require
+concurrent execution properties are not guaranteed correctness.
+\emph{--end note.}{]}
+
+\begin{minted}{cpp}
+class static_thread_pool
+{
+  public:
+    using scheduler_type = see-below;
+    using executor_type = see-below;
+
+    // construction/destruction
+    explicit static_thread_pool(std::size_t num_threads);
+
+    // nocopy
+    static_thread_pool(const static_thread_pool&) = delete;
+    static_thread_pool& operator=(const static_thread_pool&) = delete;
+
+    // stop accepting incoming work and wait for work to drain
+    ~static_thread_pool();
+
+    // attach current thread to the thread pools list of worker threads
+    void attach();
+
+    // signal all work to complete
+    void stop();
+
+    // wait for all threads in the thread pool to complete
+    void wait();
+
+    // placeholder for a general approach to getting schedulers from
+    // standard contexts.
+    scheduler_type scheduler() noexcept;
+
+    // placeholder for a general approach to getting executors from
+    // standard contexts.
+    executor_type executor() noexcept;
+};
+\end{minted}
+
+For an object of type \mintinline[]{text}{static_thread_pool},
+\emph{outstanding work} is defined as the sum of:
+
+\begin{itemize}
+\item
+  the number of existing executor objects associated with the
+  \mintinline[]{text}{static_thread_pool} for which the
+  \mintinline[]{text}{execution::outstanding_work.tracked} property is
+  established;
+\item
+  the number of function objects that have been added to the
+  \mintinline[]{text}{static_thread_pool} via the
+  \mintinline[]{text}{static_thread_pool} executor, scheduler and
+  sender, but not yet invoked; and
+\item
+  the number of function objects that are currently being invoked within
+  the \mintinline[]{text}{static_thread_pool}.
+\end{itemize}
+
+The \mintinline[]{text}{static_thread_pool} member functions
+\mintinline[]{text}{scheduler}, \mintinline[]{text}{executor},
+\mintinline[]{text}{attach}, \mintinline[]{text}{wait}, and
+\mintinline[]{text}{stop}, and the associated schedulers', senders` and
+executors' copy constructors and member functions, do not introduce data
+races as a result of concurrent invocations of those functions from
+different threads of execution.
+
+A \mintinline[]{text}{static_thread_pool}'s threads run execution agents
+with forward progress guarantee delegation. {[}\emph{Note:} Forward
+progress is delegated to an execution agent for its lifetime. Because
+\mintinline[]{text}{static_thread_pool} guarantees only parallel forward
+progress to running execution agents; \emph{i.e.}, execution agents
+which have run the first step of the function object. \emph{--end
+note}{]}
+
+\hypertarget{types}{%
+\paragraph{Types}\label{types}}
+
+\begin{minted}{cpp}
+using scheduler_type = see-below;
+\end{minted}
+
+A scheduler type conforming to the specification for
+\mintinline[]{text}{static_thread_pool} scheduler types described below.
+
+\begin{minted}{cpp}
+using executor_type = see-below;
+\end{minted}
+
+An executor type conforming to the specification for
+\mintinline[]{text}{static_thread_pool} executor types described below.
+
+\hypertarget{construction-and-destruction}{%
+\paragraph{Construction and
+destruction}\label{construction-and-destruction}}
+
+\begin{minted}{cpp}
+static_thread_pool(std::size_t num_threads);
+\end{minted}
+
+\emph{Effects:} Constructs a \mintinline[]{text}{static_thread_pool}
+object with \mintinline[]{text}{num_threads} threads of execution, as if
+by creating objects of type \mintinline[]{text}{std::thread}.
+
+\begin{minted}{cpp}
+~static_thread_pool();
+\end{minted}
+
+\emph{Effects:} Destroys an object of class
+\mintinline[]{text}{static_thread_pool}. Performs
+\mintinline[]{text}{stop()} followed by \mintinline[]{text}{wait()}.
+
+\hypertarget{worker-management}{%
+\paragraph{Worker management}\label{worker-management}}
+
+\begin{minted}{cpp}
+void attach();
+\end{minted}
+
+\emph{Effects:} Adds the calling thread to the pool such that this
+thread is used to execute submitted function objects. {[}\emph{Note:}
+Threads created during thread pool construction, or previously attached
+to the pool, will continue to be used for function object execution.
+\emph{--end note}{]} Blocks the calling thread until signalled to
+complete by \mintinline[]{text}{stop()} or \mintinline[]{text}{wait()},
+and then blocks until all the threads created during
+\mintinline[]{text}{static_thread_pool} object construction have
+completed. (NAMING: a possible alternate name for this function is
+\mintinline[]{text}{join()}.)
+
+\begin{minted}{cpp}
+void stop();
+\end{minted}
+
+\emph{Effects:} Signals the threads in the pool to complete as soon as
+possible. If a thread is currently executing a function object, the
+thread will exit only after completion of that function object.
+Invocation of \mintinline[]{text}{stop()} returns without waiting for
+the threads to complete. Subsequent invocations to attach complete
+immediately.
+
+\begin{minted}{cpp}
+void wait();
+\end{minted}
+
+\emph{Effects:} If not already stopped, signals the threads in the pool
+to complete once the outstanding work is \mintinline[]{text}{0}. Blocks
+the calling thread (C++Std {[}defns.block{]}) until all threads in the
+pool have completed, without executing submitted function objects in the
+calling thread. Subsequent invocations of \mintinline[]{text}{attach()}
+complete immediately.
+
+\emph{Synchronization:} The completion of each thread in the pool
+synchronizes with (C++Std {[}intro.multithread{]}) the corresponding
+successful \mintinline[]{text}{wait()} return.
+
+\hypertarget{scheduler-creation}{%
+\paragraph{Scheduler creation}\label{scheduler-creation}}
+
+\begin{minted}{cpp}
+scheduler_type scheduler() noexcept;
+\end{minted}
+
+\emph{Returns:} A scheduler that may be used to create sender objects
+that may be used to submit receiver objects to the thread pool. The
+returned scheduler has the following properties already established:
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{execution::allocator}
+\item
+  \mintinline[]{text}{execution::allocator(std::allocator<void>())}
+\end{itemize}
+
+\hypertarget{executor-creation}{%
+\paragraph{Executor creation}\label{executor-creation}}
+
+\begin{minted}{cpp}
+executor_type executor() noexcept;
+\end{minted}
+
+\emph{Returns:} An executor that may be used to submit function objects
+to the thread pool. The returned executor has the following properties
+already established:
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{execution::blocking.possibly}
+\item
+  \mintinline[]{text}{execution::relationship.fork}
+\item
+  \mintinline[]{text}{execution::outstanding_work.untracked}
+\item
+  \mintinline[]{text}{execution::allocator}
+\item
+  \mintinline[]{text}{execution::allocator(std::allocator<void>())}
+\end{itemize}
+
+\hypertarget{static_thread_pool-scheduler-types}{%
+\subsubsection{\texorpdfstring{\mintinline[]{text}{static_thread_pool}
+scheduler
+types}{ scheduler types}}\label{static_thread_pool-scheduler-types}}
+
+All scheduler types accessible through
+\mintinline[]{text}{static_thread_pool::scheduler()}, and subsequent
+invocations of the member function \mintinline[]{text}{require}, conform
+to the following specification.
+
+\begin{minted}{cpp}
+class C
+{
+  public:
+
+    // types:
+
+    using sender_type = see-below;
+
+    // construct / copy / destroy:
+
+    C(const C& other) noexcept;
+    C(C&& other) noexcept;
+
+    C& operator=(const C& other) noexcept;
+    C& operator=(C&& other) noexcept;
+
+    // scheduler operations:
+
+    see-below require(const execution::allocator_t<void>& a) const;
+    template<class ProtoAllocator>
+    see-below require(const execution::allocator_t<ProtoAllocator>& a) const;
+
+    see-below query(execution::context_t) const noexcept;
+    see-below query(execution::allocator_t<void>) const noexcept;
+    template<class ProtoAllocator>
+    see-below query(execution::allocator_t<ProtoAllocator>) const noexcept;
+
+    bool running_in_this_thread() const noexcept;
+};
+
+bool operator==(const C& a, const C& b) noexcept;
+bool operator!=(const C& a, const C& b) noexcept;
+\end{minted}
+
+Objects of type \mintinline[]{text}{C} are associated with a
+\mintinline[]{text}{static_thread_pool}.
+
+\hypertarget{constructors}{%
+\paragraph{Constructors}\label{constructors}}
+
+\begin{minted}{cpp}
+C(const C& other) noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{*this == other}.
+
+\begin{minted}{cpp}
+C(C&& other) noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{*this} is equal to the prior
+value of \mintinline[]{text}{other}.
+
+\hypertarget{assignment}{%
+\paragraph{Assignment}\label{assignment}}
+
+\begin{minted}{cpp}
+C& operator=(const C& other) noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{*this == other}.
+
+\emph{Returns:} \mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+C& operator=(C&& other) noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{*this} is equal to the prior
+value of \mintinline[]{text}{other}.
+
+\emph{Returns:} \mintinline[]{text}{*this}.
+
+\hypertarget{operations}{%
+\paragraph{Operations}\label{operations}}
+
+\begin{minted}{cpp}
+see-below require(const execution::allocator_t<void>& a) const;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{require(execution::allocator(x))},
+where \mintinline[]{text}{x} is an implementation-defined default
+allocator.
+
+\begin{minted}{cpp}
+template<class ProtoAllocator>
+  see-below require(const execution::allocator_t<ProtoAllocator>& a) const;
+\end{minted}
+
+\emph{Returns:} An scheduler object of an unspecified type conforming to
+these specifications, associated with the same thread pool as
+\mintinline[]{text}{*this}, with the
+\mintinline[]{text}{execution::allocator_t<ProtoAllocator>} property
+established such that allocation and deallocation associated with
+function submission will be performed using a copy of
+\mintinline[]{text}{a.alloc}. All other properties of the returned
+scheduler object are identical to those of \mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+static_thread_pool& query(execution::context_t) const noexcept;
+\end{minted}
+
+\emph{Returns:} A reference to the associated
+\mintinline[]{text}{static_thread_pool} object.
+
+\begin{minted}{cpp}
+see-below query(execution::allocator_t<void>) const noexcept;
+see-below query(execution::allocator_t<ProtoAllocator>) const noexcept;
+\end{minted}
+
+\emph{Returns:} The allocator object associated with the executor, with
+type and value as either previously established by the
+\mintinline[]{text}{execution::allocator_t<ProtoAllocator>} property or
+the implementation defined default allocator established by the
+\mintinline[]{text}{execution::allocator_t<void>} property.
+
+\begin{minted}{cpp}
+bool running_in_this_thread() const noexcept;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{true} if the current thread of
+execution is a thread that was created by or attached to the associated
+\mintinline[]{text}{static_thread_pool} object.
+
+\hypertarget{comparisons}{%
+\paragraph{Comparisons}\label{comparisons}}
+
+\begin{minted}{cpp}
+bool operator==(const C& a, const C& b) noexcept;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{true} if
+\mintinline[]{text}{&a.query(execution::context) == &b.query(execution::context)}
+and \mintinline[]{text}{a} and \mintinline[]{text}{b} have identical
+properties, otherwise \mintinline[]{text}{false}.
+
+\begin{minted}{cpp}
+bool operator!=(const C& a, const C& b) noexcept;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{!(a == b)}.
+
+\hypertarget{static_thread_pool-scheduler-functions}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{static_thread_pool}
+scheduler
+functions}{ scheduler functions}}\label{static_thread_pool-scheduler-functions}}
+
+In addition to conforming to the above specification,
+\mintinline[]{text}{static_thread_pool} schedulers shall conform to the
+following specification.
+
+\begin{minted}{cpp}
+class C
+{
+  public:
+    sender_type schedule() noexcept;
+};
+\end{minted}
+
+\mintinline[]{text}{C} is a type satisfying the
+\mintinline[]{text}{scheduler} requirements.
+
+\hypertarget{sender-creation}{%
+\paragraph{Sender creation}\label{sender-creation}}
+
+\begin{minted}{cpp}
+  sender_type schedule() noexcept;
+\end{minted}
+
+\emph{Returns:} A sender that may be used to submit function objects to
+the thread pool. The returned sender has the following properties
+already established:
+
+\begin{itemize}
+
+\item
+  \mintinline[]{text}{execution::blocking.possibly}
+\item
+  \mintinline[]{text}{execution::relationship.fork}
+\item
+  \mintinline[]{text}{execution::outstanding_work.untracked}
+\item
+  \mintinline[]{text}{execution::allocator}
+\item
+  \mintinline[]{text}{execution::allocator(std::allocator<void>())}
+\end{itemize}
+
+\hypertarget{static_thread_pool-sender-types}{%
+\subsubsection{\texorpdfstring{\mintinline[]{text}{static_thread_pool}
+sender types}{ sender types}}\label{static_thread_pool-sender-types}}
+
+All sender types accessible through
+\mintinline[]{text}{static_thread_pool::scheduler().schedule()}, and
+subsequent invocations of the member function
+\mintinline[]{text}{require}, conform to the following specification.
+
+\begin{minted}{cpp}
+class C
+{
+  public:
+
+    // construct / copy / destroy:
+
+    C(const C& other) noexcept;
+    C(C&& other) noexcept;
+
+    C& operator=(const C& other) noexcept;
+    C& operator=(C&& other) noexcept;
+
+    // sender operations:
+
+    see-below require(execution::blocking_t::never_t) const;
+    see-below require(execution::blocking_t::possibly_t) const;
+    see-below require(execution::blocking_t::always_t) const;
+    see-below require(execution::relationship_t::continuation_t) const;
+    see-below require(execution::relationship_t::fork_t) const;
+    see-below require(execution::outstanding_work_t::tracked_t) const;
+    see-below require(execution::outstanding_work_t::untracked_t) const;
+    see-below require(const execution::allocator_t<void>& a) const;
+    template<class ProtoAllocator>
+    see-below require(const execution::allocator_t<ProtoAllocator>& a) const;
+
+    static constexpr execution::bulk_guarantee_t query(execution::bulk_guarantee_t) const;
+    static constexpr execution::mapping_t query(execution::mapping_t) const;
+    execution::blocking_t query(execution::blocking_t) const;
+    execution::relationship_t query(execution::relationship_t) const;
+    execution::outstanding_work_t query(execution::outstanding_work_t) const;
+    see-below query(execution::context_t) const noexcept;
+    see-below query(execution::allocator_t<void>) const noexcept;
+    template<class ProtoAllocator>
+    see-below query(execution::allocator_t<ProtoAllocator>) const noexcept;
+
+    bool running_in_this_thread() const noexcept;
+};
+
+bool operator==(const C& a, const C& b) noexcept;
+bool operator!=(const C& a, const C& b) noexcept;
+\end{minted}
+
+Objects of type \mintinline[]{text}{C} are associated with a
+\mintinline[]{text}{static_thread_pool}.
+
+\hypertarget{constructors-1}{%
+\paragraph{Constructors}\label{constructors-1}}
+
+\begin{minted}{cpp}
+C(const C& other) noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{*this == other}.
+
+\begin{minted}{cpp}
+C(C&& other) noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{*this} is equal to the prior
+value of \mintinline[]{text}{other}.
+
+\hypertarget{assignment-1}{%
+\paragraph{Assignment}\label{assignment-1}}
+
+\begin{minted}{cpp}
+C& operator=(const C& other) noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{*this == other}.
+
+\emph{Returns:} \mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+C& operator=(C&& other) noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{*this} is equal to the prior
+value of \mintinline[]{text}{other}.
+
+\emph{Returns:} \mintinline[]{text}{*this}.
+
+\hypertarget{operations-1}{%
+\paragraph{Operations}\label{operations-1}}
+
+\begin{minted}{cpp}
+see-below require(execution::blocking_t::never_t) const;
+see-below require(execution::blocking_t::possibly_t) const;
+see-below require(execution::blocking_t::always_t) const;
+see-below require(execution::relationship_t::continuation_t) const;
+see-below require(execution::relationship_t::fork_t) const;
+see-below require(execution::outstanding_work_t::tracked_t) const;
+see-below require(execution::outstanding_work_t::untracked_t) const;
+\end{minted}
+
+\emph{Returns:} An sender object of an unspecified type conforming to
+these specifications, associated with the same thread pool as
+\mintinline[]{text}{*this}, and having the requested property
+established. When the requested property is part of a group that is
+defined as a mutually exclusive set, any other properties in the group
+are removed from the returned sender object. All other properties of the
+returned sender object are identical to those of
+\mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+see-below require(const execution::allocator_t<void>& a) const;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{require(execution::allocator(x))},
+where \mintinline[]{text}{x} is an implementation-defined default
+allocator.
+
+\begin{minted}{cpp}
+template<class ProtoAllocator>
+  see-below require(const execution::allocator_t<ProtoAllocator>& a) const;
+\end{minted}
+
+\emph{Returns:} An sender object of an unspecified type conforming to
+these specifications, associated with the same thread pool as
+\mintinline[]{text}{*this}, with the
+\mintinline[]{text}{execution::allocator_t<ProtoAllocator>} property
+established such that allocation and deallocation associated with
+function submission will be performed using a copy of
+\mintinline[]{text}{a.alloc}. All other properties of the returned
+sender object are identical to those of \mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+static constexpr execution::bulk_guarantee_t query(execution::bulk_guarantee_t) const;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{execution::bulk_guarantee.parallel}
+
+\begin{minted}{cpp}
+static constexpr execution::mapping_t query(execution::mapping_t) const;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{execution::mapping.thread}.
+
+\begin{minted}{cpp}
+execution::blocking_t query(execution::blocking_t) const;
+execution::relationship_t query(execution::relationship_t) const;
+execution::outstanding_work_t query(execution::outstanding_work_t) const;
+\end{minted}
+
+\emph{Returns:} The value of the given property of
+\mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+static_thread_pool& query(execution::context_t) const noexcept;
+\end{minted}
+
+\emph{Returns:} A reference to the associated
+\mintinline[]{text}{static_thread_pool} object.
+
+\begin{minted}{cpp}
+see-below query(execution::allocator_t<void>) const noexcept;
+see-below query(execution::allocator_t<ProtoAllocator>) const noexcept;
+\end{minted}
+
+\emph{Returns:} The allocator object associated with the sender, with
+type and value as either previously established by the
+\mintinline[]{text}{execution::allocator_t<ProtoAllocator>} property or
+the implementation defined default allocator established by the
+\mintinline[]{text}{execution::allocator_t<void>} property.
+
+\begin{minted}{cpp}
+bool running_in_this_thread() const noexcept;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{true} if the current thread of
+execution is a thread that was created by or attached to the associated
+\mintinline[]{text}{static_thread_pool} object.
+
+\hypertarget{comparisons-1}{%
+\paragraph{Comparisons}\label{comparisons-1}}
+
+\begin{minted}{cpp}
+bool operator==(const C& a, const C& b) noexcept;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{true} if
+\mintinline[]{text}{&a.query(execution::context) == &b.query(execution::context)}
+and \mintinline[]{text}{a} and \mintinline[]{text}{b} have identical
+properties, otherwise \mintinline[]{text}{false}.
+
+\begin{minted}{cpp}
+bool operator!=(const C& a, const C& b) noexcept;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{!(a == b)}.
+
+\hypertarget{static_thread_pool-sender-execution-functions}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{static_thread_pool}
+sender execution
+functions}{ sender execution functions}}\label{static_thread_pool-sender-execution-functions}}
+
+In addition to conforming to the above specification,
+\mintinline[]{text}{static_thread_pool} \mintinline[]{text}{scheduler}s'
+senders shall conform to the following specification.
+
+\begin{minted}{cpp}
+class C
+{
+  public:
+    template<template<class...> class Tuple, template<class...> class Variant>
+      using value_types = Variant<Tuple<>>;
+    template<template<class...> class Variant>
+      using error_types = Variant<exception_ptr>;
+    static constexpr bool sends_done = true;
+
+    template<receiver_of R>
+      see-below connect(R&& r) const;
+};
+\end{minted}
+
+\mintinline[]{text}{C} is a type satisfying the
+\mintinline[]{text}{typed_sender} requirements.
+
+\begin{minted}{cpp}
+template<receiver_of R>
+  see-below connect(R&& r) const;
+\end{minted}
+
+\emph{Returns:} An object whose type satisfies the
+\mintinline[]{text}{operation_state} concept.
+
+\emph{Effects:} When \mintinline[]{text}{execution::start} is called on
+the returned operation state, the receiver \mintinline[]{text}{r} is
+submitted for execution on the \mintinline[]{text}{static_thread_pool}
+according to the the properties established for
+\mintinline[]{text}{*this}. let \mintinline[]{text}{e} be an object of
+type \mintinline[]{text}{exception_ptr}; then
+\mintinline[]{text}{static_thread_pool} will evaluate one of
+\mintinline[]{text}{execution::set_value(r)},
+\mintinline[]{text}{execution::set_error(r, e)}, or
+\mintinline[]{text}{execution::set_done(r)}.
+
+\hypertarget{static_thread_pool-executor-types}{%
+\subsubsection{\texorpdfstring{\mintinline[]{text}{static_thread_pool}
+executor
+types}{ executor types}}\label{static_thread_pool-executor-types}}
+
+All executor types accessible through
+\mintinline[]{text}{static_thread_pool::executor()}, and subsequent
+invocations of the member function \mintinline[]{text}{require}, conform
+to the following specification.
+
+\begin{minted}{cpp}
+class C
+{
+  public:
+
+    // types:
+
+    using shape_type = size_t;
+    using index_type = size_t;
+
+    // construct / copy / destroy:
+
+    C(const C& other) noexcept;
+    C(C&& other) noexcept;
+
+    C& operator=(const C& other) noexcept;
+    C& operator=(C&& other) noexcept;
+
+    // executor operations:
+
+    see-below require(execution::blocking_t::never_t) const;
+    see-below require(execution::blocking_t::possibly_t) const;
+    see-below require(execution::blocking_t::always_t) const;
+    see-below require(execution::relationship_t::continuation_t) const;
+    see-below require(execution::relationship_t::fork_t) const;
+    see-below require(execution::outstanding_work_t::tracked_t) const;
+    see-below require(execution::outstanding_work_t::untracked_t) const;
+    see-below require(const execution::allocator_t<void>& a) const;
+    template<class ProtoAllocator>
+    see-below require(const execution::allocator_t<ProtoAllocator>& a) const;
+
+    static constexpr execution::bulk_guarantee_t query(execution::bulk_guarantee_t) const;
+    static constexpr execution::mapping_t query(execution::mapping_t) const;
+    execution::blocking_t query(execution::blocking_t) const;
+    execution::relationship_t query(execution::relationship_t) const;
+    execution::outstanding_work_t query(execution::outstanding_work_t) const;
+    see-below query(execution::context_t) const noexcept;
+    see-below query(execution::allocator_t<void>) const noexcept;
+    template<class ProtoAllocator>
+    see-below query(execution::allocator_t<ProtoAllocator>) const noexcept;
+
+    bool running_in_this_thread() const noexcept;
+};
+
+bool operator==(const C& a, const C& b) noexcept;
+bool operator!=(const C& a, const C& b) noexcept;
+\end{minted}
+
+Objects of type \mintinline[]{text}{C} are associated with a
+\mintinline[]{text}{static_thread_pool}.
+
+\hypertarget{constructors-2}{%
+\paragraph{Constructors}\label{constructors-2}}
+
+\begin{minted}{cpp}
+C(const C& other) noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{*this == other}.
+
+\begin{minted}{cpp}
+C(C&& other) noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{*this} is equal to the prior
+value of \mintinline[]{text}{other}.
+
+\hypertarget{assignment-2}{%
+\paragraph{Assignment}\label{assignment-2}}
+
+\begin{minted}{cpp}
+C& operator=(const C& other) noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{*this == other}.
+
+\emph{Returns:} \mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+C& operator=(C&& other) noexcept;
+\end{minted}
+
+\emph{Postconditions:} \mintinline[]{text}{*this} is equal to the prior
+value of \mintinline[]{text}{other}.
+
+\emph{Returns:} \mintinline[]{text}{*this}.
+
+\hypertarget{operations-2}{%
+\paragraph{Operations}\label{operations-2}}
+
+\begin{minted}{cpp}
+see-below require(execution::blocking_t::never_t) const;
+see-below require(execution::blocking_t::possibly_t) const;
+see-below require(execution::blocking_t::always_t) const;
+see-below require(execution::relationship_t::continuation_t) const;
+see-below require(execution::relationship_t::fork_t) const;
+see-below require(execution::outstanding_work_t::tracked_t) const;
+see-below require(execution::outstanding_work_t::untracked_t) const;
+\end{minted}
+
+\emph{Returns:} An executor object of an unspecified type conforming to
+these specifications, associated with the same thread pool as
+\mintinline[]{text}{*this}, and having the requested property
+established. When the requested property is part of a group that is
+defined as a mutually exclusive set, any other properties in the group
+are removed from the returned executor object. All other properties of
+the returned executor object are identical to those of
+\mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+see-below require(const execution::allocator_t<void>& a) const;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{require(execution::allocator(x))},
+where \mintinline[]{text}{x} is an implementation-defined default
+allocator.
+
+\begin{minted}{cpp}
+template<class ProtoAllocator>
+  see-below require(const execution::allocator_t<ProtoAllocator>& a) const;
+\end{minted}
+
+\emph{Returns:} An executor object of an unspecified type conforming to
+these specifications, associated with the same thread pool as
+\mintinline[]{text}{*this}, with the
+\mintinline[]{text}{execution::allocator_t<ProtoAllocator>} property
+established such that allocation and deallocation associated with
+function submission will be performed using a copy of
+\mintinline[]{text}{a.alloc}. All other properties of the returned
+executor object are identical to those of \mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+static constexpr execution::bulk_guarantee_t query(execution::bulk_guarantee_t) const;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{execution::bulk_guarantee.parallel}
+
+\begin{minted}{cpp}
+static constexpr execution::mapping_t query(execution::mapping_t) const;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{execution::mapping.thread}.
+
+\begin{minted}{cpp}
+execution::blocking_t query(execution::blocking_t) const;
+execution::relationship_t query(execution::relationship_t) const;
+execution::outstanding_work_t query(execution::outstanding_work_t) const;
+\end{minted}
+
+\emph{Returns:} The value of the given property of
+\mintinline[]{text}{*this}.
+
+\begin{minted}{cpp}
+static_thread_pool& query(execution::context_t) const noexcept;
+\end{minted}
+
+\emph{Returns:} A reference to the associated
+\mintinline[]{text}{static_thread_pool} object.
+
+\begin{minted}{cpp}
+see-below query(execution::allocator_t<void>) const noexcept;
+see-below query(execution::allocator_t<ProtoAllocator>) const noexcept;
+\end{minted}
+
+\emph{Returns:} The allocator object associated with the executor, with
+type and value as either previously established by the
+\mintinline[]{text}{execution::allocator_t<ProtoAllocator>} property or
+the implementation defined default allocator established by the
+\mintinline[]{text}{execution::allocator_t<void>} property.
+
+\begin{minted}{cpp}
+bool running_in_this_thread() const noexcept;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{true} if the current thread of
+execution is a thread that was created by or attached to the associated
+\mintinline[]{text}{static_thread_pool} object.
+
+\hypertarget{comparisons-2}{%
+\paragraph{Comparisons}\label{comparisons-2}}
+
+\begin{minted}{cpp}
+bool operator==(const C& a, const C& b) noexcept;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{true} if
+\mintinline[]{text}{&a.query(execution::context) == &b.query(execution::context)}
+and \mintinline[]{text}{a} and \mintinline[]{text}{b} have identical
+properties, otherwise \mintinline[]{text}{false}.
+
+\begin{minted}{cpp}
+bool operator!=(const C& a, const C& b) noexcept;
+\end{minted}
+
+\emph{Returns:} \mintinline[]{text}{!(a == b)}.
+
+\hypertarget{static_thread_pool-executor-execution-functions}{%
+\paragraph{\texorpdfstring{\mintinline[]{text}{static_thread_pool}
+executor execution
+functions}{ executor execution functions}}\label{static_thread_pool-executor-execution-functions}}
+
+In addition to conforming to the above specification,
+\mintinline[]{text}{static_thread_pool} executors shall conform to the
+following specification.
+
+\begin{minted}{cpp}
+class C
+{
+  public:
+    template<class Function>
+      void execute(Function&& f) const;
+
+    template<class Function>
+      void bulk_execute(Function&& f, size_t n) const;
+};
+\end{minted}
+
+\mintinline[]{text}{C} is a type satisfying the
+\mintinline[]{text}{Executor} requirements.
+
+\begin{minted}{cpp}
+template<class Function>
+  void execute(Function&& f) const;
+\end{minted}
+
+\emph{Effects:} Submits the function \mintinline[]{text}{f} for
+execution on the \mintinline[]{text}{static_thread_pool} according to
+the the properties established for \mintinline[]{text}{*this}. If the
+submitted function \mintinline[]{text}{f} exits via an exception, the
+\mintinline[]{text}{static_thread_pool} invokes
+\mintinline[]{text}{std::terminate()}.
+
+\begin{minted}{cpp}
+template<class Function>
+  void bulk_execute(Function&& f, size_t n) const;
+\end{minted}
+
+\emph{Effects:} Submits the function \mintinline[]{text}{f} for bulk
+execution on the \mintinline[]{text}{static_thread_pool} according to
+properties established for \mintinline[]{text}{*this}. If the submitted
+function \mintinline[]{text}{f} exits via an exception, the
+\mintinline[]{text}{static_thread_pool} invokes
+\mintinline[]{text}{std::terminate()}.
+
+\hypertarget{changelog}{%
+\subsection{Changelog}\label{changelog}}
+
+\hypertarget{revision-14}{%
+\subsubsection{Revision 14}\label{revision-14}}
+
+Fixed many editorial issues and these bug fixes:
+
+\begin{itemize}
+
+\item
+  \href{https://github.com/executors/executors/issues/462}{as-receiver::set\_error()
+  should accept any error type, not just std::exception\_ptr}
+\item
+  \href{https://github.com/executors/executors/issues/473}{execution::connect
+  should require its second argument to satisfy receiver}
+\item
+  \href{https://github.com/executors/executors/issues/474}{Constrain
+  recursion in sender\_to and executor\_of concepts}
+\item
+  \href{https://github.com/executors/executors/issues/508}{any\_executor's
+  FIND\_CONVERTIBLE\_PROPERTY can lead to wrong results}
+\item
+  \href{https://github.com/executors/executors/issues/512}{Generic
+  blocking adapter is not implementable}
+\end{itemize}
+
+\hypertarget{revision-13}{%
+\subsubsection{Revision 13}\label{revision-13}}
+
+As directed by SG1 at the 2020-02 Prague meeting, we have split the
+\mintinline[]{text}{submit} operation into the primitive operations
+\mintinline[]{text}{connect} and \mintinline[]{text}{start}.
+
+\hypertarget{revision-12}{%
+\subsubsection{Revision 12}\label{revision-12}}
+
+Introduced introductory design discussion which replaces the obsolete
+\href{https://wg21.link/P0761}{P0761}. No normative changes.
+
+\hypertarget{revision-11}{%
+\subsubsection{Revision 11}\label{revision-11}}
+
+As directed by SG1 at the 2019-07 Cologne meeting, we have implemented
+the following changes suggested by P1658 and P1660 which incorporate
+``lazy'' execution:
+
+\begin{itemize}
+
+\item
+  Eliminated all interface-changing properties.
+\item
+  Introduced \mintinline[]{text}{set_value},
+  \mintinline[]{text}{set_error}, \mintinline[]{text}{set_done},
+  \mintinline[]{text}{execute}, \mintinline[]{text}{submit}, and
+  \mintinline[]{text}{bulk_execute} customization point objects.
+\item
+  Introduced \mintinline[]{text}{executor},
+  \mintinline[]{text}{executor_of}, \mintinline[]{text}{receiver},
+  \mintinline[]{text}{receiver_of}, \mintinline[]{text}{sender},
+  \mintinline[]{text}{sender_to}, \mintinline[]{text}{typed_sender}, and
+  \mintinline[]{text}{scheduler} concepts.
+\item
+  Renamed polymorphic executor to \mintinline[]{text}{any_executor}.
+\item
+  Introduced \mintinline[]{text}{invocable_archetype}.
+\item
+  Eliminated \mintinline[]{text}{OneWayExecutor} and
+  \mintinline[]{text}{BulkOneWayExecutor} requirements.
+\item
+  Eliminated \mintinline[]{text}{is_executor},
+  \mintinline[]{text}{is_oneway_executor}, and
+  \mintinline[]{text}{is_bulk_oneway_executor} type traits.
+\item
+  Eliminated interface-changing properties from
+  \mintinline[]{text}{any_executor}.
+\end{itemize}
+
+\hypertarget{revision-10}{%
+\subsubsection{Revision 10}\label{revision-10}}
+
+As directed by LEWG at the 2018-11 San Diego meeting, we have migrated
+the property customization mechanism to namespace
+\mintinline[]{text}{std} and moved all of the details of its
+specification to a separate paper, \href{http://wg21.link/P1393}{P1393}.
+This change also included the introduction of a separate customization
+point for interface-enforcing properties,
+\mintinline[]{text}{require_concept}. The generalization also
+necessitated the introduction of
+\mintinline[]{text}{is_applicable_property_v} in the properties paper,
+which in turn led to the introduction of
+\mintinline[]{text}{is_executor_v} to express the applicability of
+properties in this paper.
+
+\hypertarget{revision-9}{%
+\subsubsection{Revision 9}\label{revision-9}}
+
+As directed by the SG1/LEWG straw poll taken during the 2018 Bellevue
+executors meeting, we have separated The Unified Executors programming
+model proposal into two papers. This paper contains material related to
+one-way execution which the authors hope to standardize with C++20 as
+suggested by the Bellevue poll. \href{http://wg21.link/P1244}{P1244}
+contains remaining material related to dependent execution. We expect
+P1244 to evolve as committee consensus builds around a design for
+dependent execution.
+
+This revision also contains bug fixes to the
+\mintinline[]{text}{allocator_t} property which were originally
+scheduled for Revision 7 but were inadvertently omitted.
+
+\hypertarget{revision-8}{%
+\subsubsection{Revision 8}\label{revision-8}}
+
+Revision 8 of this proposal makes interface-changing properties such as
+\mintinline[]{text}{oneway} mutually exclusive in order to simplify
+implementation requirements for executor adaptors such as polymorphic
+executors. Additionally, this revision clarifies wording regarding
+execution agent lifetime.
+
+\hypertarget{revision-7}{%
+\subsubsection{Revision 7}\label{revision-7}}
+
+Revision 7 of this proposal corrects wording bugs discovered by the
+authors after Revision 6's publication.
+
+\begin{itemize}
+
+\item
+  Enhanced \mintinline[]{text}{static_query_v} to result in a default
+  property value for executors which do not provide a
+  \mintinline[]{text}{query} function for the property of interest
+\item
+  Revise \mintinline[]{text}{then_execute} and
+  \mintinline[]{text}{bulk_then_execute}'s operational semantics to
+  allow user functions to handle incoming exceptions thrown by preceding
+  execution agents
+\item
+  Introduce \mintinline[]{text}{exception_arg} to disambiguate the user
+  function's exceptional overload from its nonexceptional overload in
+  \mintinline[]{text}{then_execute} and
+  \mintinline[]{text}{bulk_then_execute}
+\end{itemize}
+
+\hypertarget{revision-6}{%
+\subsubsection{Revision 6}\label{revision-6}}
+
+Revision 6 of this proposal corrects bugs and omissions discovered by
+the authors after Revision 5's publication, and introduces an
+enhancement improving the safety of the design.
+
+\begin{itemize}
+
+\item
+  Enforce mutual exclusion of behavioral properties via the type system
+  instead of via convention
+\item
+  Introduce missing \mintinline[]{text}{execution::require} adaptations
+\item
+  Allow executors to opt-out of invoking factory functions when
+  appropriate
+\item
+  Various bug fixes and corrections
+\end{itemize}
+
+\hypertarget{revision-5}{%
+\subsubsection{Revision 5}\label{revision-5}}
+
+Revision 5 of this proposal responds to feedback requested during the
+2017 Albuquerque ISO C++ Standards Committee meeting and introduces
+changes which allow properties to better interoperate with polymorphic
+executor wrappers and also simplify
+\mintinline[]{text}{execution::require}'s behavior.
+
+\begin{itemize}
+
+\item
+  Defined general property type requirements
+\item
+  Elaborated specification of standard property types
+\item
+  Simplified \mintinline[]{text}{execution::require}'s specification
+\item
+  Enhanced polymorphic executor wrapper
+
+  \begin{itemize}
+
+  \item
+    Templatized
+    \mintinline[]{text}{execution::executor<SupportableProperties...>}
+  \item
+    Introduced \mintinline[]{text}{prefer_only} property adaptor
+  \end{itemize}
+\item
+  Responded to Albuquerque feedback
+
+  \begin{itemize}
+
+  \item
+    From SG1
+
+    \begin{itemize}
+
+    \item
+      Execution contexts are now optional properties of executors
+    \item
+      Eliminated ill-specified caller-agent forward progress properties
+    \item
+      Elaborated \mintinline[]{text}{Future}'s requirements to
+      incorporate forward progress
+    \item
+      Reworded operational semantics of execution functions to use
+      similar language as the blocking properties
+    \item
+      Elaborated \mintinline[]{text}{static_thread_pool}'s specification
+      to guarantee that threads in the bool boost-block their work
+    \item
+      Elaborated operational semantics of execution functions to note
+      that forward progress guarantees are specific to the concrete
+      executor type
+    \end{itemize}
+  \item
+    From LEWG
+
+    \begin{itemize}
+
+    \item
+      Eliminated named \mintinline[]{text}{BaseExecutor} concept
+    \item
+      Simplified general executor requirements
+    \item
+      Enhanced the \mintinline[]{text}{OneWayExecutor} introductory
+      paragraph
+    \item
+      Eliminated \mintinline[]{text}{has_*_member} type traits
+    \end{itemize}
+  \end{itemize}
+\item
+  Minor changes
+
+  \begin{itemize}
+
+  \item
+    Renamed TS namespace from \mintinline[]{text}{concurrency_v2} to
+    \mintinline[]{text}{executors_v1}
+  \item
+    Introduced \mintinline[]{text}{static_query_v} enabling static
+    queries
+  \item
+    Eliminated unused \mintinline[]{text}{property_value} trait
+  \item
+    Eliminated the names \mintinline[]{text}{allocator_wrapper_t} and
+    \mintinline[]{text}{default_allocator}
+  \end{itemize}
+\end{itemize}
+
+\hypertarget{revision-4}{%
+\subsubsection{Revision 4}\label{revision-4}}
+
+\begin{itemize}
+
+\item
+  Specified the guarantees implied by
+  \mintinline[]{text}{bulk_sequenced_execution},
+  \mintinline[]{text}{bulk_parallel_execution}, and
+  \mintinline[]{text}{bulk_unsequenced_execution}
+\end{itemize}
+
+\hypertarget{revision-3}{%
+\subsubsection{Revision 3}\label{revision-3}}
+
+\begin{itemize}
+
+\item
+  Introduced \mintinline[]{text}{execution::query()} for executor
+  property introspection
+\item
+  Simplified the design of \mintinline[]{text}{execution::prefer()}
+\item
+  \mintinline[]{text}{oneway}, \mintinline[]{text}{twoway},
+  \mintinline[]{text}{single}, and \mintinline[]{text}{bulk} are now
+  \mintinline[]{text}{require()}-only properties
+\item
+  Introduced properties allowing executors to opt into adaptations that
+  add blocking semantics
+\item
+  Introduced properties describing the forward progress relationship
+  between caller and agents
+\item
+  Various minor improvements to existing functionality based on
+  prototyping
+\end{itemize}
+
+\hypertarget{revision-2}{%
+\subsubsection{Revision 2}\label{revision-2}}
+
+\begin{itemize}
+
+\item
+  Separated wording from explanatory prose, now contained in paper
+  \href{https://wg21.link/P0761}{P0761}
+\item
+  Applied the simplification proposed by paper
+  \href{https://wg21.link/P0688}{P0688}
+\end{itemize}
+
+\hypertarget{revision-1}{%
+\subsubsection{Revision 1}\label{revision-1}}
+
+\begin{itemize}
+
+\item
+  Executor category simplification
+\item
+  Specified executor customization points in detail
+\item
+  Introduced new fine-grained executor type traits
+
+  \begin{itemize}
+
+  \item
+    Detectors for execution functions
+  \item
+    Traits for introspecting cross-cutting concerns
+
+    \begin{itemize}
+
+    \item
+      Introspection of mapping of agents to threads
+    \item
+      Introspection of execution function blocking behavior
+    \end{itemize}
+  \end{itemize}
+\item
+  Allocator support for single agent execution functions
+\item
+  Renamed \mintinline[]{text}{thread_pool} to
+  \mintinline[]{text}{static_thread_pool}
+\item
+  New introduction
+\end{itemize}
+
+\hypertarget{revision-0}{%
+\subsubsection{Revision 0}\label{revision-0}}
+
+\begin{itemize}
+
+\item
+  Initial design
+\end{itemize}
+
+\hypertarget{appendix-executors-bibilography}{%
+\subsection{Appendix: Executors
+Bibilography}\label{appendix-executors-bibilography}}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule
+\begin{minipage}[b]{0.32\columnwidth}\raggedright
+Paper\strut
+\end{minipage} & \begin{minipage}[b]{0.54\columnwidth}\raggedright
+Notes\strut
+\end{minipage} & \begin{minipage}[b]{0.05\columnwidth}\raggedright
+Date introduced\strut
+\end{minipage}\tabularnewline
+\midrule
+\endhead
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/N3378}{N3378 - A preliminary proposal for work
+executors}\\
+\href{https://wg21.link/N3562}{N3562 - Executors and schedulers,
+revision 1}\\
+\href{https://wg21.link/N3371}{N3731 - Executors and schedulers,
+revision 2}\\
+\href{https://wg21.link/N3785}{N3785 - Executors and schedulers,
+revision 3}\\
+\href{https://wg21.link/N4143}{N4143 - Executors and schedulers,
+revision 4}\\
+\href{https://wg21.link/N4414}{N4414 - Executors and schedulers,
+revision 5}\\
+\href{https://wg21.link/P0008}{P0008 - C++ Executors}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Initial executors proposal from Google, based on an abstract base
+class.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2012-02-24\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/N4046}{N4046 - Executors and Asynchronous
+Operations}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Initial executors proposal from Kohlhoff, based on extensions to
+ASIO.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2014-05-26\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/N4406}{N4406 - Parallel Algorithms Need
+Executors}\\
+\href{https://wg21.link/P0058}{P0058 - An interface for abstracting
+execution}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Initial executors proposal from Nvidia, based on a traits class.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2015-04-10\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P0285}{P0285 - Using customization points to
+unify executors}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Proposes unifying various competing executors proposals via
+customization points.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2016-02-14\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P0443}{P0443 - A Unified Executors Proposal for
+C++}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+This proposal.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2016-10-17\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P0688}{P0688 - A Proposal to Simplify the
+Executors Design}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Proposes simplifying this proposal's APIs using properties.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2017-06-19\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P0761}{P0761 - Executors Design Document}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Describes the design of this proposal circa 2017.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2017-07-31\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P1055}{P1055 - A Modest Executor Proposal}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Initial executors proposal from Facebook, based on lazy execution.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2018-04-26\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P1194}{P1194 - The Compromise Executors
+Proposal: A lazy simplification of P0443}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Initial proposal to integrate senders and receivers into this
+proposal.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2018-10-08\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P1232}{P1232 - Integrating executors with the
+standard library through customization}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Proposes to allow executors to customize standard algorithms
+directly.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2018-10-08\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P1244}{P1244 - Dependent Execution for a Unified
+Executors Proposal for C++}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Vestigal futures-based dependent execution functionality excised from
+later revisions of this proposal.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2018-10-08\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P1341}{P1341 - Unifying asynchronous APIs in C++
+standard Library}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Proposes enhancements making senders awaitable.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2018-11-25\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P1393}{P1393 - A General Property Customization
+Mechanism}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Standalone paper proposing the property customization used by P0443
+executors.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2019-01-13\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P1677}{P1677 - Cancellation is
+serendipitous-success}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Motivates the need for \mintinline[]{text}{done} in addition to
+\mintinline[]{text}{error}.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2019-05-18\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P1678}{P1678 - Callbacks and Composition}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Argues for callbacks/receivers as a universal design pattern in the
+standard library.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2019-05-18\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P1525}{P1525 - One-Way execute is a Poor Basis
+Operation}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Identifies deficiencies of \mintinline[]{text}{execute} as a basis
+operation.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2019-06-17\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P1658}{P1658 - Suggestions for Consensus on
+Executors}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Suggests progress-making changes to this proposal circa 2019.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2019-06-17\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P1660}{P1660 - A Compromise Executor Design
+Sketch}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Proposes concrete changes to this proposal along the lines of
+\href{https://wg21.link/P1525}{P1525},
+\href{https://wg21.link/P1658}{P1658}, and
+\href{https://wg21.link/P1738}{P1738}.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2019-06-17\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P1738}{P1738 - The Executor Concept Hierarchy
+Needs a Single Root}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Identifies problems caused by a multi-root executor concept
+hierarchy.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2019-06-17\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P1897}{P1897 - Towards C++23 executors: A
+proposal for an initial set of algorithms}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Initial proposal for a set of customizable sender algorithms.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2019-10-06\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P1898}{P1898 - Forward progress delegation for
+executors}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Proposes a model of forward progress for executors and asynchronous
+graphs of work.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2019-10-06\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P2006}{P2006 - Splitting submit() into
+connect()/start()}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Proposes refactoring \mintinline[]{text}{submit} into more fundamental
+\mintinline[]{text}{connect} and \mintinline[]{text}{start} sender
+operations.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2020-01-13\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.32\columnwidth}\raggedright
+\href{https://wg21.link/P2033}{P2033 - History of Executor
+Properties}\strut
+\end{minipage} & \begin{minipage}[t]{0.54\columnwidth}\raggedright
+Documents the evolution of \href{https://wg21.link/P1393}{P1393}'s
+property system, especially as it relates to executors.\strut
+\end{minipage} & \begin{minipage}[t]{0.05\columnwidth}\raggedright
+2020-01-13\strut
+\end{minipage}\tabularnewline
+\bottomrule
+\end{longtable}
+
+\hypertarget{appendix-a-note-on-coroutines}{%
+\subsection{Appendix: A note on
+coroutines}\label{appendix-a-note-on-coroutines}}
+
+\href{http://wg21.link/P1341}{P1341} leverages the structural
+similarities between coroutines and the sender/receiver abstraction to
+give a class of senders a standard-provided
+\mintinline[]{text}{operator co_await}. The end result is that a sender,
+simply by dint of being a sender, can be
+\mintinline[]{text}{co_await}-ed in a coroutine. With the refinement of
+sender/receiver that was proposed in
+\href{https://wg21.link/P2006}{P2006} --- namely, the splitting of
+\mintinline[]{text}{submit} into
+\mintinline[]{text}{connect}/\mintinline[]{text}{start} --- that
+automatic adaptation from sender-to-awaitable is allocation- and
+synchronization-free.
+
+\hypertarget{appendix-the-retry-algorithm}{%
+\subsection{\texorpdfstring{Appendix: The \mintinline[]{text}{retry}
+Algorithm}{Appendix: The  Algorithm}}\label{appendix-the-retry-algorithm}}
+
+Below is an implementation of a simple \mintinline[]{text}{retry}
+algorithm in terms of
+\mintinline[]{text}{sender}/\mintinline[]{text}{receiver}. This
+algorithm is Generic in the sense that it will retry any multi-shot
+asynchronous operation that satisfies the \mintinline[]{text}{sender}
+concept. More accurately, it takes any deferred async operation and
+wraps it so that when it is executed, it will retry the wrapped
+operation until it either succeeds or is cancelled.
+
+Full working code can be found here: \url{https://godbolt.org/z/nm6GmH}
+
+\begin{minted}{cpp}
+// _conv needed so we can emplace construct non-movable types into
+// a std::optional.
+template<invocable F>
+    requires std::is_nothrow_move_constructible_v<F>
+struct _conv {
+    F f_;
+    explicit _conv(F f) noexcept : f_((F&&) f) {}
+    operator invoke_result_t<F>() && {
+        return ((F&&) f_)();
+    }
+};
+
+// pass through set_value and set_error, but retry the operation
+// from set_error.
+template<class O, class R>
+struct _retry_receiver {
+    O* o_;
+    explicit _retry_receiver(O* o): o_(o) {}
+    template<class... As>
+        requires receiver_of<R, As...>
+    void set_value(As&&... as) &&
+        noexcept(is_nothrow_receiver_of_v<R, As...>) {
+        ::set_value(std::move(o_->r_), (As&&) as...);
+    }
+    void set_error(auto&&) && noexcept {
+        o_->_retry(); // This causes the op to be retried
+    }
+    void set_done() && noexcept {
+        ::set_done(std::move(o_->r_));
+    }
+};
+
+template<sender S>
+struct _retry_sender : sender_base {
+    S s_;
+    explicit _retry_sender(S s): s_((S&&) s) {}
+
+    // Hold the nested operation state in an optional so we can
+    // re-construct and re-start it when the operation fails.
+    template<receiver R>
+    struct _op {
+        S s_;
+        R r_;
+        std::optional<state_t<S&, _retry_receiver<_op, R>>> o_;
+
+        _op(S s, R r): s_((S&&)s), r_((R&&)r), o_{_connect()} {}
+        _op(_op&&) = delete;
+
+        auto _connect() noexcept {
+            return _conv{[this] {
+                return ::connect(s_, _retry_receiver<_op, R>{this});
+            }};
+        }
+        void _retry() noexcept try {
+            o_.emplace(_connect()); // potentially throwing
+            ::start(std::move(*o_));
+        } catch(...) {
+            ::set_error((R&&) r_, std::current_exception());
+        }
+        void start() && noexcept {
+            ::start(std::move(*o_));
+        }
+    };
+
+    template<receiver R>
+        requires sender_to<S&, _retry_receiver<_op<R>, R>>
+    auto connect(R r) && -> _op<R> {
+        return _op<R>{(S&&) s_, (R&&) r};
+    }
+};
+
+template<sender S>
+sender auto retry(S s) {
+    return _retry_sender{(S&&)s};
+}
+\end{minted}
+
+\end{document}
