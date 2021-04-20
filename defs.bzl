@@ -18,6 +18,7 @@ def my_latex_gen(name, main, deps, options = {"bibtex": True}):
         outs = [out],
         cmd_bash = cmd_bash,
         cmd_ps = cmd_ps,
+        local = 1,
     )
     checksum_inputs = [main, out] + deps
     checksum_output = paths.replace_extension(main, ".sha512")
