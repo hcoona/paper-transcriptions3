@@ -1,1 +1,2 @@
 build --action_env=USERPROFILE
+build --action_env=PATH

@@ -5,19 +5,24 @@ def my_latex_gen(name, main, deps, options = {"bibtex": True}):
     if options["bibtex"]:
         cmd_bash = "latexmk -cd -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + ") && " + \
                    "mv \"$$(dirname $(location " + main + "))/" + out + "\" \"$@\""
-        cmd_ps = "latexmk -cd -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + "); if ($$?) { " + \
+        cmd_ps = "latexmk.exe -cd -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + "); if ($$?) { " + \
                  "mv \"$$(Split-Path -Parent $(location " + main + "))/" + out + "\" \"$@\" } "
+        cmd_bat = "latexmk.exe -cd -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + ") && " + \
+                  "move /Y \"$(location " + main + ")\\..\\" + out + "\" \"$@\" && dir \"$@\""
     else:
         cmd_bash = "latexmk -cd -bibtex- -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + ") && " + \
                    "mv \"$$(dirname $(location " + main + "))/" + out + "\" \"$@\""
         cmd_ps = "latexmk -cd -bibtex- -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + "); if ($$?) { " + \
                  "mv \"$$(Split-Path -Parent $(location " + main + "))/" + out + "\" \"$@\" } "
+        cmd_bat = "latexmk.exe -cd -bibtex- -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + ") && " + \
+                  "move /Y \"$(location " + main + ")\\..\\" + out + "\" \"$@\" && dir \"$@\""
     native.genrule(
         name = name,
         srcs = [main] + deps,
         outs = [out],
         cmd_bash = cmd_bash,
-        cmd_ps = cmd_ps,
+        # cmd_ps = cmd_ps,
+        cmd_bat = cmd_bat,
         local = 1,
     )
     checksum_inputs = [main, out] + deps
