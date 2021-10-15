@@ -1,0 +1,65 @@
+workspace(name = "com_github_hcoona_paper_transctriptions3")
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+#
+# Constants
+#
+
+BAZEL_SKYLIB_VERSION = "1.1.1"  # 2021-09-27T17:33:49Z
+
+BAZEL_SKYLIB_SHA256 = "c6966ec828da198c5d9adbaa94c05e3a1c7f21bd012a0b29ba8ddbccb2c93b0d"
+
+RULES_PYTHON_TAG = "0.4.0"  # 2021-09-12T22:58:33Z
+
+RULES_PYTHON_SHA256 = "954aa89b491be4a083304a2cb838019c8b8c3720a7abb9c4cb81ac7a24230cea"
+
+#
+# Starlark libraries
+#
+
+http_archive(
+    name = "bazel_skylib",
+    sha256 = BAZEL_SKYLIB_SHA256,
+    urls = [
+        "https://github.com/bazelbuild/bazel-skylib/releases/download/{version}/bazel-skylib-{version}.tar.gz".format(version = BAZEL_SKYLIB_VERSION),
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/{version}/bazel-skylib-{version}.tar.gz".format(version = BAZEL_SKYLIB_VERSION),
+    ],
+)
+
+http_archive(
+    name = "rules_python",
+    sha256 = RULES_PYTHON_SHA256,
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_python/releases/download/{version}/rules_python-{version}.tar.gz".format(version = RULES_PYTHON_TAG),
+        "https://github.com/bazelbuild/rules_python/releases/download/{version}/rules_python-{version}.tar.gz".format(version = RULES_PYTHON_TAG),
+    ],
+)
+
+#
+# Repository Rule
+#
+
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+
+bazel_skylib_workspace()
+
+#
+# Python dependencies
+#
+
+# load("@rules_python//python:pip.bzl", "pip_parse")
+
+# # Create a central repo that knows about the dependencies needed from
+# # requirements.txt. The requirements.txt is generated from
+# # poetry export -f requirements.txt --output requirements.txt --dev
+# pip_parse(
+#     name = "pip_deps",
+#     requirements_lock = "//:requirements.txt",
+# )
+
+# # Load the starlark macro which will define your dependencies.
+# load("@pip_deps//:requirements.bzl", "install_deps")
+
+# # Call it to define repos for your requirements.
+# install_deps()

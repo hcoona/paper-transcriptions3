@@ -1,6 +1,14 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 
 def my_latex_gen(name, main, deps, options = {"bibtex": True}):
+    """Generate PDF file & SHA512 checksums for input files.
+
+    Args:
+      name: the name of the target.
+      main: the latex main file.
+      deps: the dependencies.
+      options: extra options.
+    """
     out = paths.replace_extension(main, ".pdf")
     if options["bibtex"]:
         cmd_bash = "latexmk -cd -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + ") && " + \
