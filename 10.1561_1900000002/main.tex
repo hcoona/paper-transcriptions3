@@ -3071,7 +3071,7 @@ call to unlock resources individually --- the \texttt{remove\_transaction()} cal
 will unlock all resources associated with a transaction. However, as we
 discuss in Section 5.2.1, the SQL standard allows for lower degrees of
 transaction isolation, and hence there is a need for an \texttt{unlock
-(lockname, transactionID)} call as well. There is also a \texttt{lock\_upgrade
+(lockname, transactionID)} call as well. There is also a \texttt{lock\_uXrade
 (lockname, transactionID, newmode)} call to allow transactions to
 ``upgrade'' to higher lock modes (e.g., from shared to exclusive mode)
 in a two-phase manner, without drop-ping and re-acquiring locks.

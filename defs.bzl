@@ -10,20 +10,20 @@ def my_latex_gen(name, main, deps, options = {"bibtex": True}):
       options: extra options.
     """
     out = paths.replace_extension(main, ".pdf")
+
+    latexmk_bibtex_str = ""
     if options["bibtex"]:
-        cmd_bash = "latexmk -cd -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + ") && " + \
-                   "mv \"$$(dirname $(location " + main + "))/" + out + "\" \"$@\""
-        cmd_ps = "latexmk.exe -cd -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + "); if ($$?) { " + \
-                 "mv \"$$(Split-Path -Parent $(location " + main + "))/" + out + "\" \"$@\" } "
-        cmd_bat = "latexmk.exe -cd -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + ") && " + \
-                  "move /Y \"$(location " + main + ")\\..\\" + out + "\" \"$@\" && dir \"$@\""
+        latexmk_bibtex_str = ""
     else:
-        cmd_bash = "latexmk -cd -bibtex- -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + ") && " + \
-                   "mv \"$$(dirname $(location " + main + "))/" + out + "\" \"$@\""
-        cmd_ps = "latexmk -cd -bibtex- -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + "); if ($$?) { " + \
-                 "mv \"$$(Split-Path -Parent $(location " + main + "))/" + out + "\" \"$@\" } "
-        cmd_bat = "latexmk.exe -cd -bibtex- -xelatex -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + ") && " + \
-                  "move /Y \"$(location " + main + ")\\..\\" + out + "\" \"$@\" && dir \"$@\""
+        latexmk_bibtex_str = "-bibtex-"
+
+    cmd_bash = "latexmk -cd -xelatex " + latexmk_bibtex_str + " -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + ") && " + \
+               "mv \"$$(dirname $(location " + main + "))/" + out + "\" \"$@\""
+    cmd_ps = "latexmk.exe -cd -xelatex " + latexmk_bibtex_str + " -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + "); if ($$?) { " + \
+             "mv \"$$(Split-Path -Parent $(location " + main + "))/" + out + "\" \"$@\" } "
+    cmd_bat = "latexmk.exe -g -MSWinBackSlash -cd -xelatex " + latexmk_bibtex_str + " -latexoption=\"-shell-escape -interaction=errorstopmode -halt-on-error\" $(location " + main + ") && " + \
+              "move /Y $(location " + main + ")\\..\\" + out + " $@"
+
     native.genrule(
         name = name,
         srcs = [main] + deps,
