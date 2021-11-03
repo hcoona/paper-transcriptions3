@@ -1,0 +1,1584 @@
+\PassOptionsToPackage{dvipsnames}{xcolor}
+\PassOptionsToPackage{unicode=true,colorlinks=true,urlcolor=blue}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[a4paper,12pt,notitlepage,twoside,openright]{article}
+
+\usepackage{ifxetex}
+\ifxetex{}
+\else
+\errmessage{Must be built with XeLaTeX}
+\fi
+
+\input{../common/fonts.tex}
+\input{../common/packages.tex}
+\usepackage{endnotes}
+\input{../common/setup.tex}
+
+\title{Safer Usage Of C++}
+\author{adetaylor, palmer}
+\date{2021-08-20}
+
+\newcommand{\uline}[1]{#1}
+
+\begin{document}
+
+\maketitle
+
+\textbf{This document is PUBLIC. Chromium committers can comment
+on \href{https://www.google.com/url?q=https://docs.google.com/document/d/1eVKfIsPsEVDsBS24ErmuyjNy-9zSBzHgp4Sk6fs6OOI/edit\%23\&sa=D\&source=editors\&ust=1631944129012000\&usg=AOvVaw0F0RgfJgUo0h2Qa_7lRJLS}{the
+original doc}. If you want to comment but can't, ping palmer@. Thanks
+for reading!}
+
+\section{Introduction}
+
+Chrome
+Security \href{https://www.google.com/url?q=https://docs.google.com/document/d/1JWGI-fkEsdRPpwPtS6x3siNtHX8cWoZeiWD6_y781ag/edit\&sa=D\&source=editors\&ust=1631944129014000\&usg=AOvVaw2-sNWSU4CBVsAbGowWToa-}{has
+been asked to consider} {[}Google-internal only, sorry{]} what it would
+take to make C++ less dangerous. This document outlines various
+mechanisms we could use to make it significantly easier to use C++
+safely. Some are radical, and adopting them (especially adopting many of
+them) may result in code that looks quite different from what C++
+programmers expect.
+
+Most of the proposed mechanisms are new usage patterns, libraries, and
+classes, but some call for the use of compiler-specific flags that
+change the language somewhat. (For example, Chromium already
+uses \texttt{-fno-exceptions}, and here we propose \texttt{-ftrapv}, \texttt{-fwrapv},
+or \texttt{fsanitize=signed-integer-overflow}.)
+
+Some of these mechanisms are already being built in Chromium, with
+varying degrees of success. (Examples: The UAF-resistant smart
+pointer \href{https://www.google.com/url?q=http://go/miracleptr\&sa=D\&source=editors\&ust=1631944129016000\&usg=AOvVaw2vE6RkE_iDu216o08aJNOu}{MiraclePtr} is
+in performance trials, we have expanded the use of Oilpan to PDFium, and
+the hardening of //base, WTF, and Abseil is substantial and has proven
+effective.)
+
+Other mechanisms we propose represent significant new directions for C++
+and Chromium, and may even require new research and development into
+open problem areas (e.g. new forms of static analysis).
+
+The C++ language and culture tend to trade off safety in favor of
+efficiency, and therefore many of these proposed changes are complex,
+controversial, and not as robust as similar changes might be in another
+language. Additionally, they might sometimes have micro- or even
+macro-efficiency effects (time, space, or object code size).
+
+\subsection{Prior Work}
+
+Safer C++ is a dream that many people share.
+
+There
+is \href{https://www.google.com/url?q=https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines\&sa=D\&source=editors\&ust=1631944129018000\&usg=AOvVaw3esgyUEKe_P7ORRHHsQKuw}{the
+C++ Core Guidelines project},
+and \href{https://www.google.com/url?q=https://github.com/duneroadrunner/scpptool\&sa=D\&source=editors\&ust=1631944129019000\&usg=AOvVaw2Mqr8zeo2INs5TCMiGAXxz}{the
+Safe C++
+Tool} (and \href{https://www.google.com/url?q=https://github.com/duneroadrunner/SaferCPlusPlus\&sa=D\&source=editors\&ust=1631944129019000\&usg=AOvVaw0WEMnaP_cIAFfrNm_5BkEQ}{its
+SaferCPlusPlus library},
+and \href{https://www.google.com/url?q=https://github.com/duneroadrunner/SaferCPlusPlus-AutoTranslation2\&sa=D\&source=editors\&ust=1631944129020000\&usg=AOvVaw3DSaV0ss5Z4newR7PeGb_h}{an
+auto-translation tool}).
+
+We don't propose a new language, but
+e.g. \href{https://www.google.com/url?q=https://web.eecs.umich.edu/ weimerw/p/p232-condit.pdf\&sa=D\&source=editors\&ust=1631944129020000\&usg=AOvVaw3VtjxgjGOY2s7YlopmPcna}{CCured} and \href{https://www.google.com/url?q=https://cyclone.thelanguage.org/\&sa=D\&source=editors\&ust=1631944129020000\&usg=AOvVaw3mmIspB3EW_s2LHVnpv5K1}{Cyclone} have
+been interesting previous efforts to make new flavors of C mostly
+compatible with existing C.
+
+Also see an analysis
+of \href{https://www.google.com/url?q=https://docs.google.com/document/d/1LhcUy_Eoqo8H2yNPJYAPDfaQWmOIY0gS8S8gfPISOIc/edit\%23heading\%3Dh.t1e8jytl71ol\&sa=D\&source=editors\&ust=1631944129021000\&usg=AOvVaw2rd0sTq73D3ofpS8zTWq7U}{how
+memory tagging might change the safety
+situation} {[}Google-internal{]}.
+
+\subsection{Background}
+
+There are 2 basic types of memory safety: spatial safety and temporal
+safety. \textbf{Spatial safety} is the guarantee that the program will
+behave in a defined and safe way if it accesses memory outside valid
+bounds. Examples include array bounds, struct and union field access,
+and iterator access.
+
+\textbf{Temporal safety} is the guarantee that the program will behave
+in a defined and safe way if it accesses memory when that memory is not
+valid at the time of the access. Examples include use after free (UAF),
+double-free, use before initialization, and use after move (UAM).
+Temporal safety violations often look like type confusion. For example,
+the program mistakenly uses a recently-freed Dog object as if it were
+a Cat object. (Attackers often build entirely fake objects with vtables
+that give them control of program execution.)
+
+Of these 2 types of safety, spatial safety is relatively easier to
+achieve (with changes in Chromium code and/or by boxing a build target
+in WASM), albeit at some micro-cost to efficiency. (For example, you
+have to perform the array bounds check, which might cost more than not
+doing it. This is an entirely empirical question that can only be
+resolved in the context of a real program, and the results can be
+surprising.)
+
+Temporal safety is more difficult to achieve and more expensive.
+Solutions include ubiquitous reference counting (e.g. Objective-C with
+ARC, Swift), banning shared mutable state and building a borrow-checker
+into the compiler (e.g. Rust), or fully generic garbage collection (e.g.
+Go, JavaScript, etc.).
+
+We believe that, \emph{given sufficient tolerance for micro-efficiency
+regressions}, we could essentially eliminate spatial unsafety in
+C++ \emph{in first-party code}. We could do this (and have started doing
+so) with a combination of library changes and additions, compiler
+options, and policies/style rules and presubmit checks (including banned
+and encouraged classes and constructs). Keep in mind that
+while \emph{possible} and usually relatively easily technically, this
+work is controversial in C++ communities (including Chromium).
+
+We cannot marginalize or eliminate temporal unsafety in C++ without
+adopting one of the known solutions (such as GC). Micro-efficient and
+ergonomic temporal safety remains an open problem in software
+engineering. However, at some (potentially significant) cost to
+efficiency, we can reduce the prevalence and exploitability of temporal
+unsafety. \href{https://www.google.com/url?q=https://source.chromium.org/chromium/chromium/src/\%2B/master:base/allocator/partition_allocator/starscan/README.md\&sa=D\&source=editors\&ust=1631944129023000\&usg=AOvVaw0WV-iMbo0WDC3QbBfHcu9Z}{*Scan
+is a promising possibility} that we are experimenting with.
+
+\subsection{Undefined Behavior}
+
+Much of the problems of C/C++ come from undefined behavior (UB) built
+into the language and library specifications. (Even very recent language
+additions continue the tradition.) Spatial and temporal safety are
+sub-types of UB; other examples include signed integer overflow.
+Merely \href{https://www.google.com/url?q=http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1705r1.html\&sa=D\&source=editors\&ust=1631944129024000\&usg=AOvVaw105cmRp9-saBo3luPsWpiN}{enumerating
+all the UB in C++ is an open project}.
+
+\href{https://www.google.com/url?q=https://blog.regehr.org/archives/213\&sa=D\&source=editors\&ust=1631944129024000\&usg=AOvVaw1I5eRSTln2KNNjipgz2Opq}{Compiler
+authors see UB as an opportunity for micro-optimization},
+while \href{https://www.google.com/url?q=http://www.dullien.net/thomas/weird-machines-exploitability.pdf\&sa=D\&source=editors\&ust=1631944129025000\&usg=AOvVaw0BM_xMKnu3TtvqeuuCOiBX}{attackers
+see UB as an opportunity for exploitation}.
+
+For software that runs in an unpredictable and even hostile environment
+like the Internet, there is increasingly broad recognition
+that \href{https://www.google.com/url?q=https://alexgaynor.net/2020/may/27/science-on-memory-unsafety-and-security/\&sa=D\&source=editors\&ust=1631944129025000\&usg=AOvVaw2BcG3fkxkIPmIk7JDpUpR9}{writing
+reliable and safe software in C/C++ is an extreme uphill battle} due to
+the many safety- and ergonomics-relevant forms of UB.
+
+\subsection{Purpose Of This Document}
+
+Given this background, our goal in this document is to enumerate some
+likely projects Chromium contributors could, should, and might undertake
+to reduce the overall exploitable and un-ergonomic UB in Chromium's
+usage of C++.
+
+It is not possible to entirely `fix' C++ without fundamentally
+redefining it. That is not our goal here. Instead, we want to identify
+and reduce some of the most persistent and impactful types of unsafe UB
+in Chromium's usage.
+
+\subsubsection{Prioritization And Motivation}
+
+Here's a guide to the relative importance of each of the solutions
+discussed in this document. This is pure numbers of bugs, but note that
+attackers favor different classes of bugs differently:
+
+\includegraphics[width=5.76806in,height=3.23542in]{./media/image1.png}
+
+(\href{https://www.google.com/url?q=https://docs.google.com/presentation/d/1UVSc_0CHCdj0iv0c23uJZ6OQ_fr9TrISrYmcahJAbIo/edit?ts\%3D5f31d4f7\%23slide\%3Did.g8f91eb8516_0_2\&sa=D\&source=editors\&ust=1631944129027000\&usg=AOvVaw1rTE-lCvOGTOz6siXuLmUe}{source};
+Google-internal but the results are reproducible
+from \href{https://www.google.com/url?q=https://bugs.chromium.org/p/chromium/issues/list?colspec\%3DID\%2520Pri\%2520M\%2520Stars\%2520ReleaseBlock\%2520Component\%2520Status\%2520Owner\%2520Summary\%2520OS\%2520Modified\%26x\%3Dm\%26y\%3Dreleaseblock\%26cells\%3Dids\%26q\%3DType\%253DBug-Security\%26can\%3D1\%26sort\%3Dpri\&sa=D\&source=editors\&ust=1631944129027000\&usg=AOvVaw2ewSLXG4Wr_Cfq5rqyOSds}{the
+public bug tracker})
+
+The proposals and in-progress work described in the rest of this
+document are roughly ordered by how much impact they might have on our
+most significant bug classes.
+
+\subsubsection{Managing Expectations}
+
+Note that many of these proposed and in-progress projects are quite
+large and complex, even changing the semantics of C++. While we think
+most of them are necessary, we also know that they are not sufficient.
+That is the nature of the C++ problem.
+
+With that, here they are.
+
+\section{Remove/Reduce Raw Pointers}
+
+\textbf{Problem:} Manual lifetime and ownership management has proven
+too difficult for even very experienced engineers to reliably do
+correctly. This results in UAF bugs and also memory leaks.
+
+\textbf{Solution:} Ban the direct use of raw pointers, new, and delete.
+Instead, require developers to use one of the MiraclePtr
+implementations, for example. \textbf{Note:} Wrapping pointers in some
+syntax is beneficial for most approaches (Oilpan, MiraclePtr, *Scan, et
+c.), and is valuable on its own.
+
+\textbf{Current
+status:} \href{https://www.google.com/url?q=https://docs.google.com/document/d/1pnnOAIz_DMWDI4oIOFoMAqLnf_MZ2GsrJNb_dbQ3ZBg/edit\%23\&sa=D\&source=editors\&ust=1631944129029000\&usg=AOvVaw0-NEg9SdvTBD7GYlBrO6gZ}{Work
+in progress} (as of August 2021) for T* fields in the browser process.
+The MiraclePtr project aims to make a smart pointer type that makes UAF
+unexploitable while not regressing run-time performance too badly.
+
+\textbf{Costs:} Performance (TBD; as of August 2021 we are actively
+quantifying the impact of several implementations). Deviation from C++
+language community norms. Non-Chrome C++ is is much less likely to adopt
+this approach and hence will not get the temporal safety that MiraclePtr
+provides (e.g. Google code pulled into Chrome, open source
+dependencies). Difficulty of diagnosing crashes (only one call stack
+from MiraclePtr as opposed to three from ASAN: allocate, free, use). If
+we wish to apply these protections to 3rd-party code, we may need to
+fork repositories such that their other consumers also use non-standard
+C++.
+(\href{https://www.google.com/url?q=https://docs.google.com/document/d/1VTJAqsQ004ydSPxPcFirM1ukS8uvmR49ppA4OM_9AQI/edit\%23heading\%3Dh.bcg0gbbh7czw\&sa=D\&source=editors\&ust=1631944129030000\&usg=AOvVaw2DZvpSd5eI5011eUSDEuWz}{Most
+UAFs happen in 1st-party code}.) Instantaneous cost of rewriting lots
+of code (merge conflicts, etc.).
+
+\textbf{Benefits:} UAF accounts for
+around \href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.eoikp3r0cwlf}{48\%
+of high-severity security bugs} (and
+climbing). \href{https://www.google.com/url?q=https://docs.google.com/document/d/1VTJAqsQ004ydSPxPcFirM1ukS8uvmR49ppA4OM_9AQI/edit\%23heading\%3Dh.x9snb54sjlu9\&sa=D\&source=editors\&ust=1631944129031000\&usg=AOvVaw3aIt6uoCrntz84P6hQy0BL}{MiraclePtr
+plans to address \textasciitilde50\% of those now}, and might
+theoretically cover 20\% more in the future by banning raw pointers in
+containers and in local variables and function parameters. (In practice
+using MiraclePtr in local variables and tight loops might have a
+prohibitive performance cost.) The proposed
+implementation, BackupRefPtr, involves the potential runtime cost of
+atomic reference counting. (It can still be defeated by pointer
+arithmetic and aliasing.)
+
+See \href{https://www.google.com/url?q=https://docs.google.com/document/d/1qsPh8Bcrma7S-5fobbCkBkXWaAijXOnorEqvIIGKzc0/edit\%23heading\%3Dh.j7d3wg2h6goh\&sa=D\&source=editors\&ust=1631944129032000\&usg=AOvVaw2lgrxYIr80YnxorY2-jq0J}{Pointer
+Safety Ideas} for more information.
+
+However, Project Zero believes that \textbf{inside renderer processes},
+the majority of UAFs are not of the kind MiraclePtr fixes. Instead, they
+are iterator invalidation and other lifetime mishaps.
+
+\section{Annotate Lifetimes}
+
+\textbf{Problem:} C++ lifetimes are unknown to the compiler, and
+impossible to follow with static analysis.
+
+\textbf{Solutions:} In some cases, we can annotate lifetimes
+with {[}{[}clang::lifetimebound{]}{]} in order to tell the compiler the
+lifetime is bound to an object.
+
+The attribute has many limitations, meaning it is not a solution for
+memory safety, but it can help with some important scenarios. The
+limitations are:
+
+\begin{itemize}
+\item
+  \begin{quote}
+  There is no way to distinguish between different lifetimes.
+  \end{quote}
+\item
+  \begin{quote}
+  There is no way to annotate a static lifetime.
+  \end{quote}
+\item
+  \begin{quote}
+  The attribute attaches to function parameters and always implicitly
+  refers to the outermost reference-like type; it is not possible to
+  attach it to part of a type (e.g. to the T* in a const
+  std::vector\textless T*\textgreater\&).
+  \end{quote}
+\item
+  \begin{quote}
+  The single lifetime is implicitly applied to the outermost
+  reference-like type in the function's return type (or the value of the
+  constructed object, in the case of a constructor). Again, it is not
+  possible to associate the lifetime with inner reference types in the
+  return value (e.g. the T* in const
+  std::vector\textless T*\textgreater\&).
+  \end{quote}
+\item
+  \begin{quote}
+  There is no way to add a lifetime parameter to a struct. This means
+  that parameters can only be attached to the object's lifetime if they
+  are given to a constructor, not in other setters.
+  \end{quote}
+\end{itemize}
+
+In theory, we should apply this to:
+
+\begin{itemize}
+\item
+  \begin{quote}
+  Any constructor reference parameter that is stored in a field.
+  \end{quote}
+\end{itemize}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  However it misses even trivial examples:
+  \end{quote}
+\end{itemize}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  \href{https://www.google.com/url?q=https://godbolt.org/z/Ysq41G6vb\&sa=D\&source=editors\&ust=1631944129035000\&usg=AOvVaw0Rnch-j0apUhdw0LM5stFJ}{https://godbolt.org/z/Ysq41G6vb}
+  \end{quote}
+\end{itemize}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  Any constructor pointer parameter that can be held in a const member.
+  (In other words, the pointer is never reassigned.)
+  \end{quote}
+\end{itemize}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  However it misses even trivial examples:
+  \end{quote}
+\end{itemize}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  \href{https://www.google.com/url?q=https://godbolt.org/z/Ma7P8q8WG\&sa=D\&source=editors\&ust=1631944129036000\&usg=AOvVaw31wGuAGhkcA9WvYkZ-0CG7}{https://godbolt.org/z/Ma7P8q8WG}
+  \end{quote}
+\end{itemize}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  Any class method that returns a reference or pointer to a class member
+  (but not to pointers inside class members, unfortunately).
+  \end{quote}
+\end{itemize}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  However it misses even trivial examples:
+  \end{quote}
+\end{itemize}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  \href{https://www.google.com/url?q=https://godbolt.org/z/9er4WE6zK\&sa=D\&source=editors\&ust=1631944129036000\&usg=AOvVaw2Kh9RhXzwFffwRp6Fm6Y0s}{https://godbolt.org/z/9er4WE6zK}
+  \end{quote}
+\item
+  \begin{quote}
+  \href{https://www.google.com/url?q=https://godbolt.org/z/GW9j4zrdT\&sa=D\&source=editors\&ust=1631944129037000\&usg=AOvVaw1nrVEhav1-RhjoWdbBOu8e}{https://godbolt.org/z/GW9j4zrdT}
+  \end{quote}
+\end{itemize}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  Any function that receives references or pointers and returns a
+  reference or pointer back to its input. This includes templated
+  functions that return one of their inputs (such as min/max/clamp).
+  \end{quote}
+\end{itemize}
+
+The only cases this attribute only actually catches at the moment
+are \href{https://www.google.com/url?q=https://reviews.llvm.org/D49922\%23inline-440637\&sa=D\&source=editors\&ust=1631944129038000\&usg=AOvVaw0ZgDB7wthr0uf0eXbnCh7s}{invalid
+use of temporaries}. While this is a valid/important memory safety bug
+when it happens, it is not representative of the type of bug we see in
+our UAF security bugs.
+
+\begin{itemize}
+\item
+  \begin{quote}
+  And it does not even catch all temporaries:
+  \end{quote}
+\end{itemize}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  \href{https://www.google.com/url?q=https://godbolt.org/z/PbnM1TY8n\&sa=D\&source=editors\&ust=1631944129038000\&usg=AOvVaw2rfmJ9A2vbf5NxysSnFJQD}{https://godbolt.org/z/PbnM1TY8n}
+  \end{quote}
+\item
+  \begin{quote}
+  \href{https://www.google.com/url?q=https://godbolt.org/z/aMbaq4W55\&sa=D\&source=editors\&ust=1631944129039000\&usg=AOvVaw2QHvbnCGBCtLIR1zR43GFJ}{https://godbolt.org/z/aMbaq4W55}
+  \end{quote}
+\item
+  \begin{quote}
+  \href{https://www.google.com/url?q=https://godbolt.org/z/9G77fcE18\&sa=D\&source=editors\&ust=1631944129039000\&usg=AOvVaw298-Iy0OCDeOVx7H82I5J0}{https://godbolt.org/z/9G77fcE18}
+  \end{quote}
+\end{itemize}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  In fact it's hard to construct an example that it does catch.
+  \end{quote}
+\end{itemize}
+
+Some key potential places to do this are:
+
+\begin{itemize}
+\item
+  \begin{quote}
+  base::span constructor
+  \end{quote}
+\item
+  \begin{quote}
+  base::StringPiece constructor
+  \end{quote}
+\item
+  \begin{quote}
+  base::clamp
+  \end{quote}
+\item
+  \begin{quote}
+  ????
+  \end{quote}
+\item
+  \begin{quote}
+  Reference/pointer-returning methods everywhere --- but only if we can
+  show that the attribute actually helps (see above godbolts for
+  counter-examples).
+  \end{quote}
+\end{itemize}
+
+Note that base::span is designed to be able to hold an invalid pointer
+past the end of the container it's ``pointing'' to, and the lifetime
+analysis can not help with this problem. This is a spatial memory safety
+problem built into C++. But it could potentially help with using
+the base::span beyond the lifetime of the object it points to, if the
+attribute caught more misuses.
+
+\textbf{Current status:} Not started.
+
+\textbf{Costs:} Visually noisy annotations (the Abseil macro is a
+mouthful) present in the code. We will learn to become familiar with
+them. But there are many places where the annotation can not be used.
+The annotation can be written incorrectly, where it is more strict than
+the object requires, or it may become incorrect over time if an object
+is changed. For instance, if base::span grew a method to re-assign the
+pointers.
+
+Since the attribute is defined to generate a warning \emph{if} a
+violation can be spotted, it does not actually guarantee violations are
+caught. And it seems that most are not (see godbolt examples above).
+This can give a false impression of safety, which may lead to developers
+trying to rely on the attribute catching their mistakes and actually
+writing \emph{more }UAFs.
+
+Furthermore, there is no way to enforce that the annotations are present
+where they are possible, which would allow new code to be written
+without them. Code authors that rely on annotations to check their
+correctness would be left without any checks.
+
+\textbf{Benefits:} Compiler errors when some set of simple lifetime
+errors are written.
+
+\section{Implement Automatic Memory Management}
+
+\textbf{Problem:} Temporal safety and correctness (UAF, leaks).
+
+\textbf{Solutions:} Reference counting
+(e.g. \href{https://www.google.com/url?q=https://en.wikipedia.org/wiki/Automatic_Reference_Counting\&sa=D\&source=editors\&ust=1631944129042000\&usg=AOvVaw0oMAe91IrprtUI2zFzkmi7}{ARC}-like
+semantics), and/or full GC.
+
+\textbf{Current status:} Oilpan is now a generic reusable library (no
+longer special to Blink),
+and \href{https://www.google.com/url?q=https://bugs.chromium.org/p/pdfium/issues/detail?id\%3D1563\&sa=D\&source=editors\&ust=1631944129042000\&usg=AOvVaw1uctKa94n_u0n9AU7jui4R}{we }\href{https://www.google.com/url?q=https://bugs.chromium.org/p/pdfium/issues/detail?id\%3D1563\&sa=D\&source=editors\&ust=1631944129043000\&usg=AOvVaw0MGd1-LSOfDe38KK48Tt0p}{have
+adopted it in PDFium} to resolve many or most of our temporal safety
+problems in that project. This enabled us to ship XFA Forms support in
+production, for example! (Currently off by default, due to functionality
+gaps.)
+
+\textbf{Costs:} Reference counting needs to be atomic, which costs
+micro-time. Fully generic GC can be expensive.
+
+\textbf{Benefits:} UAFs account for
+around \href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.eoikp3r0cwlf}{48\%
+of high-severity security bugs} (and climbing). This approach is an
+alternative to the universal application of checked pointer types
+(\href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.c3notccb295u}{see
+above}). Additionally, GC has excellent developer ergonomics.
+
+\section{Implement Ownership Analysis}
+
+\textbf{Problem:} Temporal safety and correctness (UAF, leaks).
+
+\textbf{Solutions:} Enforce at run-time that there is a single `owner'
+of any object, which can only be changed via std::move. Allow `borrows'
+with Rust-like rules which prevent multiple mutable references existing
+at the same time, and ensures objects aren't accessed beyond their
+lifetime bounds.
+
+This solution seems a poor fit to C++, but it keeps being proposed so it
+seems important to discuss it here.
+
+Rust achieves this model through fairly
+complex \href{https://www.google.com/url?q=https://doc.rust-lang.org/edition-guide/rust-2018/ownership-and-lifetimes/non-lexical-lifetimes.html\&sa=D\&source=editors\&ust=1631944129045000\&usg=AOvVaw0Sc7SumvQIHrlzjTV7oqUB}{compiler
+support}. The majority of objects therefore incur no runtime cost for
+this sort of ownership checking; it's all static. Developers can
+optionally instead use a runtime version
+(\href{https://www.google.com/url?q=https://doc.rust-lang.org/std/cell/struct.RefCell.html\&sa=D\&source=editors\&ust=1631944129045000\&usg=AOvVaw2-AksYW18PTZd07aOxYU5o}{RefCell\textless\textgreater{}})
+which does the same checks at runtime. We presume this model would be
+far too expensive if \emph{every} object were tracked at runtime,
+and \href{https://www.google.com/url?q=https://docs.google.com/document/d/1oVTxJ-4VItkcA7rAMylIW74SOmKsnc4aS6bylr1B8ZY/edit?resourcekey\%3D0-RNrtKRt8CQ_BgGdGzrDwUA\&sa=D\&source=editors\&ust=1631944129046000\&usg=AOvVaw1vKF2_PTEYFrWd4ikG4Sf1}{we
+don't see a way to do static build-time enforcement in C++ without
+radical compiler and language changes}. (Clang has
+added \href{https://www.google.com/url?q=https://reviews.llvm.org/rL338464\&sa=D\&source=editors\&ust=1631944129046000\&usg=AOvVaw0A8ddFZa3y3m3AXUyQIMD0}{lifetime
+bounds} for simple
+cases, \href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.j8svxi9w9c1i}{but
+see above}).
+
+\textbf{Current status:} We
+have \href{https://www.google.com/url?q=https://docs.google.com/document/d/1YnJBXshxxpUkgzgEsuGTvxsFqVq_YFzsueQHxpbDZJU/edit\&sa=D\&source=editors\&ust=1631944129047000\&usg=AOvVaw2B9xqIF8Z6_YCzRSAf9YY1}{some
+early experiments at runtime ownership enforcement}. Compile-time
+safety
+is \href{https://www.google.com/url?q=https://docs.google.com/document/d/1oVTxJ-4VItkcA7rAMylIW74SOmKsnc4aS6bylr1B8ZY/edit?usp\%3Dsharing\%26resourcekey\%3D0-RNrtKRt8CQ_BgGdGzrDwUA\&sa=D\&source=editors\&ust=1631944129047000\&usg=AOvVaw2FvCsUz7Sn-st7JCiyuSzw}{infeasible} without
+fundamental changes to C++ such as new reference types. There is work
+for limited safety
+in \href{https://www.google.com/url?q=https://youtu.be/80BZxujhY38?t\%3D1096\&sa=D\&source=editors\&ust=1631944129047000\&usg=AOvVaw3izQ8dqJsUTUsFa7E7ou28}{clang
+warnings that will catch dangling references} through control flow
+analysis, but these will not catch invalid heap pointers by design.
+
+\textbf{Costs:} Runtime costs equivalent to reference counting. Need to
+distinguish `owner\_ptr' from `borrowed\_ptr'.
+
+\textbf{Benefits:} UAFs account for
+around \href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.eoikp3r0cwlf}{48\%
+of high-severity security bugs} (and climbing). This approach is an
+alternative to the universal application of checked pointer types.
+
+\section{Use \texttt{-Wdangling-gsl}}
+
+Google has had good results with this internally, finding and fixing UAF
+bugs. Chrome should be able to try it out, too. There are some false
+positives, but plenty of true positives.
+
+\section{Define All Standard Library Behaviors}
+
+(Where possible.)
+
+\textbf{Problem:} The standard library is riddled with potentially
+exploitable undefined behavior. This includes lack of bounds checking
+(e.g. \href{https://www.google.com/url?q=https://en.cppreference.com/w/cpp/container/span/operator_at\&sa=D\&source=editors\&ust=1631944129049000\&usg=AOvVaw0ppTtrO7NVxYBnq9-OMQdg}{std::span::operator{[}{]}})
+and lack of validity checking
+(e.g. \href{https://www.google.com/url?q=https://en.cppreference.com/w/cpp/utility/optional/operator*\&sa=D\&source=editors\&ust=1631944129049000\&usg=AOvVaw23V3p_TRgf2pMCe7iZc9tZ}{std::optional::operator*}). \href{https://www.google.com/url?q=https://github.com/isocpp/CppCoreGuidelines/issues/1038\&sa=D\&source=editors\&ust=1631944129050000\&usg=AOvVaw3BLCBEKIo0Kyb9KcOajrgL}{std::string\_view's
+unfortunate affordance for UAF} is a separate problem, though. This is
+especially unfortunate in the recent library additions, because
+unsafe-but-fast options were already available.
+
+Since std is specified to have lots of UB, we cannot easily be and
+remain certain that implementations we use will be fully hardened or
+easily hardenable against UB, especially as new features are added.
+Instead, we should use a std(-like) replacement whose design and
+implementation we can more effectively influence, such as Abseil.
+Alternatively, we could dedicate headcount to working with upstream
+libcxx to ensure a hardened mode is robust and supported.
+
+\textbf{Solutions:} Add a `hardened' mode (selectable at compile time)
+to standard library implementations that allows us to make the undefined
+behavior well-defined and safe. This is fairly `easy' for spatial
+safety; for temporal safety, see above.
+
+\textbf{Current status:} Abseil team have already added a
+spatial safety hardening mode to Abseil. It perhaps could use a
+completeness audit, but as of August 2021 it looks pretty
+good. {\href{https://www.google.com/url?q=https://source.chromium.org/chromium/chromium/src/\%2B/main:third_party/abseil-cpp/absl_hardening_test.cc;l\%3D19?q\%3Dabsl_harden\%26ss\%3Dchromium\&sa=D\&source=editors\&ust=1631944129051000\&usg=AOvVaw0cHRqJzTxMfueFZGG_xz-J}{We
+use }\href{https://www.google.com/url?q=https://source.chromium.org/chromium/chromium/src/\%2B/main:third_party/abseil-cpp/absl_hardening_test.cc;l\%3D19?q\%3Dabsl_harden\%26ss\%3Dchromium\&sa=D\&source=editors\&ust=1631944129052000\&usg=AOvVaw1jFEYauM_cOOMNfTUUADa6}{this
+mode in Chromium}. A similar hardening mode for LLVM libcxx is
+in \href{https://www.google.com/url?q=https://bugs.chromium.org/p/chromium/issues/detail?id\%3D923166\&sa=D\&source=editors\&ust=1631944129053000\&usg=AOvVaw2CgUfuKxGKgWkZIOQ3Nq9y}{progress} (\href{https://www.google.com/url?q=https://reviews.llvm.org/D89353\&sa=D\&source=editors\&ust=1631944129053000\&usg=AOvVaw3JKAAvS4gV2e6p1iXVACSs}{upstream}).
+We have also added spatial hardening to //base (but could use a
+completeness
+audit). \href{https://www.google.com/url?q=https://source.chromium.org/chromium/chromium/src/\%2B/main:third_party/blink/renderer/platform/wtf/\&sa=D\&source=editors\&ust=1631944129053000\&usg=AOvVaw0kkd5EAIlI1FKFlepB4rBL}{WTF} also
+has the same status as //base.
+
+We are
+also considering a \href{https://www.google.com/url?q=https://github.com/chromium/libboring\&sa=D\&source=editors\&ust=1631944129054000\&usg=AOvVaw0Wl6dhQfxK9NJixftXrm63}{project
+to build a standard-like library with no UB} {[}Google-internal for
+now, sorry{]}, since there is not much appetite for making //base
+stand-alone. However, Abseil with hardening may obviate that. But if
+there is general interest for an open source, std(-like) library that is
+specified to have no UB, we could dedicate headcount to that.
+
+\textbf{Costs:} Possible micro-cost in run-time due to increased
+checking.
+
+\textbf{Benefits:} \href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.eoikp3r0cwlf}{Spatial
+unsafety is 16\% of high severity security bugs; possibly 17.5\%}.
+
+\subsection{Define Undefined Iterator Behaviors}
+
+\textbf{Problem:} In particular, it seems important to mention 2 bug
+classes involving UB in iterators. Thanks to Sergei and Mark from P0 for
+raising these points:
+
+\begin{minted}{cpp}
+for (auto& iter : my_container) {
+  MaybeChangeMyContainer();
+}
+\end{minted}
+
+and
+
+\begin{minted}{cpp}
+auto iter = my_container.find(the_thing);
+DCHECK(iter != my_container.end());
+iter->second->Foo();
+\end{minted}
+
+Mark says:
+
+\begin{quote}
+It seems like the iterator invalidation problem could be solved
+efficiently.
+
+EITHER by having the container track live iterators and "neuter" any
+live iterators when an iterator-invalidating operation occurs - it
+should be rare that such an operation occurs with many live iterators,
+so this should be fairly inexpensive, and would incur zero overhead on
+iterator access.
+
+OR using something like a generation tag, which would be checked on
+iterator access; this would add iterator access overhead so it might be
+too expensive?
+
+OR more API-breakingly, we could simply CHECK on iterator-invalidating
+operations when there are live iterators - this would be cheaper but
+would likely require significant testing and code changes to ensure that
+on-stack iterators are discarded once they're not being used.
+\end{quote}
+
+\textbf{Solution:} We
+have \href{https://www.google.com/url?q=https://source.chromium.org/chromium/chromium/src/\%2B/master:base/containers/checked_iterators.h\&sa=D\&source=editors\&ust=1631944129057000\&usg=AOvVaw13QYLercw7YJFR6fuENUX8}{a CheckedIterator type
+in //base}.
+
+\textbf{Current status:} It had been expensive in practice (due to a
+lack of a supported way in libcxx to express that it can be optimized),
+but \href{https://www.google.com/url?q=https://bugs.chromium.org/p/chromium/issues/detail?id\%3D994174\%23c15\&sa=D\&source=editors\&ust=1631944129058000\&usg=AOvVaw30V7RnIENr3gQFMdSLCPVt}{that
+is fixed now}. We should expand its use now that we can do so
+efficiently. For example, it should be possible to create a
+well-defined end singleton template that crashes cleanly.
+
+\textbf{Costs:} Hopefully, the run-time overhead is acceptable now.
+
+\textbf{Benefits:} Reduced iterator invalidation UB (including spatial
+and temporal unsafety).
+
+\section{Define Integer Semantics}
+
+\textbf{Problem:} \href{https://www.google.com/url?q=https://chromium.googlesource.com/chromium/src/\%2B/master/docs/security/integer-semantics.md\&sa=D\&source=editors\&ust=1631944129059000\&usg=AOvVaw1RJ_W19UD6mSpv0PStkjwY}{C/C++'s
+integer semantics are bonkers}: the wrapping, overflow, underflow,
+undefined behavior, implicit casting, and silent truncation behaviors
+all add up to unsafety and poor ergonomics. As a result, developers have
+a hard time correctly calculating sizes, indices, and offsets,
+especially when an attacker can control some of the terms. Arithmetic
+overflow and underflow often lead to mistakes in memory allocation and
+access, and from there to exploitable bugs. Other bug classes arise from
+integer overflow too, such
+as \href{https://www.google.com/url?q=https://twitter.com/tehjh/status/1045000957678047232?lang\%3Den\&sa=D\&source=editors\&ust=1631944129060000\&usg=AOvVaw3ygs6qYV6oSRM8GtjPepzo}{\uline{reference
+counts wrapping}}, or wrapping causing unique IDs to no longer be
+unique.
+
+Implicit conversion from integer to floating point hides the fact the
+stored value potentially changes. It's insidious as within common ranges
+the value does not change, but if an attacker can control the value of
+the integer, they can make it large enough to violate the assumption.
+Then on conversion back to an
+integer, \href{https://www.google.com/url?q=http://crbug.com/278141\&sa=D\&source=editors\&ust=1631944129060000\&usg=AOvVaw0wnyxdxDMCXQ8kLCOWjHyU}{\uline{the
+result becomes invalid}}.
+
+\textbf{Solution 1:} Require developers to use the //base/numerics
+library or something similar. Specify specific types for intentional
+wrapping, saturating, and trapping (as Rust does). The norm should be
+that people use reliable arithmetic by default, and leave primitive C
+arithmetic behind to the greatest extent possible. In particular, we
+should dedicate some headcount to improving the generality and
+ergonomics of //base/numerics, and should make it into a stand-alone
+dependency. (It already is easily separable from //base, but you have to
+copy and paste.)
+
+\textbf{Solution 2:} We could require compiler options to make signed
+overflow behave the same as unsigned
+(i.e. \href{https://www.google.com/url?q=https://clang.llvm.org/docs/ClangCommandLineReference.html\&sa=D\&source=editors\&ust=1631944129061000\&usg=AOvVaw2PGnWR5j__AwLcxq4JWAHj}{\uline{wrapping}}).
+That is, we could standardize on the Java and Go behavior: we could
+use -fwrapv in debug and production builds. Alternatively, we could
+use -fwrapv in release builds and -ftrapv in debug builds (like Rust).
+
+\textbf{Solution 3:} Clang also
+has \href{https://www.google.com/url?q=https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html\&sa=D\&source=editors\&ust=1631944129062000\&usg=AOvVaw1WcT_P8zjRqDFzV4ZI1TJT}{\uline{sanitizer
+options}} --- which can be configured to immediately trap, thus
+requiring no run-time support --- to handle division by 0, truncation,
+implicit casting, and shifting left too far, casting an integer to an
+invalid enum value.
+
+Android already
+uses -fsanitize=signed-integer-overflow,unsigned-integer-overflow in
+large (and growing) parts of the codebase.
+
+enh@ notes: ``In combination with fuzzing it works quite well to show
+you where you need \_\_builtin\_add\_overflow or whatever. Without
+fuzzing it's a `good' source of work backporting security fixes as/when
+stuff is found in the field.''
+
+\textbf{Solution 4:} Clang provides a warning on implicit int conversion
+to float, behind -Wimplicit-int-float-conversion. We should enable this
+warning.
+
+\textbf{Current status:} //base/numerics is used in many places
+successfully. We just need to use it more. The API needs some ergonomic
+improvements.
+
+We do not use either -ftrapv or -fwrapv in any .gn or .gni file.
+We \href{https://www.google.com/url?q=https://crbug.com/989932\&sa=D\&source=editors\&ust=1631944129063000\&usg=AOvVaw2EeNXbT-C5RHlx1OGnSA00}{\uline{have
+disabled}} the -Wimplicit-int-float-conversion \href{https://www.google.com/url?q=https://source.chromium.org/chromium/chromium/src/\%2B/main:build/config/compiler/BUILD.gn;drc\%3Dab531c265c533cba1c2f6d8240cc0bf7679f605a;l\%3D1611\&sa=D\&source=editors\&ust=1631944129063000\&usg=AOvVaw0y22xRHB_K05IyKVdiN47i}{\uline{warning}}.
+
+\uline{\href{https://www.google.com/url?q=https://source.chromium.org/search?q\%3Dsanitize\%253Dsigned-integer-overflow\%26sq\%3D\%26ss\%3Dchromium\&sa=D\&source=editors\&ust=1631944129064000\&usg=AOvVaw3X2yYb0iYbcUwuPk3SlZUw}{Build
+profiles that
+use is\_ubsan}\href{https://www.google.com/url?q=https://source.chromium.org/search?q\%3Dsanitize\%253Dsigned-integer-overflow\%26sq\%3D\%26ss\%3Dchromium\&sa=D\&source=editors\&ust=1631944129065000\&usg=AOvVaw1TV5lWdf0gJaEL47oeTXN4}{ sanitize
+signed int overflow}},
+and \href{https://www.google.com/url?q=https://source.chromium.org/chromium/chromium/src/\%2B/master:tools/ubsan/blacklist.txt?q\%3Dblacklist.txt\%26ss\%3Dchromium\&sa=D\&source=editors\&ust=1631944129065000\&usg=AOvVaw3fCUMhabQSj7I8LGKJMnqC}{\uline{with
+a significant block list}}. It does not seem to be on in production
+builds of Chrome.
+
+\textbf{Costs:} Training. Migrating code. Some 3rd-party projects (e.g.
+Skia) resist systemic solutions. Potential for micro-efficiency
+regression if people use checked arithmetic in tight loops. Potential
+for binary size increase if we ship UBSan with trapping (which does not
+require the UBSan runtime support library and produces small,
+coalescable branch targets on failure).
+
+Assuming overflow behavior is a significant change in C/C++ semantics.
+(LLVM developers for example try to avoid introducing new semantics with
+command-line options; but some already exist out of necessity.) If
+developers come to rely on well-defined integer behavior, code can
+become buggy if anyone were to turn the option off. (We can, and should
+in any case, protect against this with tests.) Using explicit types for
+trapping, wrapping, and saturating avoids that, but doesn't easily work
+for 3P dependencies and requires explicit changes to call sites.
+
+\textbf{Benefits:} \href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.eoikp3r0cwlf}{\uline{Integer
+overflow represents around 2\% of our high severity security bugs}},
+though arguably that's reduced in importance if we truly manage to
+prevent buffer overflows (see later). Using -fwrapv may and should
+be maximally compatible with existing code, and matches most developers'
+expectations. Using UBSan with trap-on-failure covers the most problems
+but may require some carve-outs and may introduce some speed and binary
+size regressions (an empirical question). Call sites that need explicit
+checking should continue to use //base/numerics in any case.
+
+There are also logical bugs, such as an expectation that incrementing
+numbers will remain unique as identifiers, reference counters wrapping,
+and so on. Again, trapping or sanitizing would catch these. With
+a Trapping\textless T\textgreater in //base/numerics, we could
+statically ensure that.
+
+Having defined behavior and skipping odd optimizations based on
+undefined integer behavior might also improve ergonomics.
+
+\section{Set Pointers To Null After Free}
+
+\textbf{Problem:} The contents of a region of memory after free are
+undefined. That is confusing and potentially exploitable.
+
+\textbf{Solution:} kcc@ notes: ``Another potential investigation is
+nullifying pointers after free (by compiler). After delete
+foo-\textgreater bar, add foo-\textgreater bar = nullptr. Obviously,
+it'll fix a small portion of cases (guesstimate: 1\% -- 10\%); e.g. it
+can't handle delete GetBar();. But it's \textasciitilde{} zero overhead
+and relatively easy to implement. LLVM patches have been floating around
+(but IDK the current state).''
+
+This will also help make any GC-based approaches more efficient.
+
+\textbf{Current status:} None.
+
+\textbf{Costs:} kcc@ says \textasciitilde{} zero.
+
+\textbf{Benefits:} Detect 1 -- 10\% of UAFs. Improved developer
+ergonomics (modulo aliasing, the contents of a region after free and
+before it is reused are now defined).
+
+\section{Define Null Pointer Dereferences}
+
+\textbf{Problem:} Null pointer dereferences are UB. This is an issue
+because developers (reasonably) expect a null pointer dereference to
+crash the process instead of continuing. However, the compiler can and
+sometimes will optimize away the null pointer dereference and in some
+cases to elide a check for it, even though continuing execution might
+result in a much more corrupted state and possibly exploitable behavior.
+
+For example, our smart pointer type WeakPtr was vulnerable to UAFs: if
+the pointed-to object was destroyed, WeakPtr::get would return a null
+pointer and the subsequent dereference was supposed to crash the
+program. However, clang correctly determined that storing a null pointer
+and immediately dereferencing that pointer was undefined behavior, and
+therefore removed the store of null pointer entirely.
+So WeakPtr::get would actually return the stale pointer and the
+dereference would instead result in a UAF. There has been at
+least \href{https://www.google.com/url?q=https://bugs.chromium.org/p/chromium/issues/detail?id\%3D1133635\&sa=D\&source=editors\&ust=1631944129071000\&usg=AOvVaw0nhje5VI4xjTFlE1-QftQ3}{\uline{1
+externally-reported high-severity security bug due to this
+issue}} (\href{https://www.google.com/url?q=https://chromium.googlesource.com/chromium/src/\%2B/0b308a0e37b9d14a335c3b487511b7117c98d74b\&sa=D\&source=editors\&ust=1631944129071000\&usg=AOvVaw3Bagjs8VlafIjNTAqrnEZF}{\uline{fixed
+with an explicit CHECK}}).
+
+\textbf{Solution:} Clang provides a compiler flag
+called -fno-delete-null-pointer-checks (named as such for historical
+reasons) that defines null pointer dereferences. With this flag,
+dereferences of null are never optimized away.
+
+\textbf{Current
+status:} \href{https://www.google.com/url?q=https://chromium-review.googlesource.com/c/chromium/src/\%2B/2481465\&sa=D\&source=editors\&ust=1631944129072000\&usg=AOvVaw1TiZFMeA5sgo2qoM3LqftV}{\uline{Landed}}.
+
+\textbf{Cost: }42 kB Android binary size (at minimum)
+and \href{https://www.google.com/url?q=https://crbug.com/1149340\&sa=D\&source=editors\&ust=1631944129072000\&usg=AOvVaw2VVH7EMtibHKBKRTY50Qwe}{\uline{some
+microbenchmark regressions in Blink parsing performance}}.
+
+\textbf{Benefits:} With this flag, the compiler behaves the way most
+developers expect, making it easier to understand the meaning of code.
+
+\section{Require Coding Patterns To Reduce Lifetime Errors}
+
+\textbf{Benefits:} UAFs account for
+around \href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.eoikp3r0cwlf}{\uline{48\%
+of high-severity security bugs}} (and climbing). Improved coding
+patterns are not a robust solution, since they're still subject to human
+error. But they may eliminate some fraction of the bugs. When combined
+with a robust solution such as a deterministic MiraclePtr, they may
+remove some (non-exploitable) crashes.
+
+\subsection{Use absl::variant Instead Of }enum\textbf{s For State Machines}
+
+\textbf{Problem:} enums are often used for state machines.
+Unfortunately, the enum variant is not the only bit of the state ---
+there are almost always extra fields which pertain to a subset of the
+states. These things get out of sync, causing object lifetime problems
+and logic errors.
+
+\begin{minted}{cpp}
+struct StateMachine {
+   enum {
+      CONNECTING,
+      CONNECTED,
+      DISCONNECTING,
+   } state;
+
+   // These fields could get out of sync with `state':
+   int thing_relevant_only_when_connected;
+   std::string thing_relevant_only_after_connection;
+};
+\end{minted}
+
+\textbf{Solution:} Use absl::variant, which is a type-safe tagged
+union. \href{https://www.google.com/url?q=https://genbattle.bitbucket.io/blog/2016/10/07/Type-Safe-Unions-in-C-and-Rust/\&sa=D\&source=editors\&ust=1631944129075000\&usg=AOvVaw1q7XscklQWyKhOkY9vFTAF}{\uline{All
+data which relates only to one of the states should be associated with
+that specific variant}}.
+
+\textbf{Current
+status:} absl::variant is \href{https://www.google.com/url?q=https://groups.google.com/a/chromium.org/g/chromium-dev/c/sKVWxxSjVFU/m/MWqjjz9CAwAJ\&sa=D\&source=editors\&ust=1631944129076000\&usg=AOvVaw3UMonBEuD7BXE6zG71T5Lw}{\uline{newly
+allowed}}. No attempt has been made to retrofit to existing code.
+
+\begin{minted}{cpp}
+struct Connecting { int thing; }
+struct Connected { std::string thing; }
+struct Disconnecting { std::string thing; }
+
+auto state_machine = absl::variant<Connecting, Connected,
+  Disconnecting>;
+\end{minted}
+
+\textbf{Costs:} Awkward syntax (arguable). Difficulty of identifying
+which enums are used for state machines. (Can we simply ban all enums?)
+
+\textbf{Benefits:} Reduced logic errors and object lifetime errors,
+currently unquantified.
+
+\subsection{Ban std::unique\_ptr::get; Use Shared Pointers}
+
+\textbf{Problem:} unique\_ptr encourages the notion that there's a
+single owner, yet we see such pointers featuring in use-after-free bugs
+so this notion is obviously wrong. (unique\_ptr really guarantees a
+unique \emph{deleter}, not necessarily a unique \emph{owner}.)
+
+\textbf{Solution:} Prevent any means of getting a raw pointer out of
+a unique\_ptr (to the extent possible). Not even a checked pointer: if
+developers are getting any extra pointers to something within a unique
+pointer, then it's not truly uniquely owned, and they should use a
+shared pointer. (Yes, we really do have to incur the costs of reference
+counting.) And in most cases where unique\_ptr is used, it might be
+better to use base::Optional to obtain composition into a single heap
+cell.
+
+\textbf{Current status:} Opposite of current best practice, where shared
+pointers are discouraged and unique\_ptr encouraged.
+
+Note that dcheng has a countervailing view: that we instead want clarity
+of lifetime and the ability to assert ownership more clearly than
+shared\_ptr/reference counting/GC allows:
+
+\begin{quote}
+What I think we really need is a safe version of raw pointer to make
+lifetime assertions when we believe an object should have single
+ownership. There was a previous attempt at this called CheckedPtr
+(though that kind of conflicts with MiraclePtr's implementation details
+now)... maybe we should seriously consider it though, as this seems to
+be a repeated theme.
+\end{quote}
+
+\textbf{Costs:} We may find lots of objects need reference counting. But
+we need to do that for safety. Reduced clarity about lifetimes and when
+an object's destructor would run. It would also be easier to create
+reference cycles.
+
+\textbf{Benefits:} Reduced object lifetime errors, currently
+unquantified. Fewer heap allocations and dereferences if we use
+composition more often than a pointer.
+
+\section{Initialize All Memory}
+
+\textbf{Problem:} When a program uses variables before they have been
+initialized, bugs ensue. These can include (possibly exploitable) wild
+pointer dereferences and information disclosure bugs. Using
+uninitialized memory may also introduce application-semantic bugs that
+may or may not be security vulnerabilities.
+
+(Information disclosure bugs can occur when the struct has padding, and
+the code memcpys a struct and sends the result to another process. The
+padding may be uninitialized, which is to say, whatever data was there
+previously --- and perhaps that data is sensitive. We have
+had \href{https://www.google.com/url?q=https://bugs.chromium.org/p/chromium/issues/detail?id\%3D765512\&sa=D\&source=editors\&ust=1631944129080000\&usg=AOvVaw1rvWaqATRYqrayvsC28EmW}{\uline{bugs
+like this}} in the past. Of course, the proper fix for such information
+disclosure bugs is to properly serialize structs, initializing the
+whole struct first is a good defense in depth.)
+
+\textbf{Solutions:} In addition to being nice, well-defined behavior
+(and hence good for developer ergonomics, as Go has shown), initializing
+all memory (either to 0 or some canary value) eliminates wild pointer
+and application-semantic bugs arising from the use of uninitialized
+memory.
+
+Alternatively, we could configure the compiler to reject variable
+declarations that have no initializer.
+
+\textbf{Current status:} vitalybuka@ has
+painstakingly \href{https://www.google.com/url?q=https://source.chromium.org/chromium/chromium/src/\%2B/master:build/config/compiler/BUILD.gn;l\%3D2583?q\%3Dtrivial-auto-var-init\%26ss\%3Dchromium\&sa=D\&source=editors\&ust=1631944129081000\&usg=AOvVaw3YUck07c2KvA4COd6OlcrS}{\uline{enabled
+stack auto-initialization}},
+on \href{https://www.google.com/url?q=https://source.chromium.org/chromium/chromium/src/\%2B/master:build/config/compiler/BUILD.gn;l\%3D135?q\%3Dinit_stack_vars\%26ss\%3Dchromium\&sa=D\&source=editors\&ust=1631944129081000\&usg=AOvVaw3V7aEFva0hRGlT4R3821dt}{\uline{non-Android}},
+with \href{https://www.google.com/url?q=https://source.chromium.org/search?q\%3Ddefault_init_stack_vars\%26sq\%3D\%26ss\%3Dchromium\&sa=D\&source=editors\&ust=1631944129082000\&usg=AOvVaw3haxLM_dqlDewzY0dHbkc8}{\uline{some
+carve-outs}}, and has worked for months to solve performance regressions
+by excluding hot paths.
+
+enh@ says:
+
+\begin{quote}
+Android R has stack zero initialization for kernel and userspace. We
+found relatively few places in userspace that we needed to annotate for
+performance. Folks are looking at heap zero initialization for S. That
+will probably be harder.
+\end{quote}
+
+Future work:
+
+\begin{itemize}
+\item
+  \begin{quote}
+  Heap auto-init (currently it is stack-only)
+  \end{quote}
+\item
+  \begin{quote}
+  Try to push for zero-init again
+  \end{quote}
+\item
+  \begin{quote}
+  See if we can switch to \_\_attribute((uninitialized)) instead of
+  build config carve-outs
+  \end{quote}
+\item
+  \begin{quote}
+  Try V8 again?
+  \end{quote}
+\end{itemize}
+
+\textbf{Costs:} Auto-initialization has proven to incur noticeable
+run-time costs in hot paths. (Vitaly has manually opted those hot paths
+out of auto-init.)
+
+Assuming auto-init is a significant change in C/C++ semantics. If
+developers come to rely on auto-init, code can become buggy if anyone
+were to turn auto-init off. (We can, and should in any case, protect
+against this with tests.)
+
+\textbf{Benefits:} Uninitialized memory is a small fraction of our high
+severity security bugs, probably no more than 1.5\%. Auto-init reduces
+the cognitive load (less need to remember all UB), and may enable
+cleaner code paths iff developers can assume autoinit is always
+on \href{https://www.google.com/url?q=https://lists.llvm.org/pipermail/cfe-dev/2020-April/065233.html\&sa=D\&source=editors\&ust=1631944129084000\&usg=AOvVaw2T_sqx8Nl21LBxNUvi3dis}{\emph{\uline{if
+the program continues}}}.
+
+Since we do need to turn auto-init off in places, such call sites should
+be `obvious' and well-documented. (An example of obvious and
+well-documented: \uline{\href{https://www.google.com/url?q=https://source.chromium.org/chromium/chromium/src/\%2B/master:sandbox/win/src/sandbox_nt_util.cc;l\%3D63?q\%3Dtrivial-auto-var-init\%26ss\%3Dchromium\&sa=D\&source=editors\&ust=1631944129084000\&usg=AOvVaw3bHIFqDRxdVpYasCoj9_By}{using }\href{https://www.google.com/url?q=https://source.chromium.org/chromium/chromium/src/\%2B/master:sandbox/win/src/sandbox_nt_util.cc;l\%3D63?q\%3Dtrivial-auto-var-init\%26ss\%3Dchromium\&sa=D\&source=editors\&ust=1631944129085000\&usg=AOvVaw0ZvsfgE7IGTXJXGf3A71BS}{\_\_attribute((uninitialized)) or
+similar}} in hot spots rather than special-casing directories in the
+build.)
+
+\section{Remove Primitive Arrays}
+
+(May be covered
+under \href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.c3notccb295u}{\uline{Remove
+Raw Pointers}}.)
+
+\textbf{Problem:} Primitive C arrays are not bounds-checked, and thus
+tend to exhibit spatial safety bugs. -fsanitize=bounds only works when
+the compiler can statically determine the array's size, which is not
+always.
+
+\textbf{Solutions:} Require the use of a type like std::array where
+C-style arrays are currently in use. It may be possible to automatically
+migrate old code to std::array (similar to how we are automatically
+migrating code to MiraclePtr). Note that this is only a security win if
+we also use a std implementation where all undefined behavior is
+defined; for example, std::array::operator{[}{]} does no bounds
+checking.
+(See \href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.ji6or6kpi3sa}{\uline{Define
+All Standard Library Behaviors}}.)
+
+\textbf{Current status:} None.
+
+\textbf{Costs:} Micro-efficiency. Training and socialization. May want
+to write a PRESUBMIT check or (preferably) a clang warning, if that's
+possible.
+
+\textbf{Benefits:} \href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.eoikp3r0cwlf}{\uline{Spatial
+safety is 16\% of high severity security bugs; possibly 17.5\%}}.
+
+\section{Remove Mutable Shared State}
+
+\textbf{Problem:} C++ cannot prevent data races.
+
+\textbf{Solutions:} Implement support in the compiler to enforce this,
+and a borrow checker.
+
+\textbf{Current status:} None.
+
+\textbf{Costs:} Unknown. Potentially significant change to developer
+expectations. If Chromium makes heavy use of shared mutable state in
+places, that code would need to be significantly refactored.
+
+\textbf{Benefits:} Data races
+are \href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.eoikp3r0cwlf}{\uline{known
+to be \textasciitilde1\% of our high severity security bugs}}; however
+they are implicated in lots of bugs that then appear in other categories
+(e.g. temporal unsafety) so this likely under-represents the scale of
+the problem.
+
+\section{Check Type Casts}
+
+\textbf{Problem:} Type confusion bugs such as this:
+
+\begin{minted}{cpp}
+void SomeFunction(Animal* animal) {
+  // NOTE: Dog and Cat are subclasses of Animal.
+  DCHECK(IsCat(animal));
+
+  Cat* cat = static_cast<Cat*>(animal);
+  cat->Meow();    // If animal is really a Dog*, memory unsafety may ensue!
+}
+\end{minted}
+
+can be exploitable, such as by causing memory corruption when code
+incorrectly treats an object of 1 class as if it were an instance of
+another.
+
+The static\_cast should be a dynamic\_cast, or otherwise automatically
+checked --- not just in debug builds with DCHECK, but in production
+builds too. Historically Chrome has avoided dynamic\_cast because the
+cost of RTTI is too high (e.g. huge object code size). That allows bugs
+that escape detection during debugging and fuzzing to become
+vulnerabilities in the wild.
+
+Regarding object code size, davidben@ notes:
+
+\begin{quote}
+Playing around with godbolt, looks like the cost of RTTI is each vtable
+now also gets a typeinfo with a few quads and a class name. That doesn't
+seem like it should be too expensive?
+
+I got an (possibly with the wrong build flags) increase from 171M to
+178M in a stripped Linux release build, which is substantial but doesn't
+seem huge? Android hit some link error with use\_rtti though I assume
+that's fixable.
+
+Assuming it is indeed the type names, maybe we just need a Clang flag to
+omit
+them? \href{https://www.google.com/url?q=https://en.cppreference.com/w/cpp/types/type_info/name\&sa=D\&source=editors\&ust=1631944129092000\&usg=AOvVaw1kUlFV7YNfYs6EbGGfwfqk}{\uline{std:type\_info::name supposedly
+doesn't promise anything}}, so the empty string should be perfectly
+compliant...
+\end{quote}
+
+\textbf{Solutions:} TODO. dcheng@ says:
+
+\begin{quote}
+I'm guessing you're thinking of the casting helpers that
+@inferno@google.com originally added to WebKit. These use a handrolled
+implementation of RTTI.
+
+I've updated these into a more `modern' template-based C++ solution, but
+since we don't actually support RTTI at all today, it doesn't
+use dynamic\_cast, even in debug mode.
+
+The way it works today:
+\end{quote}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  Blink classes implement IsX
+  \end{quote}
+\item
+  \begin{quote}
+  There are traits that tell the cast helpers how to use the
+  various IsX methods.
+  \end{quote}
+\item
+  \begin{quote}
+  DynamicTo\textless\textgreater behaves
+  like dynamic\_cast\textless\textgreater and returns nullptr if the
+  type check fails. Used in places where you'd want to
+  do IsA\textless X\textgreater followed by To\textless X\textgreater.
+  \end{quote}
+\item
+  \begin{quote}
+  To\textless\textgreater behaves
+  like static\_cast\textless\textgreater but has
+  a DCHECK(IsA\textless X\textgreater);.
+  \end{quote}
+\end{itemize}
+
+\begin{quote}
+My ideal world would be:
+\end{quote}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  To\textless\textgreater always does the type check
+  \end{quote}
+\item
+  \begin{quote}
+  DynamicTo\textless\textgreater stays the same.
+  \end{quote}
+\item
+  \begin{quote}
+  UnsafeTo\textless\textgreater skips the type check in official builds
+  when the performance is `necessary'.
+  \end{quote}
+\item
+  \begin{quote}
+  \textless Something\textgreater{} enforces that we use these helpers
+  for casting rather than static\_cast.
+  \end{quote}
+\end{itemize}
+
+tsepez@ says:
+
+\begin{quote}
+Some years ago, I'd pondered
+creating subclass\_cast\textless\textgreater (or down\_cast\textless\textgreater)
+which would be defined as dynamic\_cast if RTTI was enabled,
+and static\_cast otherwise (to avoid warnings about dynamic cast in
+non-RTTI builds). I eventually concluded this was a bad idea, on the
+grounds that you make languages better by removing things from them you
+shouldn't use rather than adding new things that you should use.
+\end{quote}
+
+markbrand@ says: ``AFAIU clang-cfi supports this, not sure whether RTTI
+is required.''
+
+kcc@ asks: ``Why
+not \href{https://www.google.com/url?q=https://clang.llvm.org/docs/ControlFlowIntegrity.html\%23bad-cast-checking\&sa=D\&source=editors\&ust=1631944129096000\&usg=AOvVaw1hIEhYq5DWiRx3GcY8-Eni}{\uline{cast-cfi}}?
+Microsoft is doing it.''
+
+\textbf{Current status:} There is now a convention in Blink to handle
+the ``cast to wrong subclass'' problem, which used to be more common in
+Blink. Perhaps it could be adopted more widely.
+
+\textbf{Costs:} We can make it cheaper than RTTI and dynamic\_cast, but
+there will always be some micro-cost in run-time and possibly some cost
+to object code size.
+
+\textbf{Benefits:} \href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.eoikp3r0cwlf}{\uline{Type
+confusion is 7\% of our high severity security bugs}}, though a fair
+amount of that is within V8 and wouldn't be covered by C++ improvements
+(nor by a new general-purpose programming language). Attackers seem
+particularly fond of exploiting these bugs disproportionately to their
+number.
+
+\section{Make All DCHECKs Into CHECKs}
+
+\textbf{Problem:} DCHECKs exist to check some \emph{static} invariant,
+but they are sometimes misused to check
+a \emph{dynamic} invariant (sometimes on the assumption that we'll
+notice the bug dynamically in debug builds). In release builds,
+execution might sail past the DCHECK and lead to some memory safety
+problem, or sometimes some logic error. In either case it can be a
+security bug.
+
+\textbf{Solutions:} Audit for unnecessary DCHECKs (there are some), and
+then turn many remaining DCHECKs into CHECKs. Some DCHECKs really are
+checking static invariants, and those should not be converted.
+
+\textbf{Current
+status:} \href{https://www.google.com/url?q=https://docs.google.com/document/d/1QY4IbbJ8X6G-6-cMheEkP_mT7ZNPCuUJIW2sr_mEiH4/edit\&sa=D\&source=editors\&ust=1631944129101000\&usg=AOvVaw2BlusRZodOmwWxlt2Ifxxe}{\uline{Albatross}} build.
+Proposal probabilistically to enable DCHECKs for some fraction of checks
+on some build.
+
+\textbf{Costs:} An extra branch instruction at runtime. The checking
+clause on some DCHECKs involves substantial binary bloat and runtime
+calculation (e.g. comparing trees of opcodes in V8). We would need some
+way of working around this, where possible.
+
+\textbf{Benefits:} Can address memory safety problems and
+logic/correctness problems. About 30\% of our high severity security
+bugs are \emph{not} memory safety
+problems. \href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.eoikp3r0cwlf}{\uline{10\%
+of our high severity security bugs are DCHECKs}} where we've determined
+that there may be security implications when the release build goes past
+the DCHECK site.
+
+\section{Back NOTREACHED With CHECK}
+
+\textbf{Problem:} NOTREACHED implies that the program has entered an
+undefined state, and the result will be undefined behaviour. While this
+crashes in debug builds, it continues on (un)happily for our users.
+
+\textbf{Solutions:} Make NOTREACHED do a CHECK(false) instead
+of DCHECK(false), or equivalent.
+
+\textbf{Current status:} There
+is \uline{\href{https://www.google.com/url?q=https://bugs.chromium.org/p/chromium/issues/detail?id\%3D851128\&sa=D\&source=editors\&ust=1631944129105000\&usg=AOvVaw2LrM6i2LECKEjRcO5h20mN}{a
+plan to
+make NOTREACHED}\href{https://www.google.com/url?q=https://bugs.chromium.org/p/chromium/issues/detail?id\%3D851128\&sa=D\&source=editors\&ust=1631944129106000\&usg=AOvVaw34qgxqGkGdOZeZV-chozbg}{ be {[}{[}noreturn{]}{]}}} which
+includes making it IMMEDIATE\_CRASH.
+
+\textbf{Costs:} More binary size for our users, as these checks are
+compiled out in release builds today. This should be significantly
+smaller and safer than converting DCHECK to CHECK globally,
+as NOTREACHED is used to document undefined behaviour and is less
+common. It's likely this would take multiple rounds of attempts to land
+and stick. Any NOTREACHED that was found happening in production should
+be removed and converted to handle that case correctly.
+
+\section{Prevent Use After Move}
+
+\textbf{Problem:} C++ allows programmers to move objects, and then use
+the moved-from storage. (We call this use after move, or UAM.) The state
+of that storage is undefined and using it is UB.
+
+\textbf{Solution:} Implement a Clang plugin to prevent touching any
+moved value.
+
+Existing work:
+
+\begin{itemize}
+\item
+  \begin{quote}
+  Clang \href{https://www.google.com/url?q=https://clang.llvm.org/docs/analyzer/checkers.html\%23alpha-cplusplus-misusedmovedobject-c\&sa=D\&source=editors\&ust=1631944129108000\&usg=AOvVaw0Z8KLx8foXb0CEYmjb384B}{\uline{MisusedMovedObject
+  check}}
+  \end{quote}
+\item
+  \begin{quote}
+  \href{https://www.google.com/url?q=https://clang.llvm.org/extra/clang-tidy/checks/bugprone-use-after-move.html\&sa=D\&source=editors\&ust=1631944129108000\&usg=AOvVaw3euQN7cJIxz8XBVdcRGC3r}{\uline{Clang-Tidy
+  bugprone-use-after-move}} is deployed in
+  google3 \href{https://www.google.com/url?q=https://chromium-review.googlesource.com/c/chromium/src/\%2B/2383010\&sa=D\&source=editors\&ust=1631944129108000\&usg=AOvVaw0y_18KwSgPtPRNt-LsDNe_}{\uline{and
+  in Chromium}}.
+  \end{quote}
+\end{itemize}
+
+Clang-tidy's check is helpful but not sufficient. It does not see this
+as a UAM:
+
+\begin{quote}
+auto consumes = {[}{]}(OnceClosure c) \{\};
+
+auto moves = {[}\&{]}(OnceClosure\& c) \{ consumes(std::move(c)); \};
+
+auto c = BindOnce({[}{]}() \{\});
+
+moves(c);
+
+moves(c); // Use after move.
+\end{quote}
+
+Chromium currently relies on things
+like OnceCallback and unique\_ptr being readable (and in a null state)
+after being moved-from.
+
+\textbf{Current
+status:} None. \href{https://www.google.com/url?q=https://crbug.com/1198689\&sa=D\&source=editors\&ust=1631944129110000\&usg=AOvVaw37710zVQHo5HvDBB4mW1Hy}{\uline{Bug
+for using an attribute to annotate acceptable uses}}.
+
+\textbf{Costs:} Hopefully none?
+
+\textbf{Benefits:} Reduced object lifetime errors.
+
+\section{{Appendix: }Explore Solutions For Logic Errors}
+
+Chrome Security's primary concern about C++ is memory safety errors.
+However, once they're all fixed, attackers will move to exploit logic
+errors instead. There are some facilities and idioms provided by other
+languages which perhaps make such errors less likely. There are perhaps
+some things we could do to C++ to discourage logic bugs in
+security-critical areas. These could also potentially serve to reduce
+temporal unsafety.
+
+Logic errors are
+around \href{https://docs.google.com/document/d/e/2PACX-1vRZr-HJcYmf2Y76DhewaiJOhRNpjGHCxliAQTBhFxzv1QTae9o8mhBmDl32CRIuaWZLt5kVeH9e9jXv/pub\#h.eoikp3r0cwlf}{\uline{10\%
+of our high severity security bugs}}.
+
+\subsection{Encourage Type Wrappers For Security Invariants}
+
+\textbf{Problem:} C++ makes it awkward to write type wrappers. In
+another language, you might have (for
+instance) IpAddress and IpAddressWhichIsNotLoopback (wrapping IpAddress with
+zero runtime impact except for an initial check). Some APIs would only
+accept the latter type, providing zero runtime impact. None of this is
+impossible in C++, it's just not a common pattern because C++ makes it a
+bit awkward.
+
+Similarly, it might be useful to
+have \href{https://www.google.com/url?q=https://resources.sei.cmu.edu/asset_files/TechnicalNote/2007_004_001_14846.pdf\&sa=D\&source=editors\&ust=1631944129113000\&usg=AOvVaw3rHn2Q-m9cXLF3kGN-M1Hu}{\uline{ranged
+integers}}.
+
+For example, there are many web platform features that require the
+caller to be in a secure context. Part of that check is checking that
+the caller's origin is one of the secure URL schemes. Right now, we pass
+in normal GURLs and url::Origins (preferably the latter!), and expect
+the callee (the feature) to explicitly check.
+
+Instead, we could bake that check into the constructor of a constrained
+class, e.g.:
+
+class SecureGURL : public GURL \{
+
+  // This constructor is intentionally not `explicit`:
+
+  SecureGURL(const GURL\& gurl) \{ CHECK(gurl.IsSecureScheme()); ... \}
+
+\}
+
+
+
+std::vector\textless byte\textgreater{} LoadTrustedResource(const
+SecureGURL\& gurl);
+
+Thus the callee, in this case the hypothetical LoadTrustedResource, can
+only be called with a GURL that has already passed the check, and does
+not need to explicitly perform the check.
+
+ellyjones@ notes that we could go further, and  could
+make SecureGURL not a subclass of GURL, so that nobody can accidentally
+downcast. It would require us to restate the entire interface of GURL,
+though.
+
+\textbf{Solution:} Guidance that compile-time type safety can address
+higher-level logic errors. Look for cases in the codebase where this can
+help. (Origins, URIs, et c. seem like a likely area, for example.)
+
+\textbf{Current status:} None.
+
+\textbf{Costs:} Should be no runtime cost, in fact the opposite if it
+means a check can only be performed once or statically, not dynamically
+or multiple times. It might or might not be hard to identify cases where
+this sort of pattern makes sense in an existing codebase.
+
+\textbf{Benefits:} If any cases can be identified, may eliminate some
+logic bugs with no performance penalty (or a micro-improvement, e.g
+getting rid of a CHECK).
+
+\section{Appendix: Hardware Support For Detecting Memory Issues}
+
+\subsection{Memory Tagging}
+
+Everything that was old is new again: tagged memory is making a
+resurgence. (Between that and the prevalence of JavaScript, Lisp really
+did win after all!)
+See \href{https://www.google.com/url?q=https://docs.google.com/document/d/1j7S5EZeXesdL2eLC5D6dTAbF8Us9QNUcxAhD9cmWKMg/edit\&sa=D\&source=editors\&ust=1631944129117000\&usg=AOvVaw3aB5nf-FezD0eUwLuRjhjI}{ARM
+MTE}. Depending on the specific mechanism, pointers to and/or regions
+of memory are `tagged', and if code tries to load or store memory
+without using the right tag, the program faults. This helps us detect
+bugs and stop exploits with a certain (typically high) probability per
+instance.
+
+MTE might appear in high-end devices soon, but will take much longer to
+reach most of the world.
+
+Tagging is not a perfect defense. If an attacker can learn or guess the
+correct tag
+--- \href{https://www.google.com/url?q=https://googleprojectzero.blogspot.com/2019/02/examining-pointer-authentication-on.html\&sa=D\&source=editors\&ust=1631944129118000\&usg=AOvVaw1gThhNgANrziuAi11Pvu4v}{and
+they often can} --- they can make use of the correct tag during their
+exploit and hence not trigger the hardware's alarm. To get the benefit
+of tagging, we will need to make it hard for attackers to learn tag
+values, and hard for them to guess. (Such as by, potentially, having the
+browser throttle navigations to sites that crash their renderers too
+often. Whether that would actually work, I don't know.)
+
+\subsection{Control Flow Integrity}
+
+We are now
+shipping \href{https://www.google.com/url?q=https://security.googleblog.com/2021/05/enabling-hardware-enforced-stack.html\&sa=D\&source=editors\&ust=1631944129119000\&usg=AOvVaw2rim68EVFlBXjFhBDe4leE}{support
+for Intel Control-flow Enforcement Technology (CET) on Windows}.
+
+Deploying this makes it meaningful to ship forward jump Clang
+CFI/Windows CFG, and we are investigating doing so in 2021. TODO:
+ENDBRANCH.
+
+We are also going to investigate enabling CET on all OSs, hopefully also
+in 2021.
+
+TODO: \href{https://www.google.com/url?q=https://developer.apple.com/documentation/security/preparing_your_app_to_work_with_pointer_authentication\&sa=D\&source=editors\&ust=1631944129120000\&usg=AOvVaw3jurZceu1ptrIB_GQl8_Uy}{ARM
+PAC} is shipping today for Apple devices. It would also be good to
+explore PAC
+and \href{https://www.google.com/url?q=https://developer.arm.com/documentation/ddi0596/2020-12/Base-Instructions/BTI--Branch-Target-Identification-\&sa=D\&source=editors\&ust=1631944129120000\&usg=AOvVaw0EN5YPuPn3O35XJKNmysBM}{BTI} on
+other hardware and operating systems.
+
+Appendix: Bug Types
+
+This document talks about the percentage impact of fixing different
+types of security bug. Those percentages are based on a manual analysis
+of each high severity security bug that has impacted the stable channel
+since the start of 2019. Exact root causes are a little approximate.
+It's worth noting that the ``temporal safety'' sector seems to be
+growing year-by-year.
+
+\includegraphics[width=5.76806in,height=3.60278in]{./media/image2.png}
+
+Appendix: Remove Null Pointers
+
+\textbf{Problem:} While we don't consider null pointer dereferences to
+be a security vulnerability (unless the attacker can control an offset
+to the pointer, which is rare), they do account for a big fraction of
+our stability bugs. It can also take the Security Sheriff substantial
+time to ensure that a given bug really is `just' a stability bug
+(\href{https://www.google.com/url?q=https://bugs.chromium.org/p/chromium/issues/detail?id\%3D1048473\&sa=D\&source=editors\&ust=1631944129122000\&usg=AOvVaw0fy7uPuy7ezmAwq9hPlixp}{example}).
+
+Removing null pointers may also improve developer ergonomics --- people
+can shed the cognitive and code overhead of checking for null.
+
+Note: ASan explicitly reports a crash as null-deref if the faulty
+address is within {[}0, 4096). Without ASan one needs to look at the
+value of registers, but people make mistakes sometimes. Reproducing as
+many crashes as possible on ClusterFuzz would likely reduce the chance
+of an error.
+
+\textbf{Solutions:} Modify the smart pointer type to require an explicit
+annotation or constructor flag for pointers which may be null. Check and
+crash on deference for such pointers. Check on construction for those
+pointers which shouldn't be null.
+
+As with integer semantics, it may be possible to get what we want with
+compiler
+options. \href{https://www.google.com/url?q=https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html\&sa=D\&source=editors\&ust=1631944129123000\&usg=AOvVaw3Y79vEDZKr7fj2vr_YqYy3}{Several
+options are available},
+including -fsanitize=null and -fsanitize=nullability-arg.
+The nullability-* options work with Clang's \_Nonnull annotation.
+
+\textbf{Current status:} None.
+
+\textbf{Costs:} The micro-cost of the check.
+
+\textbf{Benefits:} We should detect stability bugs sooner, and may save
+time in security bug triage.
+
+Appendix: Mitigations
+
+This document focuses on language-level approaches to the problem:
+codifying safer usage patterns for C++ to reduce memory unsafety and UB
+generally.
+
+Exploit mitigations and enhanced bug-finding techniques can complement
+such work. Examples include:
+
+\begin{itemize}
+\item
+  \begin{quote}
+  HWASAN
+  \end{quote}
+\item
+  \begin{quote}
+  GWP-ASan
+  \end{quote}
+\item
+  \begin{quote}
+  Memory tagging (e.g. MTE)
+  \end{quote}
+\item
+  \begin{quote}
+  CFI and stack protection
+  \end{quote}
+\item
+  \begin{quote}
+  The classics: W\^{}X/DEP, stack canaries, heap canaries, ASLR
+  \end{quote}
+\end{itemize}
+
+Appendix: Other Ideas
+
+Others possibly to include:
+
+\begin{itemize}
+\item
+  \begin{quote}
+  Remove base::Unretained --- require developers to decide the
+  right ownership model for each object. (WeakPtr is not always a silver
+  bullet because it cannot be used across task sequences/threads.)
+  \end{quote}
+\end{itemize}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  Or, back Unretained with MiraclePtr.
+  \end{quote}
+\end{itemize}
+
+\begin{itemize}
+\item
+  \begin{quote}
+  Mojom improvements to ensure all objects are stored in suitable
+  containers?
+  \end{quote}
+\item
+  \begin{quote}
+  Ban design patterns which tend to cause problems (e.g. singletons
+  intrinsically mean shared and likely mutable state). (There
+  was \href{https://www.google.com/url?q=https://docs.google.com/document/d/1MAuOqSpVaKsjqmw8oPLwwdSywHX9HF4FiPnODHNimmQ/edit\&sa=D\&source=editors\&ust=1631944129127000\&usg=AOvVaw2i9qlTgB1UaL_3zE2nBgKg}{an
+  effort to systematically investigate}.)
+  \end{quote}
+\item
+  \begin{quote}
+  Re-emphasize composition rather than any kind of pointer in the first
+  place. (Can we write a checker to look for objects owned by pointer
+  which could instead simply be owned by value?)
+  \end{quote}
+\item
+  \begin{quote}
+  Replace base::Bind \emph{and all code which uses it} with a
+  straight-line version instead (promises? Some C++ code generator?), to
+  simplify the ease of writing asynchronous code and make error cases
+  easier to spot.
+  \end{quote}
+\item
+  \begin{quote}
+  Design for fuzzing: encourage patterns in mojo \& implementation that
+  make it easier to fuzz formats and object lifetimes from a compromised
+  renderer.
+  \end{quote}
+\item
+  \begin{quote}
+  Design for static analysis: discourage patterns that give static
+  analyzers a hard time.
+  \end{quote}
+\item
+  \begin{quote}
+  \href{https://www.google.com/url?q=https://docs.microsoft.com/en-us/cpp/code-quality/using-sal-annotations-to-reduce-c-cpp-code-defects\&sa=D\&source=editors\&ust=1631944129129000\&usg=AOvVaw0r_Lm-49kaxSlt0qo4jfhz}{SAL
+  annotations}. Valuable at the OS boundary where annotations are
+  already available. Basically a new language for base:: developers to
+  interface with to take full advantage.
+  \end{quote}
+\item
+  \begin{quote}
+  Compile parts of the code with WebAssembly. (We are investigating this
+  as of August 2021.)
+  \end{quote}
+\end{itemize}
+
+\end{document}
