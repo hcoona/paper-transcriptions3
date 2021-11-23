@@ -52,9 +52,31 @@ def my_latex_gen(name, main, deps, options = {"bibtex": True}):
             " > \"$@\"",
         ],
     )
+    checksum_ps1 = (
+        "Get-Item (@(" +
+        ", ".join(
+            [
+                "\"$(location " + out + ")\"",
+                "\"$(location " + main + ")\"",
+            ] + [
+                "\"$(location " + d + ")\""
+                for d in deps
+                if not d.startswith("//")
+            ],
+        ) + ")" +
+        " ".join([
+            " + \"$(locations " + d + ")\" -split \" \""
+            for d in deps
+            if d.startswith("//")
+        ]) + ")" +
+        " | Get-FileHash -Algorithm SHA512 " +
+        " | %{ $$_.Hash.ToLower() + \"  \" + ((Resolve-Path -Relative $$_.Path) -replace \"\\.\\\\\", \"\" -replace \"\\\\\", \"/\") }" +
+        " | Set-Content -Encoding UTF8 \"$@\""
+    )
     native.genrule(
         name = name + "_checksum",
         srcs = checksum_inputs,
         outs = [checksum_output],
         cmd_bash = checksum_cmd,
+        cmd_ps = checksum_ps1,
     )
