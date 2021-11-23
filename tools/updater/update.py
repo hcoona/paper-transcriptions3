@@ -1,6 +1,7 @@
 """Tools update archive folders for generated LaTeX files.
 """
 
+import difflib
 import filecmp
 import logging
 import shutil
@@ -10,6 +11,12 @@ from pathlib import Path
 EXCLUDE_FOLDERS_NAMES = ['archive', 'common', 'tools']
 PDF_FILENAME = "main.pdf"
 CHECKSUM_FILENAME = "main.sha512"
+
+
+def _parse_hashfile(path):
+    """Parse sha512sum generated file."""
+    with path.open("r", encoding="utf8") as fp:
+        return fp.readlines()
 
 
 def main():
@@ -28,17 +35,22 @@ def main():
 
         src_pdf = d / PDF_FILENAME
         src_checksum = d / CHECKSUM_FILENAME
+        src_checksum_content = _parse_hashfile(src_checksum)
         dst_pdf = dst_root_dir / (d.name + ".pdf")
         dst_checksum = dst_root_dir / (d.name + ".sha512")
+        dst_checksum_content = _parse_hashfile(dst_checksum)
+
+        # opt out the generated PDF file checksum.
+        diff = list(
+            difflib.unified_diff(src_checksum_content[1:],
+                                 dst_checksum_content[1:]))
 
         if not src_checksum.exists():
             logging.error('Checksum file %s not generated.',
                           src_checksum.resolve())
             return 11
 
-        # TODO(zhangshuai.ustc): Parse checksum file and opt out the output file.
-        if dst_checksum.exists() and filecmp.cmp(src_checksum.resolve(),
-                                                 dst_checksum.resolve()):
+        if dst_checksum.exists() and len(diff) == 0:
             logging.info('Checksum of %s and %s are same.',
                          src_checksum.resolve(), dst_checksum.resolve())
         else:
