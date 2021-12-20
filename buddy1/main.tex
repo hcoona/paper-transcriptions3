@@ -1,0 +1,202 @@
+\PassOptionsToPackage{dvipsnames}{xcolor}
+\PassOptionsToPackage{unicode=true,colorlinks=true,urlcolor=blue}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[a4paper,12pt,notitlepage,twoside,openright]{article}
+
+\usepackage{ifxetex}
+\ifxetex{}
+\else
+\errmessage{Must be built with XeLaTeX}
+\fi
+
+\input{../common/fonts.tex}
+\input{../common/packages.tex}
+\usepackage{endnotes}
+\input{../common/setup.tex}
+
+\title{Dynamic Storage Allocation: A Survey and Critical Review}
+\author{Paul R. Wilson, Mark S. Johnstone, Michael Neely, and David Boles}
+\date{October 1999}
+
+\begin{document}
+
+\maketitle{}
+
+\section*{3.7 Buddy Systems}
+
+Buddy systems [Kno65, PN77] are a variant of segregated lists that supports
+a limited but efficient kind of splitting and coalescing. In the simple buddy
+schemes, the entire heap area is conceptually split into two large areas, and
+those areas are further split into two smaller areas, and so on. This hierarchical
+division of memory is used to constrain where objects are allocated, what their
+allowable sizes are, and how they may be coalesced into larger free areas. For each
+allowable size, a separate free list is maintained, in an array of free lists. Buddy
+systems are therefore actually \emph{a special case of segregated fits}, using size classes
+with rounding, and a peculiar limited technique for splitting and coalescing.
+
+Buddy systems therefore implement an approximation of a best fit policy, but
+with potentially serious variations due to peculiarities in splitting and coalescing.
+
+(In practical terms, buddy systems appear to be distinctly inferior to more
+general schemes supporting arbitrary coalescing; without heroic efforts at optimization
+and/or hybridization, their cost in internal fragmentation alone seems
+to be higher than the total fragmentation costs of better schemes.)
+
+A free block may only be merged with its \emph{buddy}, which is its unique neighbor
+at the same level in the binary hierarchical division. The resulting free block is
+therefore always one of the free areas at the next higher level in the memory division
+hierarchy --- at any level, the first block may only be merged with the
+following block, which follows it in memory; conversely, the second block may
+only be merged with the first, which precedes it in memory. This constraint on
+coalescing ensures that the resulting merged free area will always be aligned on
+one of the boundaries of the hierarchical splitting.
+
+(This is perhaps best understood by example; the reader may wish to skip
+ahead to the description of binary buddies, which are the simplest kind of buddy
+systems.)
+
+The purpose of the buddy allocation constraint is to ensure that when a
+block is freed, its (unique) buddy can always be found by a simple address
+computation, and its buddy will always be either a whole, entirely free block,
+or an unavailable block. An unavailable block may be entirely allocated, or may
+have been split and have some of its sub-parts allocated but not others. Either
+way, the address computation will always be able to locate the beginning of the
+buddy --- it will never find the middle of an allocated object. The buddy will be
+either a whole (allocated or free) block of a determinate size, or the beginning
+of a block of that size that has been split in a determinate way. If (and only
+if) it turns out to be the header of a free block, and the block is the whole
+buddy, the buddies can be merged. If the buddy is entirely or partly allocated,
+the buddies cannot be merged --- even if there is an adjacent free area within the
+(split) buddy.
+
+Buddy coalescing is relatively fast, but perhaps the biggest advantage in
+some contexts is that it requires little space overhead per object --- only one bit
+is required per buddy, to indicate whether the buddy is a contiguous free area.
+This can be implemented with a single-bit header per object or free block. Unfortunately,
+for this to work, \emph{the size of the block being freed must be known} --- the
+buddy mechanism itself does not record the sizes of the blocks. This is workable
+in some statically-typed languages, where object sizes are known statically and
+the compiler can supply the size argument to the freeing routine. In most current
+languages and implementations, however, this is not the case, due to the presence
+of variable-sized objects and/or because of the way libraries are typically
+linked. Even in some languages where the sizes of objects are known, the ``single''
+bit ends up up costing an entire word per object, because a single bit cannot
+be ``stolen'' from the space for an allocated object --- objects must be aligned on
+word boundaries for architectural reasons, and there is no provision for stealing
+a bit from the space allocated to an object.\footnote{In some implementations of some languages, this is less of a problem, because all
+objects have headers that encode type information, and one bit can be reserved for
+use by the allocator and ignored by the language implementation. This complicates
+the language implementation, but may be worthwhile if a buddy system is used.} Stealing a bit from each object
+can be avoided, however, by keeping the bits in a separate table ``off to the side''
+[IGK71], but this is fairly awkward, and such a bit table could probably be put
+to better use with an entirely different basic allocation mechanism.
+
+In practical terms, therefore, buddy systems usually require a header word
+per object, to record the type and/or size. Other, less restrictive schemes can
+get by with a word per object as well. Since buddy systems also incur internal
+fragmentation, this apparently makes buddy systems unattractive relative to
+more general coalescing schemes such as segregated fits.\footnote{Of course, buddy systems could become more attractive if it were to turn out that
+the buddy policy has significant beneficial interactions with actual program behavior,
+and unexpectedly reduced external fragmentation or increased locality. At present,
+this does not appear to be the case.}
+
+In experiments using both real and synthetic traces, buddy systems generally
+exhibit significantly more fragmentation than segregated fits and indexed fits
+schemes using boundary tags to support general coalescing. (Most of these results
+come from synthetic trace studies, however; it appears that only two buddy
+systems have ever been studied using real traces [WJNB95].)
+
+Several significant variations on buddy systems have been devised:
+
+\emph{Binary buddies}. Binary buddies are the simplest and best-known kind of buddy
+system [Kno65]. In this scheme, all buddy sizes are a power of two, and each size
+is divided into two equal parts. This makes address computations simple, because
+all buddies are aligned on a power-of-two boundary offset from the beginning of
+the heap area, and each bit in the offset of a block represents one level in the
+buddy system's hierarchical splitting of memory --- if the bit is 0, it is the first of
+a pair of buddies, and if the bit is 1, it is the second. These operations can be
+implemented efficiently with bitwise logical operations.
+
+On the other hand, systems based on closer size class spacings may be similarly
+efficient if lookup tables are used to perform size class mappings quickly.
+
+A major problem with binary buddies is that internal fragmentation is usually
+relatively high--the expected case is (very roughly) about 28\% [Knu73, PN77],\footnote{
+This figure varies somewhat depending on the expected range and skew of the size
+distribution [PN77].
+}
+because any object size must be rounded up to the nearest power of two (minus
+a word for the header, if the size field is stored).
+
+\emph{Fibonacci buddies}. This variant of the buddy scheme uses a more closely-spaced
+set of size classes, based on a Fibonacci series, to reduce internal fragmentation
+[Hir73]. Since each number in the Fibonacci series is the sum of the two previous
+numbers, a block can always be split (unevenly) to yield two blocks whose sizes
+are also in the series. This limits the number of free lists required.
+
+A further refinement, called generalized Fibonacci buddies [Hir73, Bur76,
+PN77] uses a Fibonacci-like number series that starts with a larger number
+and generates a somewhat more closely-spaced set of sizes.
+
+A possible disadvantage of Fibonacci buddies is that when a block is split to
+satisfy a request for a particular size, the remaining block is of a different size,
+which is less likely to be useful if the program allocates many objects of the same
+size [Wis78].
+
+\emph{Weighted buddies}. Weighted buddy systems [SP74] use a different kind of size
+class series than either binary or Fibonacci buddy systems. Some size classes can
+be split only one way, while other size classes can be split in two ways. The size
+classes include the powers of two, but in between each pair of successive sizes,
+there is also a size that is three times a power of two. The series is thus 2, 3, 4,
+6, 8, 12... (words). (Often, the series actually starts at 4 words.)
+
+Sizes that are powers of two may only be split evenly in two, as in the binary
+buddy system. This always yields another size in the series, namely the next
+lower power of two.
+
+Sizes that are three times a power of two can be split in two ways. They may
+be split evenly in two, yielding a size that is another three-times-a-power-of-two
+size. (E.g., a six may be split into two threes.) They may also be split unevenly
+into two sizes that are one third and two thirds of the original size; these sizes
+are always a power of two. (E.g., six may be split into two and four.).
+
+Double buddies. Double buddy systems [Wis78, PH86, WJNB95] use a different
+technique to allow a closer spacing of size classes. They use two different binary
+buddy systems, with staggered sizes. For example, one buddy system may use
+powers-of-two sizes (2, 4, 8, 16...) while another uses a powers-of-two spacing
+starting at a different size, such as 3. (The resulting sizes are 3, 6, 12, 24 ...).
+This is the same set of sizes used in weighted buddies, but the splitting rule is
+quite different. Blocks may only be split in half, as in the binary buddy system,
+so the resulting blocks are always in the same binary buddy series.
+
+Request sizes are rounded up to the nearest size class in either series. This
+reduces the internal fragmentation by about half, but means that space used for
+blocks in one size series can only coalesced or split into sizes in that series. That
+is, splitting a size whose place in the combined series is odd always produces
+another size whose place is odd; likewise, splitting an even-numbered size always
+produces an even-numbered size. (E.g., a block of size 16 can be split into 8's
+and 4's, and a block of size 24 can be split into 12's and 6's, but not 8's or 4's.)
+
+This may cause external fragmentation if blocks in one size series are freed,
+and blocks in the other are requested. As an optimization, free areas of a relatively
+large size (e.g., a whole free page) may be made available to the other size
+series and split according to that size series' rules. (This complicates the treatment
+of large objects, which could be treated entirely differently, or by another
+buddy system for large units of free storage such as pages.)
+
+Naturally, more than two buddy systems could be combined, to decrease
+internal fragmentation at a possible cost in external fragmentation due to limitations
+on sharing free memory between the different buddy systems.
+
+As with simple segregated storage, it is possible to keep per-page counts of live
+objects, and notice when an entire page is empty. Empty pages can be transferred
+from one buddy series to another. To our knowledge, such an optimization has
+never been implemented for a double buddy scheme.
+
+Buddy systems can easily be enhanced with deferred coalescing techniques,
+as in ``recombination delaying'' buddy systems [Kau84]. Another optimization
+is to tailor a buddy system's size class series to a particular program, picking a
+series that produces little internal fragmentation for the object sizes the program
+uses heavily.
+
+\end{document}
