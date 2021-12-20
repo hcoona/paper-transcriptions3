@@ -2,7 +2,6 @@
 """
 
 import difflib
-import filecmp
 import logging
 import shutil
 import sys
@@ -34,21 +33,25 @@ def main():
         logger.info("Processing %s", d.name)
 
         src_pdf = d / PDF_FILENAME
-        src_checksum = d / CHECKSUM_FILENAME
-        src_checksum_content = _parse_hashfile(src_checksum)
         dst_pdf = dst_root_dir / (d.name + ".pdf")
-        dst_checksum = dst_root_dir / (d.name + ".sha512")
-        dst_checksum_content = _parse_hashfile(dst_checksum)
 
-        # opt out the generated PDF file checksum.
-        diff = list(
-            difflib.unified_diff(src_checksum_content[1:],
-                                 dst_checksum_content[1:]))
-
+        src_checksum = d / CHECKSUM_FILENAME
         if not src_checksum.exists():
             logging.error('Checksum file %s not generated.',
                           src_checksum.resolve())
             return 11
+
+        dst_checksum = dst_root_dir / (d.name + ".sha512")
+
+        diff = []
+        if dst_checksum.exists():
+            src_checksum_content = _parse_hashfile(src_checksum)
+            dst_checksum_content = _parse_hashfile(dst_checksum)
+            # opt out the generated PDF file checksum.
+            diff = list(
+                difflib.unified_diff(src_checksum_content[1:],
+                                    dst_checksum_content[1:]))
+
 
         if dst_checksum.exists() and len(diff) == 0:
             logging.info('Checksum of %s and %s are same.',
