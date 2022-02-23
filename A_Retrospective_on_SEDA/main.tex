@@ -1,0 +1,63 @@
+\PassOptionsToPackage{dvipsnames}{xcolor}
+\PassOptionsToPackage{unicode=true,colorlinks=true,urlcolor=blue}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[a4paper,12pt,notitlepage,twoside,openright]{article}
+
+\usepackage{ifxetex}
+\ifxetex{}
+\else
+\errmessage{Must be built with XeLaTeX}
+\fi
+
+\input{../common/fonts.tex}
+\input{../common/packages.tex}
+\input{../common/setup.tex}
+
+\title{A Retrospective on SEDA\\\scriptsize \url{https://matt-welsh.blogspot.com/2010/07/retrospective-on-seda.html}}
+\author{Matt Welsh}
+\date{July 26, 2010}
+
+\begin{document}
+\maketitle
+
+I keep \href{http://news.ycombinator.com/item?id=399670}{bumping into} references online to my \href{http://www.eecs.harvard.edu/~mdw/proj/seda/}{PhD thesis work on the Staged Event-Driven Architecture, or SEDA}. I thought this had been long forgotten, but I guess not. It's been about 10 years since I did the bulk of that work (the major \href{http://www.eecs.harvard.edu/~mdw/papers/seda-sosp01.pdf}{paper} was published in \href{http://sosp.org/2001/}{SOSP 2001}), so I thought it would be interesting to think back on what we got right and what we got wrong. Just to summarize, SEDA is a design for highly-concurrent servers based on a hybrid of event-driven and thread-driven concurrency. The idea is to break the server logic into a series of stages connected with queues; each stage has a (small and dynamically-sized) thread pool to process incoming events, and passes events to other stages. The advantages of the design include modularity, the ability to scale to large numbers of concurrent requests, and (most importantly, I think) explicit control of overload, through the queues.
+
+Apparently quite a few systems have been influenced by SEDA, including some major components that drive Google and Amazon. I occasionally hear war stories from folks that tried the SEDA design and abandoned it when the performance did not meet up with expectations. The events-versus-threads debate continues to rage on. See, for example, this \href{http://dosync.posterous.com/clojure-nodejs-and-why-messaging-can-be-lame}{recent post comparing the performance of Node.js and Clojure}. (Who knew that people would be talking about implementing high-performance servers in JavaScript and LISP? And I thought using Java for SEDA was crazy\ldots)
+
+\section{Some historical context}
+
+It's important to keep in mind that I started work on SEDA around 1999. At the time, the server landscape looked pretty different than it does now. Linux threads were suffering a lot of scalability problems, so it was best to avoid using too many of them. Multicore machines were rare. Finally, at the time nearly all papers about Web server performance focused on bulk throughput for serving static Web pages, without regard for end-to-end request latency.
+
+These days, things are pretty different. Linux threading implementations have vastly improved. Multicores are the norm. With the rise of AJAX and ``Web 2.0,'' request latency matters a lot more.
+
+Before we start splitting hairs, I want to emphasize that the SEDA work is about a server \emph{architecture}, not an \emph{implementation}. Yes, I implemented a prototype of SEDA (called Sandstorm) in Java, but I never considered Sandstorm to be the main contribution. Unfortunately, a lot of follow-on work has compared C or C++ implementations of alternate server designs to my original Java implementation. It is really hard to draw many conclusions from this, in part because Sandstorm was heavily tuned for the particular JVM+JIT+threading+GC combination I was using at the time. (I spent an incredible amount of time trying to get gcj to be robust enough to run my code, but eventually gave up after around six months of hacking on it.) Probably the best head-to-head comparison I have seen is \href{http://www.cs.uwaterloo.ca/~brecht/papers/getpaper.php?file=eurosys-2007.pdf}{David Pariag et al.'s paper in EuroSys 2007}, where they do a nice job of factoring out these implementation effects.
+
+\section{What we got wrong}
+
+In retrospect, there definitely a few things about the SEDA design that I would rethink today.
+
+The most critical is the idea of connecting stages through event queues, with each stage having its own separate thread pool. As a request passes through the stage graph, it experiences multiple context switches, and potentially long queueing at busy stages. This can lead to poor cache behavior and greatly increase response time. Note that under reasonably heavy load, the context switch overhead is amortized across a batch of requests processed at each stage, but on a lightly (or moderately) loaded server, the worst case context switching overhead can dominate.
+
+If I were to design SEDA today, I would decouple stages (i.e., code modules) from queues and thread pools (i.e., concurrency boundaries). Stages are still useful as a structuring primitive, but it is probably best to group multiple stages within a single ``thread pool domain'' where latency is critical. Most stages should be connected via direct function call. I would only put a separate thread pool and queue in front of a group of stages that have long latency or nondeterministic runtime, such as performing disk I/O. (This approach harkens back to the original \href{http://www.cs.princeton.edu/~vivek/flash/}{Flash} event-driven server design that SEDA was inspired by.) This is essentially the design we used in the \href{http://fiji.eecs.harvard.edu/Pixie}{Pixie operating system}.
+
+I was never completely happy with the SEDA I/O interface. My original work on Java NBIO was used as the foundation for Sandstorm's event-driven socket library. (I was also one of the members of the \href{http://jcp.org/en/jsr/detail?id=51}{Java Community Process group that defined the java.nio extensions}, but I preferred to use my own library since I wrote the code and understood it.) However, layering the SEDA stage abstraction on top proved to be a real pain; there are multiple threads responsible for polling for request completion, incoming sockets, and so forth, and performance is highly sensitive to the timing of these threads. I probably spent more time tuning the sockets library than any other part of the design. (It did not surprise me to learn that people trying to run Sandstorm on different JVMs and threading libraries had trouble getting the same performance: I found those parameters through trial-and-error.) The fact that SEDA never included proper nonblocking disk I/O was disappointing, but this just wasn't available at the time (and I decided, wisely, I think, not to take it on as part of my PhD.)
+
+Of course, while Java is a great implementation language for servers, I didn't implement Sandstorm with much regards for memory efficiency, so it kind of sucks in that regard compared to leaner server implementations.
+
+\section{What we got right}
+
+I chose to implement SEDA using Java, in order to tie into the larger \href{http://web.archive.org/web/20010302132216/http://ninja.cs.berkeley.edu/}{Berkeley Ninja project} which was all in Java. It turned out that my Java code was beating servers implemented in C, so I saw no reason to switch languages. I still believe that had I tried to do this work in C, I would still be writing my PhD thesis today. Case in point: \href{http://web.archive.org/web/20070609100703/www.cs.berkeley.edu/~jrvb/}{Rob von Behren}, who did a follow-on project to SEDA, called \href{http://capriccio.cs.berkeley.edu/publications.html}{Capriccio}, in C, never finished his PhD :-) Never mind --- we both work for Google now.
+
+The most important contribution of SEDA, I think, was the fact that we made \emph{load and resource bottlenecks explicit in the application programming model}. Regardless of how one feels about threads vs. events vs. stages, I think this is an extremely important design principle for robust, well-behaved systems. SEDA accomplishes this through the event queues between stages, which allow the application to inspect, reorder, drop, or refactor requests as they flow through the service logic. Requests are never ``stalled'' somewhere under the covers --- say, blocking on an I/O or waiting for a thread to be scheduled. You can always get at them and see where the bottlenecks are, just by looking at the queues. I haven't seen another high performance server design that tries to do this --- they mostly focus on peak performance, not performance under overload conditions, which was my main concern. I also think that SEDA makes it easier to design services that are load aware, though I leave it as an exercise to the reader to determine how you would do it in a conventional thread or event-driven framework.
+
+Honestly, we never took full advantage of this, and I struggled somewhat to come up with a good benchmark to demonstrate the importance of this idea. (When you're using SpecWeb99, you can't really drop or refactor Web page requests.) Benchmarks are tricky, but I think that many real-world services have the opportunity to leverage SEDA's explicit load conditioning model.
+
+\section{Some general comments}
+
+I'm not really working on high performance server designs anymore (although my stint at Google may or may not take me back in that direction). I'm also not up on all of the latest literature on the topic, so maybe there is a killer design out there that solves all of these problems once and for all.
+
+One thing I learned doing this work is that one should always be skeptical of simple, ``clean'' benchmarks that try to demonstrate the peak or best-case performance of a given server design. My original benchmarks of SEDA involved fetching the same static 8KB web page over and over. Not surprisingly, it yields about the same performance no matter what server design you use. This benchmark hardly stresses the I/O, memory, threading, or socket layers of any system, and is more likely to highlight performance differences in the corner cases. (Believe me, I've read plenty of papers that use much dumber benchmarks than this. SpecWeb99, which we used in the SOSP paper, is only marginally better.)
+
+It's harder to do, but I think it's important to evaluate performance in the context of a ``real'' application, one that involves all of the load and complexity you'd see in a real service. So I am not convinced by microbenchmarks anymore; it is like showing off a new automobile design running on a flat, even, indoor track with no wind drag, no adverse weather, no other traffic, and no need for seatbelts or airbags. Usually as soon as you load it up with realistic conditions, things start to break. Achieving good, \emph{robust} performance across a wide range of loads is the real challenge.
+
+\end{document}
